@@ -150,7 +150,10 @@ Contributions are welcome! You can contribute by:
 ## License
 
 Specify your license here (e.g., MIT License)
-This project references Open5GS (Apache 2.0 License).
+
+This project references:
+- Open5GS (Apache 2.0 License)
+- OpenAirInterface (OAI Public License 1.1)
 
 ---
 
