@@ -174,7 +174,7 @@ git push origin feature/my-feature
 Specify your license here (e.g., **MIT License**)
 
 This project references:
-- [Open5GS (Apache 2.0 License)](https://open5gs.org/)
+- [Open5GS (GNU AGPL v3.0)](https://open5gs.org/)
 - [OpenAirInterface (OAI Public License 1.1)](https://www.openairinterface.org/)
 
 ---
