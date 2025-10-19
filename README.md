@@ -60,7 +60,7 @@ Currently, the project has successfully:
 
 1. **Clone the repository**
 ```bash
-git clone <repository-url>
+git clone https://gitlab.com/limx59/oai-5gc-pi.git
 cd oai-5gc-pi
 ```
 
