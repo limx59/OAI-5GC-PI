@@ -44,6 +44,80 @@ The main deployment manifests are located in `open5gs/docker_open5gs/`:
 | `srsgnb*.yaml` / `srsue*.yaml` | srsRAN gNB and UE |
 | `oaignb.yaml` / `oaienb.yaml` | OAI radio components |
 
+## Architecture
+
+The repository separates the radio access network, 5G core control plane,
+user plane, subscriber data, and optional IMS services into containers. A
+typical standalone deployment has the following data flow:
+
+```mermaid
+flowchart LR
+    UE["UE or UE simulator"]
+    GNB["gNB: OAI, srsRAN, or UERANSIM"]
+
+    subgraph CORE["Open5GS 5G Core"]
+        AMF["AMF"]
+        SMF["SMF"]
+        UPF["UPF"]
+        NRF["NRF / SCP"]
+        AUTH["AUSF / UDM / UDR"]
+        POLICY["PCF / NSSF / BSF"]
+        DB["MongoDB"]
+    end
+
+    DN["Laboratory data network / Internet"]
+    OBS["Prometheus / Grafana"]
+    WEB["Open5GS WebUI"]
+
+    UE -->|"NR-Uu or simulated radio"| GNB
+    GNB -->|"N2: NGAP over SCTP"| AMF
+    GNB -->|"N3: GTP-U"| UPF
+    AMF --> AUTH
+    AMF --> POLICY
+    AMF --> NRF
+    AMF -->|"N11"| SMF
+    SMF -->|"N4: PFCP"| UPF
+    UPF -->|"ogstun / routed UE subnet"| DN
+    AUTH --> DB
+    POLICY --> DB
+    WEB --> DB
+    CORE -.-> OBS
+```
+
+### Component Responsibilities
+
+| Layer | Main components | Responsibility |
+| --- | --- | --- |
+| Radio access | OAI, srsRAN, UERANSIM | Provides a physical or simulated gNB and UE |
+| Access and mobility | AMF | Terminates N2, handles registration and mobility |
+| Session control | SMF | Creates PDU sessions and programs the UPF over N4 |
+| User plane | UPF | Carries UE traffic between N3 and the data network |
+| Authentication and data | AUSF, UDM, UDR, MongoDB | Stores subscriber data and performs authentication |
+| Discovery and policy | NRF, SCP, PCF, NSSF, BSF | Service discovery, routing, policy, and slice selection |
+| Operations | WebUI, Prometheus, Grafana | Subscriber administration, metrics, and dashboards |
+| Optional voice services | HSS, P-CSCF, I-CSCF, S-CSCF, RTPengine, DNS | Supports IMS-based VoLTE or VoNR scenarios |
+
+The Docker network uses static addresses from `TEST_NETWORK`. The AMF and UPF
+must be reachable by the selected gNB. UE traffic is routed through the UPF TUN
+interfaces using `UE_IPV4_INTERNET` and, when IMS is enabled, `UE_IPV4_IMS`.
+
+## Installation Workflow
+
+Use this order for a first 5G standalone deployment:
+
+1. Prepare an ARM64 Raspberry Pi host and install Docker with Compose support.
+2. Clone the repository and record the Git revision used for the test.
+3. Review `open5gs/docker_open5gs/.env` and assign addresses for the local lab.
+4. Build the Open5GS base image and the images required by the selected scenario.
+5. Validate the Compose configuration before creating containers.
+6. Start the core and confirm that its network functions remain running.
+7. Add a test subscriber through the WebUI.
+8. Start a gNB, confirm NG Setup, and then start the UE.
+9. Verify registration, PDU-session creation, UE addressing, and data traffic.
+10. Stop the scenario and retain the logs and version information for diagnosis.
+
+The following sections provide the commands for each stage.
+
 ## Requirements
 
 - Raspberry Pi 5, with 8 GB memory recommended
@@ -132,6 +206,16 @@ Replace every angle-bracketed value with an address or identifier assigned to yo
 
 Do not publish real subscriber credentials, private network addresses, production secrets, or host-specific routing information.
 
+Validate variable substitution before building:
+
+```bash
+docker compose -f sa-deploy.yaml config --quiet
+```
+
+Resolve every warning about missing variables before continuing. A warning
+about the legacy Compose `version` field does not block deployment, but the
+field should be removed when the manifests are modernized.
+
 ## Build the Images
 
 Build the Open5GS base image:
@@ -168,6 +252,10 @@ Check service status:
 docker compose -f sa-deploy.yaml ps
 ```
 
+Wait until the core services are stable before starting a gNB. Containers that
+continually restart usually indicate an address conflict, an unavailable
+database, or an inconsistent `.env` value.
+
 Inspect key network-function logs:
 
 ```bash
@@ -187,6 +275,22 @@ To remove the associated test database volume, first confirm that its data is no
 ```bash
 docker compose -f sa-deploy.yaml down -v
 ```
+
+### Add a Test Subscriber
+
+Open the WebUI described below and create a laboratory subscriber whose IMSI,
+KI, OP or OPC, AMF, slice, and APN or DNN values match the UE configuration.
+Never enter credentials belonging to a production subscriber.
+
+At minimum, verify these values before starting the UE:
+
+| Setting | Must match |
+| --- | --- |
+| MCC and MNC | Core, gNB, UE, and subscriber record |
+| IMSI, KI, OP/OPC, AMF | UE or SIM and WebUI subscriber record |
+| TAC | AMF and gNB |
+| SST/SD | AMF, NSSF/SMF, gNB, and UE |
+| APN/DNN | Subscriber record, SMF, and UE |
 
 ## Other Deployment Scenarios
 
