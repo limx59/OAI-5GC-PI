@@ -1,120 +1,259 @@
 # OAI-5GC Raspberry Pi Port
 
-This project focuses on **porting OAI-5GC (OpenAirInterface 5G Core)** to Raspberry Pi devices.  
-It enables lightweight and portable 5G core testing environments on ARM-based hardware, particularly **Raspberry Pi 4 and Raspberry Pi 5**.
+This project provides an ARM64 environment for building and running Open5GS, OpenAirInterface (OAI), and related mobile-network components on Raspberry Pi devices.
 
----
+The Open5GS container environment has been compiled and run successfully on a Raspberry Pi 5. The repository includes an Open5GS source snapshot, Docker build files, Compose deployment manifests, configuration templates, tests, and an auxiliary setup script for OAI and FlexRIC.
 
-## Table of Contents
+> This repository is intended for research, education, and controlled laboratory use. Review and secure all sample identities, credentials, addresses, and exposed ports before connecting the system to an untrusted network.
 
-- [Overview](#overview)
-- [Features](#features)
-- [Requirements](#requirements)
-- [Installation](#installation)
-- [Deployment and Running](#deployment-and-running)
-- [Docker Images](#docker-images)
-- [Testing and Verification](#testing-and-verification)
-- [Contributing](#contributing)
-- [License](#license)
-- [Acknowledgements](#acknowledgements)
-- [Contact](#contact)
+## Validation Status
 
----
+- Raspberry Pi 5 ARM64 compilation: verified
+- Open5GS container build: verified
+- Open5GS runtime on Raspberry Pi 5: verified
+- Docker Compose deployment: verified in a controlled test environment
+- Open5GS WebUI: available for subscriber management
 
-## Overview
+For reproducible testing, record the Raspberry Pi model, operating system, kernel, Docker version, repository commit, selected Compose manifest, local environment configuration, and built image digests.
 
-The main goal of this project is to adapt **Open5GS** and **OAI 5G Core** for Raspberry Pi, providing:
+## Repository Layout
 
-- Containerized 5G Core images for **ARM architecture**
-- Deployment and execution on **Raspberry Pi 4 / 5**
-- Basic 5G core functionality for experimentation and learning
+```text
+.
+├── 00_oaisetup.sh                 # Auxiliary OAI and FlexRIC setup script
+├── README.md
+└── open5gs/
+    ├── docker_open5gs/            # Images and Compose deployment manifests
+    ├── docker/                     # Upstream Open5GS Docker resources
+    ├── configs/                    # Open5GS configuration templates
+    ├── src/                        # Open5GS source code
+    ├── tests/                      # Open5GS tests
+    └── webui/                      # Open5GS WebUI
+```
 
-Currently, the project has successfully:
+The main deployment manifests are located in `open5gs/docker_open5gs/`:
 
-- Built and tested **Open5GS container images** for ARM
-- Verified containerized **Open5GS** running on **Raspberry Pi 4 and Raspberry Pi 5**
-
----
-
-## Features
-
-- ✅ ARM-compatible **Open5GS** and **OAI-5GC** container images  
-- ✅ Supports **Raspberry Pi 4 / 5**  
-- ✅ Deployable via **Docker** and **Docker Compose**  
-- ✅ Lightweight 5G core environment for testing and education  
-- ✅ Includes example configurations and startup scripts  
-
----
+| File | Purpose |
+| --- | --- |
+| `sa-deploy.yaml` | 5G standalone core network |
+| `sa-vonr-deploy.yaml` | 5G standalone core with IMS/VoNR |
+| `4g-volte-deploy.yaml` | 4G EPC with IMS/VoLTE |
+| `4g-external-ims-deploy.yaml` | 4G EPC with an external IMS |
+| `deploy-all.yaml` | Complete laboratory component set |
+| `nr-gnb.yaml` / `nr-ue.yaml` | UERANSIM gNB and UE |
+| `srsgnb*.yaml` / `srsue*.yaml` | srsRAN gNB and UE |
+| `oaignb.yaml` / `oaienb.yaml` | OAI radio components |
 
 ## Requirements
 
-- Raspberry Pi 4 (4GB or 8GB recommended) or Raspberry Pi 5  
-- Docker ≥ 20.x  
-- Docker Compose ≥ 1.29.x  
-- Linux-based OS (Raspberry Pi OS, Ubuntu Server, etc.)  
-- Network connectivity for 5G core containers  
+- Raspberry Pi 5, with 8 GB memory recommended
+- A 64-bit Raspberry Pi OS or Ubuntu Server installation
+- Docker with Compose support
+- Sufficient storage for source builds and container images
+- A trusted and isolated laboratory network
+- TUN, SCTP, routing, and iptables support when required
 
----
+Confirm that the host uses ARM64:
 
-## Installation
+```bash
+uname -m
+```
 
-1. **Clone the repository**
+Confirm that Docker and Compose are available:
+
+```bash
+docker version
+docker compose version
+```
+
+## Install Docker
+
+Install Docker using the method recommended for your operating system. Optionally add the current user to the Docker group:
+
+```bash
+sudo usermod -aG docker "$USER"
+newgrp docker
+```
+
+Verify the installation:
+
+```bash
+docker run --rm hello-world
+```
+
+## Get the Source
+
 ```bash
 git clone https://gitlab.com/limx59/oai-5gc-pi.git
 cd oai-5gc-pi
 ```
 
-2. **Install Docker and Docker Compose**
-```bash
-# Install Docker
-curl -fsSL https://get.docker.com -o get-docker.sh
-sudo sh get-docker.sh
+Record the source revision:
 
-# Install Docker Compose
-sudo apt install -y docker-compose
+```bash
+git rev-parse HEAD
 ```
 
-3. **(Optional) Add your user to the Docker group**
+## Configure the Environment
+
+Move to the deployment directory:
+
 ```bash
-sudo usermod -aG docker $USER
-newgrp docker
+cd open5gs/docker_open5gs
 ```
 
----
+Review `.env` before building or starting any service. Use environment-specific values rather than committing real addresses:
 
-## Deployment and Running
+```dotenv
+MCC=<MOBILE_COUNTRY_CODE>
+MNC=<MOBILE_NETWORK_CODE>
 
-1. **Build or pull container images**
-```bash
-docker-compose build      # Build locally
-docker-compose pull       # Pull pre-built images
+TEST_NETWORK=<PRIVATE_CONTAINER_SUBNET>
+DOCKER_HOST_IP=<RASPBERRY_PI_IP>
+
+MONGO_IP=<MONGODB_CONTAINER_IP>
+HSS_IP=<HSS_CONTAINER_IP>
+SMF_IP=<SMF_CONTAINER_IP>
+UPF_IP=<UPF_CONTAINER_IP>
+AMF_IP=<AMF_CONTAINER_IP>
+WEBUI_IP=<WEBUI_CONTAINER_IP>
+
+UE_IPV4_INTERNET=<INTERNET_DATA_NETWORK_SUBNET>
+UE_IPV4_IMS=<IMS_DATA_NETWORK_SUBNET>
 ```
 
-2. **Start the containers**
+Replace every angle-bracketed value with an address or identifier assigned to your local laboratory environment. The complete `.env` file contains additional component addresses that must be configured consistently.
+
+- `MCC` and `MNC` must match the UE, gNB, SIM, and subscriber configuration.
+- `DOCKER_HOST_IP` must be the Raspberry Pi address reachable from the laboratory network.
+- `TEST_NETWORK` must not overlap with the host LAN, a VPN, or another Docker network.
+- Component addresses must belong to the configured private container subnet.
+- IMSI, KI, OP, and related authentication data must be reserved for testing.
+
+Do not publish real subscriber credentials, private network addresses, production secrets, or host-specific routing information.
+
+## Build the Images
+
+Build the Open5GS base image:
+
 ```bash
-docker-compose up -d
+cd base
+docker build --no-cache --force-rm -t docker_open5gs .
+cd ..
 ```
 
-3. **Check running containers**
+Build additional images required by the selected scenario:
+
 ```bash
-docker ps
+docker compose -f sa-deploy.yaml build
 ```
 
-4. **Stop the containers**
-```bash
-docker-compose down
+IMS, UERANSIM, srsRAN, and OAI scenarios require additional images. See:
+
+```text
+open5gs/docker_open5gs/README.md
 ```
 
----
+## Start the 5G Standalone Core
 
-## Docker Images
+Run the following commands from `open5gs/docker_open5gs/`:
 
-Pre-built **Open5GS ARM Docker images** are available on Docker Hub:  
+```bash
+docker compose -f sa-deploy.yaml up -d
+```
 
-👉 **[https://hub.docker.com/u/limx59](https://hub.docker.com/u/limx59)**
+Check service status:
 
-These images have been **tested and verified to run properly on Raspberry Pi 5**.  
-You can directly pull and use them without manual build steps:
+```bash
+docker compose -f sa-deploy.yaml ps
+```
+
+Inspect key network-function logs:
+
+```bash
+docker logs -f amf
+docker logs -f smf
+docker logs -f upf
+```
+
+Stop the deployment:
+
+```bash
+docker compose -f sa-deploy.yaml down
+```
+
+To remove the associated test database volume, first confirm that its data is no longer needed:
+
+```bash
+docker compose -f sa-deploy.yaml down -v
+```
+
+## Other Deployment Scenarios
+
+Start 4G EPC with IMS/VoLTE:
+
+```bash
+docker compose -f 4g-volte-deploy.yaml up -d
+```
+
+Start 5G SA with IMS/VoNR:
+
+```bash
+docker compose -f sa-vonr-deploy.yaml up -d
+```
+
+Start a UERANSIM gNB:
+
+```bash
+docker compose -f nr-gnb.yaml up -d
+docker attach nr_gnb
+```
+
+Start a UERANSIM UE:
+
+```bash
+docker compose -f nr-ue.yaml up -d
+docker attach nr_ue
+```
+
+Start the core before the simulated gNB or UE. Confirm that the MCC, MNC, TAC, slices, DNN/APN, and subscriber authentication values match.
+
+## WebUI and Monitoring
+
+The default 5G SA deployment publishes these management services:
+
+| Service | Default host port | Purpose |
+| --- | ---: | --- |
+| Open5GS WebUI | `9999` | Subscriber management |
+| Grafana | `3000` | Dashboards |
+| Prometheus | `9090` | Metrics |
+
+Open the WebUI from a trusted machine:
+
+```text
+http://<RASPBERRY_PI_IP>:9999
+```
+
+`<RASPBERRY_PI_IP>` is a placeholder. Replace it locally with the Raspberry Pi address. Do not commit the actual address.
+
+Before deployment:
+
+- Set strong, unique `SECRET_KEY` and `JWT_SECRET_KEY` values
+- Change default administrator and database credentials
+- Restrict ports `9999`, `3000`, and `9090` to trusted hosts
+- Place management interfaces behind an authenticated HTTPS reverse proxy
+- Do not expose databases or monitoring services to public networks
+- Review all additional control-plane, user-plane, radio, and IMS ports in the selected Compose manifest
+
+## Prebuilt Images
+
+ARM images tested by the project maintainer on Raspberry Pi 5 are available from:
+
+```text
+https://hub.docker.com/u/limx59
+```
+
+Example image pulls:
 
 ```bash
 docker pull limx59/open5gs-amf:latest
@@ -125,69 +264,131 @@ docker pull limx59/open5gs-pcrf:latest
 docker pull limx59/open5gs-webui:latest
 ```
 
-To start all services using Docker Compose:
+The included Compose manifests use local image names such as `docker_open5gs`. To use prebuilt images, update the applicable `image:` fields locally. Prefer immutable version tags or image digests over `latest`.
+
+## Troubleshooting
+
+List all containers:
+
 ```bash
-docker-compose -f docker-compose.open5gs.yaml up -d
+docker ps -a
 ```
 
----
+Inspect recent logs:
 
-## Testing and Verification
-
-- Check logs of key Open5GS components:
 ```bash
-docker logs open5gs-amf
-docker logs open5gs-smf
-docker logs open5gs-upf
+docker compose -f sa-deploy.yaml logs --tail=200
 ```
 
-- Test with UE simulators or test devices.
-- Confirm Open5GS attach/detach and session creation procedures.
-- Validate web interface (WebUI) is accessible for subscriber management.
+Inspect Docker networks:
 
----
+```bash
+docker network ls
+docker network inspect docker_open5gs_default
+```
+
+Inspect host tunnel and routing state:
+
+```bash
+ls -l /dev/net/tun
+ip addr
+ip route
+```
+
+Common causes of deployment failure include:
+
+- The private container subnet conflicts with a LAN, VPN, or another Docker network.
+- `DOCKER_HOST_IP` does not match the Raspberry Pi.
+- Radio, UE, subscriber, and core-network settings are inconsistent.
+- SCTP or TUN support is missing.
+- The UPF lacks required capabilities, devices, or host routes.
+- The Raspberry Pi has insufficient memory or storage.
+- A required host port is already in use.
+
+When sharing logs, redact addresses, subscriber identifiers, authentication material, tokens, credentials, and host-specific routing data.
+
+## Test Checklist
+
+After each build:
+
+1. Confirm that all required core-network containers remain healthy.
+2. Confirm that the gNB completes NG Setup with the AMF.
+3. Confirm that a test UE can register and authenticate.
+4. Confirm that the SMF and UPF establish a PDU session.
+5. Confirm that the UE receives connectivity to the intended test data network.
+6. Restart the deployment and confirm that subscriber data persists.
+
+## OAI and FlexRIC Setup Script
+
+The root-level `00_oaisetup.sh` script assists with installing OAI radio components, the OAI core environment, and FlexRIC. It downloads external source code, installs system packages, and uses elevated privileges during some operations.
+
+Review the script before running it:
+
+```bash
+bash 00_oaisetup.sh
+```
+
+The OAI and FlexRIC defaults follow their upstream development branches. For a
+reproducible build, select known release tags or commit hashes explicitly:
+
+```bash
+OAI_REF=<OAI_TAG_OR_COMMIT> FLEXRIC_REF=<FLEXRIC_TAG_OR_COMMIT> bash 00_oaisetup.sh
+```
+
+If an existing `oai`, `swig`, or `flexric` checkout contains local changes, the
+script stops instead of overwriting them.
+
+The Open5GS Docker deployment does not depend on this script.
 
 ## Contributing
 
-Contributions are welcome! You can contribute by:
+Contributions are welcome in the following areas:
 
-### 1. Code Contributions
+- Raspberry Pi build and performance results
+- ARM64 image optimization
+- Reproducible Compose configurations
+- Automated builds and smoke tests
+- Secure default configuration
+- Documentation and troubleshooting examples
+
+Create a dedicated branch for each change:
+
 ```bash
-# Fork the repository
-git checkout -b feature/my-feature
-# Commit changes
-git commit -m "Add new feature"
-# Push and open Merge Request
-git push origin feature/my-feature
+git checkout -b feature/my-change
+git commit -m "Describe the change"
+git push origin feature/my-change
 ```
 
-### 2. Documentation
-- Improve setup instructions or add Raspberry Pi optimization tips.
-
-### 3. Testing
-- Test container deployment on different Raspberry Pi models and report feedback.
-
----
+Do not commit private addresses, subscriber secrets, credentials, tokens, or other environment-specific sensitive data.
 
 ## License
 
-Specify your license here (e.g., **MIT License**)
+The Open5GS source in this repository is provided under the GNU Affero General Public License version 3:
 
-This project references:
-- [Open5GS (GNU AGPL v3.0)](https://open5gs.org/)
-- [OpenAirInterface (OAI Public License 1.1)](https://www.openairinterface.org/)
+```text
+open5gs/LICENSE
+```
 
----
+The Docker deployment resources contain their own license and third-party notices:
+
+```text
+open5gs/docker_open5gs/LICENSE
+```
+
+Before redistributing source code or container images, review the license requirements of Open5GS, OpenAirInterface, Kamailio, srsRAN, UERANSIM, FlexRIC, and all other bundled components.
 
 ## Acknowledgements
 
-- [OpenAirInterface](https://www.openairinterface.org/)
 - [Open5GS](https://open5gs.org/)
-- [Docker Hub Repository - limx59](https://hub.docker.com/u/limx59)
-
----
+- [OpenAirInterface](https://www.openairinterface.org/)
+- [docker_open5gs](https://github.com/herlesupreeth/docker_open5gs)
+- [srsRAN](https://www.srsran.com/)
+- [UERANSIM](https://github.com/aligungr/UERANSIM)
 
 ## Contact
 
-For questions or support, contact:  
-📧 **limx59@163.com**
+For questions and test feedback:
+
+```text
+limx59@163.com
+```
