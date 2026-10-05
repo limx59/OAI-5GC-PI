@@ -1,0 +1,40 @@
+{
+  "services": {
+    "amf": {
+      "image": "docker_open5gs:local-arm64"
+    },
+    "ausf": {
+      "image": "docker_open5gs:local-arm64"
+    },
+    "bsf": {
+      "image": "docker_open5gs:local-arm64"
+    },
+    "nrf": {
+      "image": "docker_open5gs:local-arm64"
+    },
+    "nssf": {
+      "image": "docker_open5gs:local-arm64"
+    },
+    "pcf": {
+      "image": "docker_open5gs:local-arm64"
+    },
+    "scp": {
+      "image": "docker_open5gs:local-arm64"
+    },
+    "smf": {
+      "image": "docker_open5gs:local-arm64"
+    },
+    "udm": {
+      "image": "docker_open5gs:local-arm64"
+    },
+    "udr": {
+      "image": "docker_open5gs:local-arm64"
+    },
+    "upf": {
+      "image": "docker_open5gs:local-arm64"
+    },
+    "webui": {
+      "image": "docker_open5gs:local-arm64"
+    }
+  }
+}

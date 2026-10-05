@@ -1,0 +1,27 @@
+name: oai-pi-redroid
+
+services:
+  redroid:
+    image: redroid/redroid:12.0.0_64only-latest
+    platform: linux/arm64
+    container_name: redroid
+    privileged: true
+    restart: "no"
+    network_mode: bridge
+    ports:
+      - "127.0.0.1:5555:5555"
+    volumes:
+      - redroid_data:/data
+      - /dev/binderfs/binder:/dev/binder
+      - /dev/binderfs/hwbinder:/dev/hwbinder
+      - /dev/binderfs/vndbinder:/dev/vndbinder
+    command:
+      - androidboot.use_memfd=true
+      - androidboot.redroid_gpu_mode=guest
+      - androidboot.redroid_width=720
+      - androidboot.redroid_height=1280
+
+volumes:
+  redroid_data:
+    external: true
+    name: redroid_data
