@@ -15,12 +15,21 @@ They are not automatically included when committing these scripts.
 
 ## Validation status
 
-Shell syntax checks and help commands passed.
-Compilation, installation, and OAI/FlexRIC interoperability have not yet
-been validated with these scripts.
+Validated on Raspberry Pi 5, ARM64, Debian Bookworm:
 
-The checked OAI build helper lists Ubuntu 22-24, Fedora, and RHEL9.
-Raspberry Pi OS compatibility still requires verification.
+- UHD 4.8.0.0 with the OAI TDD patch: built and installed successfully.
+- OAI gNB with USRP and E2 support: all 12,673 build tasks completed.
+- nr-softmodem: direct dynamic library dependencies resolved.
+- Standalone FlexRIC: built and installed, including the Python xApp SDK.
+- nearRT-RIC: direct dynamic library dependencies resolved.
+- RIC startup: eight service models loaded and E2/E42 initialized.
+- The 10-second startup check ended with the requested SIGINT.
+
+Executable-stack linker warnings occurred during OAI and FlexRIC builds.
+NR UE compilation, CU/DU deployment, hardware operation, and OAI/FlexRIC
+E2 interoperability have not yet been validated.
+
+The OAI dependency helper explicitly includes Debian 12 support.
 
 ## Script behavior
 
@@ -37,8 +46,10 @@ Raspberry Pi OS compatibility still requires verification.
 Run from the project root. Dependency installation modifies the host:
 
 ```bash
-./scripts/build-oai.sh deps
+# Build and install local UHD first; see the UHD section below.
+OAI_HARDWARE=None ./scripts/build-oai.sh deps
 ./scripts/build-oai.sh gnb
+# Optional; NR UE compilation has not yet been validated.
 ./scripts/build-oai.sh nrue
 ```
 
@@ -103,3 +114,138 @@ Installed paths are recorded in build-local/install_manifest.txt.
 OAI and FlexRIC E2AP/service-model versions must be compatible.
 The defaults above reflect FlexRIC's checked-out configuration;
 they do not establish compatibility with the downloaded OAI revision.
+
+## UHD local source preparation
+
+Run from the project root. UHD sources are retained locally.
+
+- Repository: https://github.com/EttusResearch/uhd.git
+- Tag: v4.8.0.0
+- Commit: 308126a479ca19dfaebfe4784b375e608788d763
+- Source directory: third_party/uhd/src
+- Patch: oai/cmake_targets/tools/uhd-4.5plus-tdd-patch.diff
+
+For a fresh workspace:
+
+```bash
+git clone --branch v4.8.0.0 --depth 1 \
+  https://github.com/EttusResearch/uhd.git third_party/uhd/src
+git -C third_party/uhd/src apply --check \
+  "$PWD/oai/cmake_targets/tools/uhd-4.5plus-tdd-patch.diff"
+git -C third_party/uhd/src apply \
+  "$PWD/oai/cmake_targets/tools/uhd-4.5plus-tdd-patch.diff"
+```
+
+The patch has already been applied in the validated local workspace.
+Do not apply it twice. A detached HEAD is expected when cloning a tag.
+
+The upstream OAI installer builds UHD in /tmp/uhd and removes that directory.
+The local build-uhd.sh script preserves both source and build directories.
+
+## UHD build and installation
+
+Run from the project root, one command at a time:
+
+```bash
+bash scripts/build-uhd.sh deps
+bash scripts/build-uhd.sh build
+bash scripts/build-uhd.sh install
+/usr/local/bin/uhd_config_info --version
+```
+
+The validated build completed all 389 tasks.
+The installed version reports UHD 4.8.0.HEAD-0-g308126a4.
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| UHD_SOURCE | PROJECT_ROOT/third_party/uhd/src | Local UHD source |
+| UHD_BUILD_DIR | PROJECT_ROOT/third_party/uhd/build-local | Build directory |
+| UHD_INSTALL_PREFIX | /usr/local | Installation prefix |
+| BUILD_JOBS | 2 | Maximum build parallelism |
+
+The script uses Ninja and a Release build.
+Tests, examples, documentation, B100, USRP1, and USRP2 are disabled,
+matching the inspected OAI helper options. OctoClock is enabled.
+Installation invokes sudo and ldconfig.
+
+Installed files are listed in third_party/uhd/build-local/install_manifest.txt.
+No USRP hardware operation or FPGA/firmware image download was validated.
+
+After installing local UHD, install remaining OAI dependencies with:
+
+```bash
+OAI_HARDWARE=None ./scripts/build-oai.sh deps
+```
+
+This skips OAI's USRP/UHD installation path. The gNB build still uses
+OAI_HARDWARE=USRP by default and detected /usr/local/lib/libuhd.so.
+
+## OAI E2 dependency
+
+With OAI_BUILD_E2=1, the OAI build initializes its own FlexRIC submodule:
+
+- Repository: https://github.com/duranta-project/flexric.git
+- Directory: oai/openair2/E2AP/flexric
+- Observed commit: d7a71285f3720fbc1487e9a86309eec5fb61a408
+
+This submodule supplies OAI E2 Agent build dependencies.
+The separately cloned project-root flexric directory supplies the
+standalone RIC and xApps. The two source revisions differ.
+Do not replace OAI's submodule with the standalone checkout without
+checking compatibility.
+
+## Post-build validation
+
+Run from the project root:
+
+```bash
+ldd oai/cmake_targets/ran_build/build/nr-softmodem
+ldd /usr/local/bin/flexric/ric/nearRT-RIC
+cat /usr/local/etc/flexric/ric.conf
+timeout --signal=INT 10s /usr/local/bin/flexric/ric/nearRT-RIC \
+  -c /usr/local/etc/flexric/ric.conf
+```
+
+Both ldd checks resolved all direct dependencies.
+
+The tested RIC configuration uses:
+- Service models: /usr/local/lib/flexric/
+- Listen address: 127.0.0.1
+- E2 SCTP port: 36421
+- E42 SCTP port: 36422
+
+The RIC loaded eight service models and initialized both interfaces.
+The timeout command sent SIGINT after ten seconds; exit status 124
+normally indicates the timeout elapsed, not a startup failure.
+
+This startup check does not validate agent registration, subscriptions,
+xApp operation, or OAI CU/DU integration.
+
+## OAI and standalone FlexRIC source download
+
+For a fresh workspace, run from the project root before preparing UHD:
+
+```bash
+git clone --branch develop \
+  https://gitlab.eurecom.fr/oai/openairinterface5g.git oai
+git -C oai checkout f8f769592a7030be88ede4bb5ca66fa1ca6a80e0
+
+git clone --branch br-flexric \
+  https://gitlab.eurecom.fr/mosaic5g/flexric.git flexric
+git -C flexric checkout 736508123fe4b5dc3db83fb5baf5f0a8e9b04fe8
+```
+
+Checking out the recorded commits reproduces the source revisions used
+in this lab. Branch heads may change over time.
+
+The recommended execution order is:
+1. Download OAI, standalone FlexRIC, and UHD sources.
+2. Apply the OAI TDD patch to UHD once.
+3. Build and install UHD.
+4. Install remaining OAI dependencies with OAI_HARDWARE=None.
+5. Build the OAI gNB with USRP and E2 support.
+6. Install FlexRIC dependencies, build, and install FlexRIC.
+7. Check dynamic libraries and perform the bounded RIC startup test.
+
+The OAI dependency installer may download additional build dependencies.
+This procedure is not a fully offline or completely pinned build.
