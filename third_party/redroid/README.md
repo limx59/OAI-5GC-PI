@@ -354,3 +354,34 @@ downloaded separately.
 The official ARM64 runtime image has been tested in this lab.
 A complete build of the vendored source configuration has not yet
 been validated.
+
+## Docker Hub ARM64 image mirror
+
+The tested upstream ReDroid Android 12 ARM64 image is mirrored at:
+
+https://hub.docker.com/r/limx59/redroid
+
+```bash
+docker pull --platform linux/arm64 limx59/redroid:12.0.0-arm64
+```
+
+This is a copy of the official redroid/redroid image, not an image compiled
+from this project's vendored sources. Only the ARM64 variant is published
+under this tag.
+
+Recorded image manifest digest:
+
+```text
+sha256:3c7f9450188226bf8042c0159b9b38abe2106f1ceb0dfa45fae1cbc6409cd9bb
+```
+
+For a digest-pinned download:
+
+```bash
+docker pull --platform linux/arm64 \
+  limx59/redroid@sha256:3c7f9450188226bf8042c0159b9b38abe2106f1ceb0dfa45fae1cbc6409cd9bb
+```
+
+Upstream project: https://github.com/remote-android/redroid-doc
+
+The deployment requirements and UE proxy configuration remain the same.
