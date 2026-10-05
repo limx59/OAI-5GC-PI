@@ -125,6 +125,24 @@ docker pull limx59/open5gs-pcrf:latest
 docker pull limx59/open5gs-webui:latest
 ```
 
+### ReDroid Android UI (ARM64)
+
+A tested mirror of the official ReDroid Android 12 ARM64 image is available
+on [Docker Hub](https://hub.docker.com/r/limx59/redroid):
+
+```bash
+sudo docker pull --platform linux/arm64 limx59/redroid:12.0.0-arm64
+```
+
+ReDroid provides the Android UI; UERANSIM performs simulated 5G registration.
+Android browser traffic can use the UE PDU session through Tinyproxy.
+
+- [Installation and UE proxy configuration](third_party/redroid/README.md)
+- [ARM64 source build instructions](third_party/redroid/src/README.md)
+
+The published image is an upstream mirror. The source build procedure has
+not yet been validated by a complete build.
+
 To start all services using Docker Compose:
 ```bash
 docker-compose -f docker-compose.open5gs.yaml up -d
