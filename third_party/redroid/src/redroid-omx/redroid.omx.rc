@@ -1,0 +1,5 @@
+on early-init && property:ro.boot.use_redroid_omx=*
+    setprop sys.use_redroid_omx ${ro.boot.use_redroid_omx}
+
+on early-init && property:ro.boot.use_redroid_vaapi=*
+    setprop sys.use_redroid_vaapi ${ro.boot.use_redroid_vaapi}

@@ -341,3 +341,16 @@ The WebUI, Prometheus, and Grafana containers require separate startup.
 - IPv4 browsing was validated; end-to-end IPv6 browsing was not validated.
 - The ReDroid container remains privileged and has no enforced memory limit.
 - This integration is a development lab configuration.
+
+## Building an ARM64 image from source
+
+See [src/README.md](src/README.md) for the vendored ReDroid source layout,
+recorded upstream revisions, and Android 12 ARM64 build instructions.
+
+Build on an x86-64 Linux host, then export the image and load it on the
+Raspberry Pi. Full AOSP sources and external prebuilt dependencies are
+downloaded separately.
+
+The official ARM64 runtime image has been tested in this lab.
+A complete build of the vendored source configuration has not yet
+been validated.

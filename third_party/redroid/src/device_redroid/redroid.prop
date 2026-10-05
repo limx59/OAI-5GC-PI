@@ -1,0 +1,10 @@
+ro.hardware=redroid
+
+# disable ueventd cold-boot for performance
+ro.cold_boot_done=true
+
+persist.sys.fuse=1
+
+ro.radio.noril=yes
+
+debug.sf.nobootanimation=1

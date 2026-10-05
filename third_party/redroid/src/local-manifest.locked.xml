@@ -1,0 +1,20 @@
+<?xml version='1.0' encoding='utf-8'?>
+<manifest>
+  <remote name="redroid" fetch="https://github.com/remote-android/" revision="redroid-12.0.0" />
+  <remove-project name="platform/prebuilts/bazel/darwin-x86_64" />
+  <remove-project name="platform/prebuilts/clang/host/darwin-x86" />
+  <remove-project name="platform/prebuilts/gcc/darwin-x86/aarch64/aarch64-linux-android-4.9" />
+  <remove-project name="platform/prebuilts/gcc/darwin-x86/arm/arm-linux-androideabi-4.9" />
+  <remove-project name="platform/prebuilts/gcc/darwin-x86/host/i686-apple-darwin-4.2.1" />
+  <remove-project name="platform/prebuilts/gcc/darwin-x86/x86/x86_64-linux-android-4.9" />
+  <remove-project name="platform/prebuilts/gdb/darwin-x86" />
+  <remove-project name="platform/prebuilts/go/darwin-x86" />
+  <remove-project name="platform/prebuilts/python/darwin-x86/2.7.5" />
+  <project path="device/redroid-prebuilts" name="device_redroid-prebuilts" groups="redroid" remote="redroid" revision="6248d6a71db7222d1b1c4545b90e3850dffca55f" />
+  <remote name="LineageOS" fetch="https://github.com/LineageOS/" />
+  <remove-project name="platform/external/chromium-webview" />
+  <project path="external/chromium-webview/prebuilt/arm" name="android_external_chromium-webview_prebuilt_arm" groups="pdk lfs" revision="fd29391aab3891a79dd62cac080916a1642bb84c" remote="LineageOS" />
+  <project path="external/chromium-webview/prebuilt/arm64" name="android_external_chromium-webview_prebuilt_arm64" groups="pdk lfs" revision="394b243c2796e36580dd8bae7822609e1c01b1ff" remote="LineageOS" />
+  <project path="external/chromium-webview/prebuilt/x86" name="android_external_chromium-webview_prebuilt_x86" groups="pdk lfs" revision="79bba097efc5212af8082a938865798b2c200f7d" remote="LineageOS" />
+  <project path="external/chromium-webview/prebuilt/x86_64" name="android_external_chromium-webview_prebuilt_x86_64" groups="pdk lfs" revision="32aceaa88cb4d8925f9d7ea14d848982f06da1ab" remote="LineageOS" />
+</manifest>
