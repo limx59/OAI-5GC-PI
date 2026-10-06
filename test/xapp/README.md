@@ -278,3 +278,69 @@ DEMO_AGENT_PID=$!
 ```
 
 Start this command only when the previous demo agent has stopped.
+
+## E2SM-RC handover control communication demo
+
+xapp_handover_control.c is adapted from the vendored FlexRIC
+two-e2-nodes-two-cells/xapp_rc_ctrl_ho.c example.
+The upstream license notice is retained.
+
+This lab demo sends RC control style 3, action 1, using header and
+message format 1. It targets exactly one connected node with
+PLMN 505/1 and node ID 1. Verify that this node is the lab emulator.
+
+### Build
+
+Run from the project root:
+
+```bash
+cmake -S flexric -B flexric/build-local -DBUILD_OAI_PI_XAPP_DEMOS=ON
+cmake --build flexric/build-local --target xapp_handover_control --parallel 2
+```
+
+Run each command separately.
+The optional CMake integration is disabled by default.
+The binary remains under flexric/build-local/oai-pi-xapp/.
+
+### Run
+
+Start the RIC and emulator as described above.
+Use line-buffered logging for both processes.
+
+```bash
+XAPP_RAN_UE_ID=1 XAPP_SOURCE_NR_CGI=256 XAPP_TARGET_NR_CGI=512 \
+  timeout --kill-after=5s 20s \
+  flexric/build-local/oai-pi-xapp/xapp_handover_control \
+  -c test/xapp/xapp.conf
+```
+
+All three environment variables are required unsigned decimal integers.
+UE IDs are parsed as 64-bit values; CGI inputs are limited to 36 bits.
+Source and target must differ.
+The demo assumes a 28-bit gNB ID and extracts it from the source CGI.
+The sample source CGI 256 therefore selects node ID 1.
+
+These are synthetic identifiers. The UE identity retains the upstream
+example's placeholder GUAMI. The target CGI payload retains its
+decimal-string representation for compatibility with this emulator.
+This is not validated as interoperable NR CGI encoding for a real RAN.
+
+### Validation and limitations
+
+Validated on Raspberry Pi:
+- Native compilation succeeded.
+- The xApp received CONTROL ACK and stopped normally.
+- The emulator logged UE ID 1 and target NR CGI 512.
+- The emulator logged CONTROL ACKNOWLEDGE tx.
+- Negative, overflowing, nonnumeric, and identical-cell inputs were rejected
+  before SDK initialization.
+
+An initial run timed out waiting for a response and triggered an SDK
+assertion. A fresh RIC and emulator run succeeded; the cause of the
+initial failure remains unresolved.
+An executable-stack linker warning remains.
+
+The emulator parses the request and acknowledges it without performing
+handover. The target cell need not exist for this communication test.
+Actual UE migration, traffic changes, and OAI integration are unvalidated.
+This demo is not yet connected to xapp_traffic_steering.py recommendations.
