@@ -1,0 +1,7 @@
+[
+  {"time_s": 0,  "cells": {"cell-a": 0.90, "cell-b": 0.30}},
+  {"time_s": 1,  "cells": {"cell-a": 0.92, "cell-b": 0.35}},
+  {"time_s": 2,  "cells": {"cell-a": 0.88, "cell-b": 0.40}},
+  {"time_s": 31, "cells": {"cell-a": 0.85, "cell-b": 0.45}},
+  {"time_s": 32, "cells": {"cell-a": 0.55, "cell-b": 0.50}}
+]

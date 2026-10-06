@@ -107,3 +107,174 @@ Use one xApp process at a time for the initial demo.
 
 OAI uses a different embedded FlexRIC revision. These emulator tests do not
 establish interoperability with the OAI E2 agent.
+
+## Additional O-RAN scenario demos
+
+| File | Purpose | Input |
+| --- | --- | --- |
+| xapp_kpm_recorder.py | Record KPM measurements as CSV | Live FlexRIC KPM reports |
+| xapp_qos_watch.py | Flag sustained low mean throughput | Live FlexRIC KPM reports |
+| xapp_traffic_steering.py | Recommend migration between cells | traffic_samples.json |
+| xapp_slice_policy.py | Recommend slice PRB budgets | slice_samples.json |
+| xapp_energy_policy.py | Recommend energy-mode changes | energy_samples.json |
+
+The recorder and QoS monitor reuse xapp_kpm.py subscription and shutdown.
+Keep these Python files together in this directory.
+
+Traffic steering, slice allocation, and energy saving are standalone
+policy prototypes using synthetic JSON inputs. They do not connect to
+the RIC or send E2 control requests. Output recommendations are not
+executed network actions.
+
+### Additional validation
+
+- Recorder: received format 3 indications, wrote 52 valid CSV records,
+  and cancelled its subscription successfully.
+- QoS monitor: received live emulator reports and triggered DL/UL alerts
+  using a test threshold of 100 and two consecutive low reports.
+- QoS logic: alert persistence, recovery, and missing-data reset passed.
+- Steering: pending, recommendation, cooldown, and balanced outputs passed.
+- Slice allocation: approximately 45/40/15 percent for the supplied scenario.
+  Budget limits, unused capacity, and excessive-minimum rejection passed.
+- Energy policy: sustained-low-demand, hold, and restoration outputs passed.
+  Active-UE, coverage, and sampling-gap checks passed.
+
+All live measurements above came from the FlexRIC emulator.
+Actual handover, scheduler changes, energy savings, and OAI integration
+have not been validated.
+
+### Run the recorder and QoS monitor
+
+Start the RIC and emulator as described above.
+Run from the project root, one xApp at a time:
+
+```bash
+XAPP_OUTPUT="/tmp/oai-pi-kpm-$(date -u +%Y%m%dT%H%M%S).csv" \
+  timeout --kill-after=5s 30s python3 test/xapp/xapp_kpm_recorder.py \
+  -c test/xapp/xapp.conf
+```
+
+XAPP_OUTPUT defaults to /tmp/oai-pi-xapp-kpm.csv.
+The recorder refuses to overwrite an existing file.
+CSV timestamps are UTC receipt times, not agent measurement times.
+UE report indexes are local to each indication, not persistent UE IDs.
+The recorder retains parent SWIG objects while reading nested reports.
+Keep generated CSV files outside Git.
+
+Run the QoS monitor with demonstration thresholds:
+
+```bash
+XAPP_QOS_THRESHOLD=100 XAPP_QOS_LOW_REPORTS=2 \
+  timeout --kill-after=5s 30s python3 test/xapp/xapp_qos_watch.py \
+  -c test/xapp/xapp.conf
+```
+
+Defaults: threshold 6, consecutive low reports 3.
+The threshold uses the agent-reported measurement units.
+Each node/metric is evaluated using the arithmetic mean of valid,
+complete, nonnegative measurements in the current indication.
+This is not aggregate cell throughput or a per-UE SLA check.
+Missing valid measurements reset the consecutive-report counter.
+No arriving indications do not trigger a separate stale-data alarm.
+Low throughput may indicate idle demand rather than a QoS fault.
+
+### Run the policy prototypes
+
+These commands need only Python 3; no running RIC or SDK is required.
+Run from the project root:
+
+```bash
+python3 test/xapp/xapp_traffic_steering.py test/xapp/traffic_samples.json
+python3 test/xapp/xapp_slice_policy.py test/xapp/slice_samples.json
+python3 test/xapp/xapp_energy_policy.py test/xapp/energy_samples.json
+```
+
+Run each command separately. JSON sample times are simulation timestamps;
+the programs do not wait for those times to elapse.
+
+#### Traffic steering
+
+Input: strictly increasing time_s and a cells map of comparable normalized
+loads in [0, 1]. Do not substitute throughput values for normalized load.
+
+Recommend considering UE migration when the highest-load cell is at least
+0.8, the lowest-load cell is at most 0.6, and the gap is at least 0.2.
+The same source/target pair must qualify in two consecutive samples.
+Recommendations have a global 30-second cooldown.
+Sample spacing is not validated for freshness.
+The balanced status means no candidate meets these thresholds;
+it does not guarantee equal loads.
+
+Coverage, UE eligibility, target capacity, and control support must be
+checked before implementing an actual handover.
+
+#### Slice allocation
+
+Input: unique slice_id, min_prb_percent, demand_prb_percent, and priority.
+Minimum budgets must total no more than 100 percent.
+Allocate minimum budgets first, then distribute remaining capacity using
+unmet demand weighted by priority, capped at each slice's demand.
+A minimum budget is retained even when demand falls below that minimum.
+Unused capacity is reported when all demands are satisfied.
+Floating-point results may contain small representation differences.
+
+Slice names are illustrative labels, not configured S-NSSAI values.
+Demand estimates and scheduler-specific E2 controls require integration.
+
+#### Energy saving
+
+Input: increasing time_s, demand_ratio in [0, 1], observed_mode,
+active_ues, and neighbor_coverage_confirmed.
+
+For an active cell, demand must remain at most 0.2 for 30 seconds,
+with no active UEs and confirmed neighbor coverage.
+Gaps greater than 15 seconds reset the low-demand timer.
+In energy_saving mode, demand at least 0.6, any active UE, or lost
+coverage confirmation produces a restoration recommendation.
+Observed mode changes must come from input; recommendations do not change it.
+Recommendations may repeat while their conditions remain true.
+
+Demand in a reduced-power state must come from an appropriate external
+observation or estimate. These samples do not measure power consumption.
+
+## Slice control through the lab emulator
+
+xapp_slice_control.py converts slice policy budgets into custom
+SLICE service-model ADD/MOD control using NVS capacity fractions.
+
+With the RIC and emulator running, execute from the project root:
+
+```bash
+timeout --kill-after=5s 20s python3 test/xapp/xapp_slice_control.py \
+  -c test/xapp/xapp.conf
+```
+
+The default input is slice_samples.json beside the script.
+Set XAPP_SLICE_INPUT to select another input file.
+The demo requires positive budgets and targets exactly one connected
+gNB with PLMN 505/1 and node ID 1. Verify that this is the lab emulator.
+
+### Validation on Raspberry Pi
+
+- Constructed capacity fractions 0.45, 0.40, and 0.15.
+- The emulator logged SLICE CONTROL ADD rx.
+- The emulator logged CONTROL ACKNOWLEDGE tx.
+- The xApp received CONTROL ACK and returned to the shell.
+
+This validates control-message delivery and acknowledgment.
+The emulator does not apply or retain scheduler changes.
+NVS capacity fractions do not demonstrate enforced PRB allocation.
+The demo uses FlexRIC's custom SLICE model, not O-RAN E2SM-RC.
+OAI scheduler integration remains unvalidated.
+
+Redirected emulator output may be buffered. For subsequent tests,
+start the emulator with line-buffered output:
+
+```bash
+stdbuf -oL -eL /usr/local/bin/flexric/e2agent/emu_agent_gnb \
+  -c /usr/local/etc/flexric/e2agent.conf \
+  > /tmp/oai-pi-xapp-agent.log 2>&1 &
+DEMO_AGENT_PID=$!
+```
+
+Start this command only when the previous demo agent has stopped.

@@ -1,0 +1,20 @@
+[
+  {
+    "slice_id": "embb",
+    "min_prb_percent": 20,
+    "demand_prb_percent": 70,
+    "priority": 1
+  },
+  {
+    "slice_id": "latency-sensitive",
+    "min_prb_percent": 20,
+    "demand_prb_percent": 40,
+    "priority": 3
+  },
+  {
+    "slice_id": "iot",
+    "min_prb_percent": 10,
+    "demand_prb_percent": 20,
+    "priority": 1
+  }
+]
