@@ -343,4 +343,64 @@ An executable-stack linker warning remains.
 The emulator parses the request and acknowledges it without performing
 handover. The target cell need not exist for this communication test.
 Actual UE migration, traffic changes, and OAI integration are unvalidated.
-This demo is not yet connected to xapp_traffic_steering.py recommendations.
+xapp_steering_control.py connects synthetic steering recommendations to this communication demo.
+
+## Steering policy to emulator control
+
+xapp_steering_control.py reuses SteeringPolicy from xapp_traffic_steering.py.
+It validates the complete input, selects the first recommendation,
+maps cell names through steering_lab.json, and optionally invokes
+the compiled xapp_handover_control demo.
+
+Default lab mapping:
+- UE ID: 1.
+- cell-a: CGI 256, selecting source gNB ID 1.
+- cell-b: CGI 512, used as a synthetic target.
+
+### Run
+
+Run from the project root. The default mode needs only Python:
+
+```bash
+python3 test/xapp/xapp_steering_control.py
+```
+
+Expected selection: time_s 1, cell-a to cell-b, CGI 256 to 512.
+Dry-run mode does not connect to the RIC or invoke the native binary.
+
+For control communication, build xapp_handover_control first and start
+the lab RIC and emulator as described above. Then run:
+
+```bash
+python3 test/xapp/xapp_steering_control.py --send-emulator
+```
+
+Each invocation sends at most one request.
+The program does not wait for sample timestamps to elapse.
+The policy's cooldown uses simulation time, not wall-clock time.
+Repeated invocations reset policy state and may send the same request again.
+
+Optional arguments:
+- Positional input: JSON load samples; defaults to traffic_samples.json.
+- --mapping: cell/UE mapping; defaults to steering_lab.json.
+- --config: SDK configuration; defaults to xapp.conf.
+- --binary: compiled handover demo path.
+
+Defaults are resolved relative to the script and project directories.
+The child control process has a 20-second timeout.
+Failure or timeout produces a nonzero exit; inspect RIC and agent logs.
+
+### Validation on Raspberry Pi
+
+- Dry run selected the first qualifying recommendation.
+- Balanced input produced no request.
+- Invalid later loads, unmapped cells, and nonincreasing times were rejected.
+- Emulator mode received CONTROL ACK and exited normally.
+- The agent logged one handover request with UE ID 1 and target CGI 512,
+  followed by CONTROL ACKNOWLEDGE tx.
+
+The executed=false field denotes that actual UE migration is not performed.
+Input loads, UE identity, and target cell are synthetic.
+There is no live load acquisition or post-control measurement feedback.
+This validates policy-to-control communication, not closed-loop balancing,
+actual handover, or OAI interoperability.
