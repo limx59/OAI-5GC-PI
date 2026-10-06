@@ -450,3 +450,45 @@ latency or failure. State is reset on each invocation.
 No energy-control handler was identified in the inspected emulator code.
 Real cell activation, RF operation, power consumption, energy savings,
 and OAI integration remain unvalidated.
+
+## Automated emulator regression tests
+
+Run from the project root after building and installing FlexRIC and
+building xapp_handover_control:
+
+```bash
+bash test/xapp/run-emulator-tests.sh
+```
+
+The runner requires the installed local RIC and emulator configurations
+to use 127.0.0.1. It refuses to start when an existing lab RIC or emulator
+is detected.
+
+Each case starts a fresh RIC and emulator, waits for startup and E2
+registration, runs one xApp with a timeout, and stops its child processes.
+Cleanup also runs on failure or interruption, with bounded shutdown waits.
+Logs and the recorded CSV are retained in a unique directory under /tmp
+by default, or under TMPDIR when set.
+
+### Validation on Raspberry Pi
+
+All seven cases passed:
+- Connected-node listing.
+- KPM DL and UL measurement reporting.
+- MAC, RLC, and PDCP callbacks.
+- KPM CSV recording: 52 valid measurements in the observed run.
+- Sustained-low-throughput DL and UL alerts.
+- Custom SLICE control delivery and acknowledgment.
+- Steering recommendation mapped to E2SM-RC handover control.
+
+Final checks passed for callback errors, subscription delete responses,
+exactly one request per control case, and agent/xApp acknowledgments.
+No RIC or emulator processes remained after the run.
+
+CSV row counts can vary with emulator indications. The runner checks
+nonempty records, expected metrics, node identity, and finite values;
+it does not require exactly 52 rows.
+
+This suite validates emulator reporting and control communication.
+It does not validate actual UE handover, scheduler enforcement,
+energy savings, or OAI interoperability.
