@@ -404,3 +404,49 @@ Input loads, UE identity, and target cell are synthetic.
 There is no live load acquisition or post-control measurement feedback.
 This validates policy-to-control communication, not closed-loop balancing,
 actual handover, or OAI interoperability.
+
+## Energy policy with simulated mode feedback
+
+xapp_energy_simulator.py reuses EnergyPolicy and maintains an in-memory
+cell mode. Recommendations update that simulated mode, which becomes
+the observed_mode used for the next policy evaluation.
+
+Run from the project root:
+
+```bash
+python3 test/xapp/xapp_energy_simulator.py
+```
+
+The default input is energy_samples.json beside the script.
+A positional argument selects another observation file.
+Use --initial-mode active or --initial-mode energy_saving to select
+the simulator's starting mode; the default is active.
+
+Original observations are validated before replay.
+Their observed_mode values are retained as input_observed_mode for
+comparison, but the replay uses the simulator's own mode.
+Demand, active UE counts, and coverage confirmation remain external
+input values. Mode changes do not alter those values.
+
+Each output includes simulation_mode_before, simulation_mode_after,
+and applied_in_simulation. The executed field remains false because
+no real device action occurs.
+
+### Validation on Raspberry Pi
+
+- Entered simulated energy-saving mode at time_s 30.
+- Retained that mode at time_s 40.
+- Restored active mode at time_s 50.
+- Mode feedback worked even when all original input modes were active.
+- Active UEs, missing coverage, and excessive sampling gaps prevented
+  entry into energy-saving mode.
+- Active UEs or lost coverage caused restoration from energy-saving mode.
+
+This program requires only Python; it does not connect to a RIC or
+send E2 controls. Simulation timestamps do not cause real-time delays.
+The model assumes immediate successful mode changes without hardware
+latency or failure. State is reset on each invocation.
+
+No energy-control handler was identified in the inspected emulator code.
+Real cell activation, RF operation, power consumption, energy savings,
+and OAI integration remain unvalidated.
