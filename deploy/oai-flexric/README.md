@@ -197,5 +197,6 @@ Published image-index digests for this validated upload:
 
 These tests validate emulator reporting and control communication.
 They do not validate actual handover, scheduler enforcement, or energy savings.
-OAI gNB container construction and interoperability are a separate next step;
-the native OAI KPM test is documented in test/oai/README.md.
+OAI RFSim gNB container deployment, E2 registration and KPM subscription
+lifecycle have also been validated. See [README.oai.md](README.oai.md)
+for the workflow and its remaining limits.

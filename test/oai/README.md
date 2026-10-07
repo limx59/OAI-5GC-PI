@@ -175,5 +175,7 @@ unresolved; do not use the emulator handover or slice-control demos as
 evidence of OAI control compatibility.
 
 Generated ASN.1 compiler warnings and executable-stack linker warnings
-remain. Docker images and independent-container communication have not
-yet been validated.
+remain. Independent-container E2 registration and KPM subscription
+lifecycle have also been validated using published ARM64 images.
+See [the container deployment guide](../../deploy/oai-flexric/README.oai.md).
+Actual OAI UE throughput and RC control remain unvalidated.
