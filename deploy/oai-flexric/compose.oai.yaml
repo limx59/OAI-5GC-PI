@@ -35,6 +35,7 @@ services:
 
   gnb:
     image: limx59/oai-gnb:arm64
+    cpuset: "${OAI_RAN_CPUSET:-1-3}"
     build:
       context: ../..
       dockerfile: docker/oai/Dockerfile
@@ -63,6 +64,55 @@ services:
       core:
         soft: 0
         hard: 0
+    stop_signal: SIGINT
+    stop_grace_period: 15s
+    restart: "no"
+
+  nrue:
+    image: limx59/oai-nr-ue:arm64
+    cpuset: "${OAI_RAN_CPUSET:-1-3}"
+    build:
+      context: ../..
+      dockerfile: docker/oai/Dockerfile
+      target: nrue
+      args:
+        BUILD_JOBS: "2"
+    profiles: ["ue"]
+    depends_on:
+      - gnb
+    networks:
+      - lab
+    volumes:
+      - ./config/oai/ue.conf:/etc/oai/ue.conf:ro
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+      - IPC_LOCK
+      - SYS_NICE
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      rtprio:
+        soft: 99
+        hard: 99
+      core:
+        soft: 0
+        hard: 0
+    command:
+      - "-O"
+      - "/etc/oai/ue.conf"
+      - "--rfsim"
+      - "-C"
+      - "3619200000"
+      - "-r"
+      - "106"
+      - "--numerology"
+      - "1"
+      - "--ssb"
+      - "516"
     stop_signal: SIGINT
     stop_grace_period: 15s
     restart: "no"

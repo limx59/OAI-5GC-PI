@@ -178,4 +178,7 @@ Generated ASN.1 compiler warnings and executable-stack linker warnings
 remain. Independent-container E2 registration and KPM subscription
 lifecycle have also been validated using published ARM64 images.
 See [the container deployment guide](../../deploy/oai-flexric/README.oai.md).
-Actual OAI UE throughput and RC control remain unvalidated.
+OAI RFSim UE registration, user-plane traffic and UE KPM reporting were
+subsequently validated; see
+[the end-to-end guide](../../deploy/oai-flexric/README.e2e.md).
+RC control remains unvalidated.

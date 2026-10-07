@@ -113,11 +113,13 @@ after pulling Docker Hub images:
 - OAI E2 registration and independent xApp node discovery succeeded.
 - KPM subscription and subscription deletion succeeded.
 - The local-image gNB parsed S-NSSAI as SST 1 without SD.
-- No UE was attached; actual UE throughput indications remain unvalidated.
+- The initial tests had no attached UE. Subsequent RFSim UE registration,
+  user-plane traffic and UE KPM reports are documented in
+  [README.e2e.md](README.e2e.md).
 
 Existing UERANSIM and ReDroid sessions do not demonstrate UE attachment
-to this OAI RFSim gNB. UE attachment, user-plane traffic and physical-radio
-operation require separate tests.
+to this OAI RFSim gNB. The separate OAI UE workflow is documented in
+[README.e2e.md](README.e2e.md). Physical-radio operation remains unvalidated.
 
 RC interoperability remains unresolved. Emulator control acknowledgements
 do not establish OAI handover or slice-control compatibility.

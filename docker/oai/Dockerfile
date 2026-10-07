@@ -73,3 +73,41 @@ RUN set -eu; \
 STOPSIGNAL SIGINT
 ENTRYPOINT ["/usr/bin/tini", "-g", "--", "stdbuf", "-oL", "-eL", "/opt/oai-gnb/bin/nr-softmodem"]
 CMD ["-O", "/etc/oai/gnb.conf", "--rfsim"]
+
+FROM builder AS nrue-builder
+
+ARG BUILD_JOBS=2
+RUN cmake --build /build/oai \
+    --target nr-uesoftmodem rfsimulator coding dfts params_libconfig params_yaml \
+    --parallel "${BUILD_JOBS}"
+
+RUN mkdir -p /stage/opt/oai-nr-ue/bin /stage/opt/oai-nr-ue/lib \
+    && install -m 755 /build/oai/nr-uesoftmodem /stage/opt/oai-nr-ue/bin/ \
+    && find /build/oai -maxdepth 1 -name '*.so' -type f \
+       -exec cp '{}' /stage/opt/oai-nr-ue/lib/ ';'
+
+FROM ubuntu:24.04 AS nrue
+
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    tini python3 libsctp1 libconfig9 libyaml-cpp0.8 \
+    libssl3t64 libreadline8t64 zlib1g libcap2 libzstd1 \
+    libnanomsg5 libzmq5 libstdc++6 libgcc-s1 \
+    iproute2 iputils-ping iperf3 procps \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=nrue-builder /stage/opt/oai-nr-ue/ /opt/oai-nr-ue/
+ENV LD_LIBRARY_PATH=/opt/oai-nr-ue/lib
+WORKDIR /opt/oai-nr-ue/bin
+
+RUN set -eu; \
+    for library in ./nr-uesoftmodem /opt/oai-nr-ue/lib/*.so; do \
+      ldd "$library" > /tmp/ldd-check.txt; \
+      cat /tmp/ldd-check.txt; \
+      if grep -q 'not found' /tmp/ldd-check.txt; then exit 1; fi; \
+    done; \
+    rm /tmp/ldd-check.txt
+
+STOPSIGNAL SIGINT
+ENTRYPOINT ["/usr/bin/tini", "-g", "--", "stdbuf", "-oL", "-eL", "/opt/oai-nr-ue/bin/nr-uesoftmodem"]
+CMD ["-O", "/etc/oai/ue.conf", "--rfsim"]
