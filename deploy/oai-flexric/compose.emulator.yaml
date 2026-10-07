@@ -1,0 +1,76 @@
+name: oai-pi-flexric-lab
+
+x-xapp: &xapp
+  image: limx59/flexric-xapp:arm64
+  build:
+    context: ../..
+    dockerfile: docker/flexric/Dockerfile
+    target: xapp
+    args:
+      BUILD_JOBS: "2"
+  profiles: ["tools"]
+  networks:
+    - lab
+  volumes:
+    - ./config/emulator/xapp.conf:/usr/local/etc/flexric/xapp.conf:ro
+  restart: "no"
+
+services:
+  ric:
+    image: limx59/flexric-ric:arm64
+    build:
+      context: ../..
+      dockerfile: docker/flexric/Dockerfile
+      target: ric
+      args:
+        BUILD_JOBS: "2"
+    networks:
+      lab:
+        ipv4_address: 172.29.0.10
+    volumes:
+      - ./config/emulator/ric.conf:/usr/local/etc/flexric/ric.conf:ro
+    stop_signal: SIGINT
+    stop_grace_period: 10s
+    restart: "no"
+
+  emulator:
+    image: limx59/flexric-emulator:arm64
+    build:
+      context: ../..
+      dockerfile: docker/flexric/Dockerfile
+      target: emulator
+      args:
+        BUILD_JOBS: "2"
+    depends_on:
+      - ric
+    networks:
+      lab:
+        ipv4_address: 172.29.0.20
+    volumes:
+      - ./config/emulator/e2agent.conf:/usr/local/etc/flexric/e2agent.conf:ro
+    stop_signal: SIGINT
+    stop_grace_period: 10s
+    restart: "no"
+
+  xapp-nodes:
+    <<: *xapp
+    command: ["xapp_nodes.py", "-c", "/usr/local/etc/flexric/xapp.conf"]
+
+  xapp-kpm:
+    <<: *xapp
+    command: ["xapp_kpm.py", "-c", "/usr/local/etc/flexric/xapp.conf"]
+
+  xapp-steering:
+    <<: *xapp
+    command:
+      - xapp_steering_control.py
+      - --send-emulator
+      - --config
+      - /usr/local/etc/flexric/xapp.conf
+      - --binary
+      - /usr/local/bin/flexric/xApp/c/xapp_handover_control
+
+networks:
+  lab:
+    external: true
+    name: oai-pi-flexric-lab
