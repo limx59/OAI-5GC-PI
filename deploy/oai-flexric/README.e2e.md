@@ -199,3 +199,56 @@ sudo docker compose -f deploy/oai-flexric/compose.oai.yaml \
 
 The dedicated subscriber, local UE configuration, external networks and
 existing core deployment remain available for future tests.
+
+## Five-minute traffic and UE recreation validation
+
+Additional tests on 2026-10-07 used the published ARM64 images and the
+existing Open5GS core. The UE initially received 192.168.100.246.
+
+UDP tests ran sequentially for 300 seconds per direction, with a target
+rate of 1 Mbit/s and 1200-byte datagrams. Clients explicitly bound traffic
+to oaitun_ue1 and the allocated UE address.
+
+| Direction | Receiver bitrate | Lost/total datagrams | Reported final jitter |
+| --- | --- | --- | --- |
+| Uplink | 994 Kbit/s | 165/31249 (0.53%) | 5.822 ms |
+| Downlink | 997 Kbit/s | 99/31258 (0.32%) | 7.456 ms |
+
+Both transfers completed. Small amounts of packet loss remain unexplained.
+These are short sustained-traffic tests, not maximum-capacity or long-term
+endurance measurements.
+
+The gNB, UE and RIC remained running through the traffic tests. Selected
+logs showed no assertions, process exits or radio-link-failure messages.
+The sole matching UE RX resynchronization event occurred during initial
+attachment, before traffic testing. Periodic statistics containing
+dlsch_errors 0 or ulsch_errors 0 must not be counted as error events.
+
+Core log inspection found no matching error lines in AMF, SMF, AUSF, UDM
+or NRF during the inspected window. SCP reported two UDM client lookup
+errors during attachment; registration and PDU session establishment
+subsequently succeeded. UPF reported several invalid IPv6 packets.
+Their originating UE and relationship to IPv4 UDP loss were not established.
+
+One UE recreation was tested while keeping the gNB, RIC and core running:
+
+- Registration and PDU session establishment succeeded again.
+- The new UE address was 192.168.100.247.
+- Five Internet pings through oaitun_ue1 succeeded with zero loss;
+  average RTT was 157.234 ms.
+- A new KPM subscription to node 3584 received UE reports and completed
+  subscription deletion. Most throughput values were zero while idle.
+
+This validates one UE recreation, not recovery from gNB, RIC or core
+failure, or automatic restoration of an existing xApp subscription.
+
+Local evidence files:
+
+- /tmp/oai-pi-oai-soak-uplink-iperf.log
+- /tmp/oai-pi-oai-soak-downlink-iperf.log
+- /tmp/oai-pi-oai-recovery-kpm.log
+- /tmp/oai-pi-oai-soak-recovery-events.log
+
+The event log was collected after UE recreation, so it contains the
+replacement UE's logs rather than the removed UE's earlier logs.
+The traffic server and OAI test containers were removed after validation.
