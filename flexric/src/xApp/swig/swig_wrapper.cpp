@@ -1063,7 +1063,7 @@ kpm_act_def_format_4_t gen_act_def_frmt_4(const char** action, uint32_t period_m
   dst.matching_cond_lst = static_cast<matching_condition_format_4_lst_t*>(calloc(dst.matching_cond_lst_len, sizeof(matching_condition_format_4_lst_t)));
   assert(dst.matching_cond_lst != NULL && "Memory exhausted");
 
-  // Hack. Subscribe to all UEs with CQI greater than 0 to get a list of all available UEs in the RAN
+  // Subscribe to UEs matching the S-NSSAI condition below.
   test_info_lst_t* test_info_lst = &dst.matching_cond_lst[0].test_info_lst;
   test_info_lst->test_cond_type = S_NSSAI_TEST_COND_TYPE;
   test_info_lst->S_NSSAI = TRUE_TEST_COND_TYPE;
@@ -1075,10 +1075,16 @@ kpm_act_def_format_4_t gen_act_def_frmt_4(const char** action, uint32_t period_m
 
   test_cond_value_t* test_cond_value = static_cast<test_cond_value_t*>(calloc(1, sizeof(test_cond_value_t)));
   assert(test_cond_value != NULL && "Memory exhausted");
-  test_cond_value->type = INTEGER_TEST_COND_VALUE;
-  test_cond_value->int_value = static_cast<int64_t*>(malloc(sizeof(int64_t)));
-  assert(test_cond_value->int_value != NULL && "Memory exhausted");
-  *test_cond_value->int_value = 1;
+  // S-NSSAI: SST 1 with no SD, encoded as a one-byte OCTET STRING.
+  test_cond_value->type = OCTET_STRING_TEST_COND_VALUE;
+  test_cond_value->octet_string_value =
+      static_cast<byte_array_t*>(calloc(1, sizeof(byte_array_t)));
+  assert(test_cond_value->octet_string_value != NULL && "Memory exhausted");
+  test_cond_value->octet_string_value->len = 1;
+  test_cond_value->octet_string_value->buf =
+      static_cast<uint8_t*>(malloc(1));
+  assert(test_cond_value->octet_string_value->buf != NULL && "Memory exhausted");
+  test_cond_value->octet_string_value->buf[0] = 1;
   test_info_lst->test_cond_value = test_cond_value;
 
   // Action definition Format 1

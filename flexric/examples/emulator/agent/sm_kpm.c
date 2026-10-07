@@ -470,9 +470,28 @@ seq_arr_t match_s_nssai_test_cond_type(test_info_lst_t const* info)
 {
   assert(info != NULL);
   assert(info->test_cond_type == S_NSSAI_TEST_COND_TYPE);
-  assert(info->test_cond_value->type == INTEGER_TEST_COND_VALUE);
+  assert(info->test_cond != NULL);
+  assert(info->test_cond_value != NULL);
 
-  return emulate_ues_fullfilling_pred(info);
+  if (info->test_cond_value->type == INTEGER_TEST_COND_VALUE) {
+    assert(info->test_cond_value->int_value != NULL);
+    return emulate_ues_fullfilling_pred(info);
+  }
+
+  assert(info->test_cond_value->type == OCTET_STRING_TEST_COND_VALUE);
+  byte_array_t const* snssai = info->test_cond_value->octet_string_value;
+  assert(snssai != NULL);
+  assert(snssai->buf != NULL);
+  assert(snssai->len == 1 || snssai->len == 4);
+
+  // The dummy predicate uses SST only; it does not model real slice membership.
+  int64_t sst = snssai->buf[0];
+  test_cond_value_t value = {0};
+  value.type = INTEGER_TEST_COND_VALUE;
+  value.int_value = &sst;
+  test_info_lst_t normalized = *info;
+  normalized.test_cond_value = &value;
+  return emulate_ues_fullfilling_pred(&normalized);
 }
 
 typedef seq_arr_t (*fp_arr_cond)(test_info_lst_t const* info);

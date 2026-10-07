@@ -6,13 +6,14 @@ OAI_SOURCE="${OAI_SOURCE:-$PROJECT_ROOT/oai}"
 BUILD_JOBS="${BUILD_JOBS:-2}"
 OAI_HARDWARE="${OAI_HARDWARE:-USRP}"
 OAI_BUILD_E2="${OAI_BUILD_E2:-1}"
+OAI_KPM_VERSION="${OAI_KPM_VERSION:-KPM_V3_00}"
 ACTION="${1:-help}"
 
 case "$ACTION" in
     deps|gnb|nrue) ;;
     help|--help|-h)
         echo "Usage: $0 {deps|gnb|nrue}"
-        echo "Environment: OAI_SOURCE, BUILD_JOBS, OAI_HARDWARE, OAI_BUILD_E2"
+        echo "Environment: OAI_SOURCE, BUILD_JOBS, OAI_HARDWARE, OAI_BUILD_E2, OAI_KPM_VERSION"
         exit 0
         ;;
     *)
@@ -29,6 +30,14 @@ if [[ "$OAI_BUILD_E2" != 0 && "$OAI_BUILD_E2" != 1 ]]; then
     echo "OAI_BUILD_E2 must be 0 or 1." >&2
     exit 1
 fi
+case "$OAI_KPM_VERSION" in
+    KPM_V2_03|KPM_V3_00) ;;
+    *)
+        echo "OAI_KPM_VERSION must be KPM_V2_03 or KPM_V3_00." >&2
+        exit 1
+        ;;
+esac
+
 if [[ ! -x "$OAI_SOURCE/cmake_targets/build_oai" ]]; then
     echo "OAI build script not found: $OAI_SOURCE/cmake_targets/build_oai" >&2
     exit 1
@@ -56,7 +65,7 @@ case "$ACTION" in
     nrue) args+=(--nrUE) ;;
 esac
 if [[ "$OAI_BUILD_E2" == 1 ]]; then
-    args+=(--build-e2)
+    args+=(--build-e2 --cmake-opt "-DKPM_VERSION=$OAI_KPM_VERSION")
 fi
 
 printf 'Running:'
