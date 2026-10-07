@@ -1,0 +1,32 @@
+services:
+  ric-2:
+    extends:
+      file: compose.emulator.yaml
+      service: ric
+    networks:
+      lab:
+        ipv4_address: 172.29.0.11
+    volumes:
+      - ./config/multi-ric/ric.conf:/usr/local/etc/flexric/ric.conf:ro
+
+  emulator-3:
+    depends_on:
+      - ric-2
+    volumes:
+      - ./config/multi-ric/e2agent.conf:/usr/local/etc/flexric/e2agent.conf:ro
+
+  xapp-nodes-ric2:
+    image: "${FLEXRIC_XAPP_IMAGE:-limx59/flexric-xapp:arm64-multi-agent}"
+    extends:
+      file: compose.emulator.yaml
+      service: xapp-nodes
+    volumes:
+      - ./config/multi-ric/xapp.conf:/usr/local/etc/flexric/xapp.conf:ro
+
+  xapp-kpm-ric2:
+    image: "${FLEXRIC_XAPP_IMAGE:-limx59/flexric-xapp:arm64-multi-agent}"
+    extends:
+      file: compose.emulator.yaml
+      service: xapp-kpm
+    volumes:
+      - ./config/multi-ric/xapp.conf:/usr/local/etc/flexric/xapp.conf:ro

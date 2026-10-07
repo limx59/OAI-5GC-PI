@@ -38,6 +38,7 @@
 #include "sm_kpm.h"
 #include "sm_rc.h"
 #include <assert.h>
+#include <errno.h>
 #include <signal.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -185,6 +186,30 @@ void sig_handler(int sig_num)
   pthread_once(&once, stop_and_exit);
 }
 
+static
+int emulator_nb_id(void)
+{
+  const char* value = getenv("FLEXRIC_EMULATOR_NB_ID");
+  if (value == NULL)
+    return TEST_AGENT_NB_ID;
+
+  for (const char* p = value; *p != '\0'; ++p) {
+    if (*p < '0' || *p > '9') {
+      fprintf(stderr, "FLEXRIC_EMULATOR_NB_ID must be an integer in 1..65535\n");
+      exit(EXIT_FAILURE);
+    }
+  }
+
+  errno = 0;
+  char* end = NULL;
+  unsigned long id = strtoul(value, &end, 10);
+  if (errno != 0 || end == value || *end != '\0' || id < 1 || id > 65535) {
+    fprintf(stderr, "FLEXRIC_EMULATOR_NB_ID must be an integer in 1..65535\n");
+    exit(EXIT_FAILURE);
+  }
+  return (int)id;
+}
+
 int main(int argc, char *argv[])
 {
   // Signal handler
@@ -196,7 +221,7 @@ int main(int argc, char *argv[])
   const int mcc = TEST_AGENT_MCC;
   const int mnc = TEST_AGENT_MNC;
   const int mnc_digit_len = TEST_AGENT_MNC_DIG_LEN;
-  const int nb_id = TEST_AGENT_NB_ID;
+  const int nb_id = emulator_nb_id();
   const int cu_du_id = TEST_AGENT_CU_DU_ID;
 
   sm_io_ag_ran_t io = init_io_ag();

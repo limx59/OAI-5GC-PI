@@ -192,15 +192,32 @@ ue_id_e2sm_t gen_rc_ue_id(ue_id_e2sm_e type)
 
 static bool start_control(e2_node_arr_xapp_t nodes)
 {
-    if (nodes.len != 1 ||
-        nodes.n[0].id.plmn.mcc != 505 ||
-        nodes.n[0].id.plmn.mnc != 1 ||
-        nodes.n[0].id.nb_id.nb_id != 1 ||
-        get_nb_id(SOURCE_NR_CGI) != 1) {
-        fprintf(stderr, "Expected one lab node: PLMN 505/1, node ID 1, "
-                        "with a source CGI using the demo's 28-bit gNB ID.\n");
+    const uint64_t source_node_id = get_nb_id(SOURCE_NR_CGI);
+    if (source_node_id < 1 || source_node_id > 65535) {
+        fprintf(stderr, "Source CGI must map to a lab node ID in 1..65535.\n");
         return false;
     }
+
+    size_t selected = nodes.len;
+    for (size_t i = 0; i < nodes.len; ++i) {
+        if (nodes.n[i].id.plmn.mcc != 505 ||
+            nodes.n[i].id.plmn.mnc != 1 ||
+            nodes.n[i].id.plmn.mnc_digit_len != 2 ||
+            nodes.n[i].id.nb_id.nb_id != source_node_id)
+            continue;
+        if (selected != nodes.len) {
+            fprintf(stderr, "Multiple matching lab nodes; no control sent.\n");
+            return false;
+        }
+        selected = i;
+    }
+    if (selected == nodes.len) {
+        fprintf(stderr, "Lab node %" PRIu64 " not found; no control sent.\n",
+                source_node_id);
+        return false;
+    }
+    printf("Selected lab node: PLMN 505/01, node ID %" PRIu64 "\n",
+           source_node_id);
 
     printf("Lab request: UE=%" PRIu64 ", source=%" PRIu64
            ", target=%" PRIu64 "\n",
@@ -213,7 +230,7 @@ static bool start_control(e2_node_arr_xapp_t nodes)
     request.msg = gen_rc_ctrl_msg(FORMAT_1_E2SM_RC_CTRL_MSG);
 
     sm_ans_xapp_t answer = control_sm_xapp_api(
-        &nodes.n[0].id, SM_RC_ID, &request);
+        &nodes.n[selected].id, SM_RC_ID, &request);
     free_rc_ctrl_req_data(&request);
     free(ue_id.gnb.ran_ue_id);
 
