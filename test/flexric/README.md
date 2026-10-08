@@ -21,7 +21,7 @@ Published image-index digests for the validated upload:
 | Component | Digest |
 | --- | --- |
 | Emulator | sha256:24d8510c75501d02496247a21967c55e48696d54f0208c88d3131c60807c4236 |
-| xApps | sha256:413acdbecc5c6cf04b878d1f3ac9de4cf1dd9a8a7bc1a4e5433228b0dc808bbf |
+| xApps | sha256:b367777ec5193533c2428f39ab8582faaff5da1cd0f52af528141b259e326b7b |
 
 The topology overrides retain build settings and default to Docker Hub
 images. FLEXRIC_EMULATOR_IMAGE and FLEXRIC_XAPP_IMAGE can override those
@@ -272,8 +272,12 @@ See [the KPM CSV recording guide](README.kpm-recording.md) for Docker Hub deploy
 
 See [the QoS experiment guide](README.qos-watch.md) for the multi-node state fix, regression tests, Docker Hub validation and cleanup.
 
-The xApp digest above reflects the QoS-fixed upload. Earlier topology and CSV tests used the previous xApp digest documented in that guide.
+The xApp digest above reflects the latest slice-targeting upload. Earlier topology and CSV tests used the previous xApp digest documented in that guide.
 
 ## Multi-node MAC/RLC/PDCP reporting
 
 See [the radio statistics guide](README.radio-stats.md) for Docker Hub deployment, reusable validation, observed records and cleanup.
+
+## Multi-node slice control
+
+See [the slice-control guide](README.slice-control.md) for target selection, Docker Hub tests, control reception checks and cleanup. The guide also records the preceding QoS image digest.

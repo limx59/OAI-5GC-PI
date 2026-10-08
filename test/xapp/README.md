@@ -251,8 +251,14 @@ timeout --kill-after=5s 20s python3 test/xapp/xapp_slice_control.py \
 
 The default input is slice_samples.json beside the script.
 Set XAPP_SLICE_INPUT to select another input file.
-The demo requires positive budgets and targets exactly one connected
-gNB with PLMN 505/1 and node ID 1. Verify that this is the lab emulator.
+The demo requires positive budgets and uniquely selects a connected gNB
+with PLMN 505/01. XAPP_SLICE_NODE_ID selects the node and defaults to 1.
+The accepted lab ID range is 1..65535; invalid IDs are rejected before
+RIC initialization. Missing or ambiguous targets receive no control.
+Verify that the selected node is the lab emulator.
+
+Multi-Agent and multi-RIC validation is documented in
+[the slice-control guide](../flexric/README.slice-control.md).
 
 ### Validation on Raspberry Pi
 

@@ -42,6 +42,13 @@ def build_control(plan):
 
 
 def main():
+    value = os.environ.get("XAPP_SLICE_NODE_ID", "1")
+    if not value or any(character not in "0123456789" for character in value):
+        raise ValueError("XAPP_SLICE_NODE_ID must be an integer in 1..65535.")
+    node_id = int(value)
+    if not 1 <= node_id <= 65535:
+        raise ValueError("XAPP_SLICE_NODE_ID must be an integer in 1..65535.")
+
     source = Path(os.environ.get(
         "XAPP_SLICE_INPUT",
         str(Path(__file__).with_name("slice_samples.json")),
@@ -60,12 +67,15 @@ def main():
             node for node in nodes
             if node.id.plmn.mcc == 505
             and node.id.plmn.mnc == 1
-            and node.id.nb_id.nb_id == 1
+            and node.id.plmn.mnc_digit_len == 2
+            and node.id.nb_id.nb_id == node_id
             and node.id.type == ric.e2ap_ngran_gNB
         ]
         if len(matches) != 1:
-            raise RuntimeError("Expected exactly one lab gNB: PLMN 505/1, ID 1.")
-        print("Sending custom SLICE ADD/MOD control to lab node 1.",
+            raise RuntimeError(
+                f"Expected exactly one lab gNB: PLMN 505/01, ID {node_id}; "
+                f"found {len(matches)}. No control sent.")
+        print(f"Sending custom SLICE ADD/MOD control to lab node {node_id}.",
               flush=True)
         ric.control_slice_sm(matches[0].id, message)
         time.sleep(5)
