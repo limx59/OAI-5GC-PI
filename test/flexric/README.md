@@ -263,3 +263,7 @@ inspect the experiment containers and clean them up before another run.
 
 See [Agent recreation experiment](README.agent-recovery.md) for the initial failure, source changes, build and
 Docker Hub publication, recovery validation, evidence and cleanup.
+
+## Multi-agent and multi-RIC KPM CSV recording
+
+See [the KPM CSV recording guide](README.kpm-recording.md) for Docker Hub deployment steps, reusable validation, observed results and cleanup.
