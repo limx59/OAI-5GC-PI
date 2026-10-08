@@ -292,8 +292,8 @@ two-e2-nodes-two-cells/xapp_rc_ctrl_ho.c example.
 The upstream license notice is retained.
 
 This lab demo sends RC control style 3, action 1, using header and
-message format 1. It targets exactly one connected node with
-PLMN 505/1 and node ID 1. Verify that this node is the lab emulator.
+message format 1. It uniquely selects a connected lab gNB with PLMN 505/01 using the
+source CGI's node ID in 1..65535. Verify that this is the lab emulator.
 
 ### Build
 
@@ -498,3 +498,10 @@ it does not require exactly 52 rows.
 This suite validates emulator reporting and control communication.
 It does not validate actual UE handover, scheduler enforcement,
 energy savings, or OAI interoperability.
+
+## Python steering with multiple source nodes
+
+The Python wrapper accepts source CGI mappings for lab node IDs 1..65535.
+The default mapping remains unchanged. Multi-Agent and multi-RIC tests,
+including missing-target rejection, are described in
+[the steering-control guide](../flexric/README.steering-control.md).

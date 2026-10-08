@@ -21,7 +21,7 @@ Published image-index digests for the validated upload:
 | Component | Digest |
 | --- | --- |
 | Emulator | sha256:24d8510c75501d02496247a21967c55e48696d54f0208c88d3131c60807c4236 |
-| xApps | sha256:b367777ec5193533c2428f39ab8582faaff5da1cd0f52af528141b259e326b7b |
+| xApps | sha256:fa5e6e52d37850726d7b9465d0bbbfb4ad911a29ece328d2101cec2ee6a1ca96 |
 
 The topology overrides retain build settings and default to Docker Hub
 images. FLEXRIC_EMULATOR_IMAGE and FLEXRIC_XAPP_IMAGE can override those
@@ -272,7 +272,7 @@ See [the KPM CSV recording guide](README.kpm-recording.md) for Docker Hub deploy
 
 See [the QoS experiment guide](README.qos-watch.md) for the multi-node state fix, regression tests, Docker Hub validation and cleanup.
 
-The xApp digest above reflects the latest slice-targeting upload. Earlier topology and CSV tests used the previous xApp digest documented in that guide.
+The xApp digest above reflects the latest Python multi-source steering upload. Earlier topology and CSV tests used the previous xApp digest documented in that guide.
 
 ## Multi-node MAC/RLC/PDCP reporting
 
@@ -281,3 +281,7 @@ See [the radio statistics guide](README.radio-stats.md) for Docker Hub deploymen
 ## Multi-node slice control
 
 See [the slice-control guide](README.slice-control.md) for target selection, Docker Hub tests, control reception checks and cleanup. The guide also records the preceding QoS image digest.
+
+## Python steering with multiple source nodes
+
+See [the steering-control guide](README.steering-control.md) for mapping validation, Docker Hub tests, target reception and cleanup.

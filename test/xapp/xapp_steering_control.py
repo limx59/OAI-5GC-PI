@@ -61,8 +61,9 @@ def select_request(samples, ue_id, cells):
     if not requests:
         return None
     request = requests[0]
-    if request["source_nr_cgi"] >> 8 != 1:
-        raise ValueError("Selected source must map to lab gNB ID 1.")
+    source_node_id = request["source_nr_cgi"] >> 8
+    if not 1 <= source_node_id <= 65535:
+        raise ValueError("Selected source must map to a lab gNB ID in 1..65535.")
     return request
 
 
