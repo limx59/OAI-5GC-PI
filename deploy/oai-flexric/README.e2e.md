@@ -258,3 +258,9 @@ The traffic server and OAI test containers were removed after validation.
 The [OAI KPM recording experiment](../../test/flexric/README.oai-kpm-recording.md)
 records CSV during separate UE uplink and downlink transfers using
 the published recorder image and a reusable host-side validator.
+
+## OAI UE traffic QoS monitoring
+
+The [OAI QoS experiment](../../test/flexric/README.oai-qos-watch.md)
+validates forced-threshold alert logic during separate RFSim UE
+uplink and downlink transfers using the published xApp image.

@@ -291,3 +291,8 @@ See [the steering-control guide](README.steering-control.md) for mapping validat
 See [the OAI KPM recording guide](README.oai-kpm-recording.md) for
 RFSim UE uplink/downlink traffic, CSV validation, published images,
 observed results and cleanup.
+
+## OAI UE traffic QoS monitoring
+
+See [the OAI QoS guide](README.oai-qos-watch.md) for four
+uplink/downlink alert cases, published images, evidence and cleanup.
