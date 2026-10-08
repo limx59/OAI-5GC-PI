@@ -273,3 +273,7 @@ See [the KPM CSV recording guide](README.kpm-recording.md) for Docker Hub deploy
 See [the QoS experiment guide](README.qos-watch.md) for the multi-node state fix, regression tests, Docker Hub validation and cleanup.
 
 The xApp digest above reflects the QoS-fixed upload. Earlier topology and CSV tests used the previous xApp digest documented in that guide.
+
+## Multi-node MAC/RLC/PDCP reporting
+
+See [the radio statistics guide](README.radio-stats.md) for Docker Hub deployment, reusable validation, observed records and cleanup.
