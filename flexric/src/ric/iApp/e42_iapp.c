@@ -236,9 +236,15 @@ void e2_event_loop_iapp(e42_iapp_t* iapp)
       case SCTP_CONNECTION_SHUTDOWN_EVENT:
         {
           defer({free_sctp_msg(&e.msg);});
-          uint16_t const xapp_id = find_map_xapps_xid(&iapp->ep.xapps, &e.msg.info);
+          if (e.msg.notif->sn_header.sn_type != SCTP_SHUTDOWN_EVENT)
+            break;
+          uint16_t xapp_id = 0;
+          sctp_assoc_t association = e.msg.notif->sn_shutdown_event.sse_assoc_id;
+          if (!find_map_xapps_assoc(&iapp->ep.xapps, association, &xapp_id))
+            break;
           printf("[NEAR-RIC]: xApp %d disconnected!\n", xapp_id);
           rm_if_pending_subs(iapp, xapp_id);
+          rm_map_xapps_sad(&iapp->ep.xapps, xapp_id);
           break;
         }
       case CHECK_STOP_TOKEN_EVENT:

@@ -21,6 +21,11 @@ a* You may obtain a copy of the License at
 
 
 
+#include <errno.h>
+#include <string.h>
+#include <netinet/in.h>
+#include <netinet/sctp.h>
+#include <sys/socket.h>
 #include "../../xApp/e42_xapp_api.h"
 #include "e42_iapp_api.h"
 #include "msg_handler_iapp.h"
@@ -537,27 +542,36 @@ static
 void generate_update_e2_node(e42_iapp_t* iapp, size_t num_xapp)
 {
   assert(iapp != NULL);
-  assert(num_xapp != 0);
+  (void)num_xapp;
+  e2_node_arr_t nodes = generate_e2_node_arr(&iapp->e2_nodes);
+  defer({ free_e2_node_arr(&nodes); });
 
-  size_t init_xapp_id = 7;
-  e2_node_arr_t new_e2_arr = generate_e2_node_arr(&iapp->e2_nodes);
+  map_xapps_sockaddr_t* connections = &iapp->ep.xapps;
+  int rc = pthread_rwlock_rdlock(&connections->rw);
+  assert(rc == 0);
+  assoc_rb_tree_t* tree = &connections->bimap.left;
+  void* end = assoc_end(tree);
+  for (void* it = assoc_front(tree); it != end; it = assoc_next(tree, it)) {
+    uint16_t id = *(uint16_t*)assoc_key(tree, it);
+    sctp_info_t info = *(sctp_info_t*)assoc_value(tree, it);
+    e2ap_msg_t update = {.type = E42_UPDATE_E2_NODE};
+    update.u_msgs.e42_updt_e2_node.xapp_id = id;
+    update.u_msgs.e42_updt_e2_node.len_e2_nodes_conn = nodes.len;
+    update.u_msgs.e42_updt_e2_node.nodes = nodes.n;
+    byte_array_t bytes = e2ap_msg_enc_iapp(&iapp->ap, &update);
+    defer({ free_byte_array(bytes); });
 
-  for (size_t i = init_xapp_id; i < init_xapp_id+num_xapp; i++) {
-    e2ap_msg_t ans = {.type = E42_UPDATE_E2_NODE};
-    ans.u_msgs.e42_updt_e2_node.xapp_id = i;
-    ans.u_msgs.e42_updt_e2_node.len_e2_nodes_conn = new_e2_arr.len;
-    ans.u_msgs.e42_updt_e2_node.nodes = new_e2_arr.n;
-
-    sctp_msg_t sctp_msg = {0};
-    defer({ free_sctp_msg(&sctp_msg); } );
-    sctp_msg.info = find_map_xapps_sad(&iapp->ep.xapps, ans.u_msgs.e42_updt_e2_node.xapp_id);
-    sctp_msg.ba = e2ap_msg_enc_iapp(&iapp->ap, &ans);
-
-    e2ap_send_sctp_msg_iapp(&iapp->ep, &sctp_msg);
-    printf("[iApp]: send E42 UPDATE-E2-NODE to xApp id %ld\n", i);
-    fflush(stdout);
+    // Use the existing association; never block E2 setup on an xApp update.
+    ssize_t sent = sctp_send(iapp->ep.base.fd, bytes.buf, bytes.len,
+                             &info.sri, MSG_DONTWAIT);
+    if (sent != (ssize_t)bytes.len)
+      fprintf(stderr, "[iApp]: node update to xApp %u failed: %s\n",
+              id, strerror(errno));
+    else
+      printf("[iApp]: send E42 UPDATE-E2-NODE to xApp id %u\n", id);
   }
-  return;
+  rc = pthread_rwlock_unlock(&connections->rw);
+  assert(rc == 0);
 }
 
 e2ap_msg_t e2ap_handle_ric_e2_setup_response_iapp(e42_iapp_t* iapp, const e2ap_msg_t* msg)

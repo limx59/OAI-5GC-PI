@@ -55,6 +55,10 @@ uint16_t find_map_xapps_xid(map_xapps_sockaddr_t* m, sctp_info_t const* s);
 
 size_t get_num_connected_xapps(map_xapps_sockaddr_t* m);
 
+bool find_map_xapps_assoc(map_xapps_sockaddr_t* m, sctp_assoc_t association,
+                          uint16_t* xapp_id);
+
+
 #endif
 
 

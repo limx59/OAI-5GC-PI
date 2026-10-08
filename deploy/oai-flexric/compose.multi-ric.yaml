@@ -1,5 +1,6 @@
 services:
   ric-2:
+    image: "${FLEXRIC_RIC_IMAGE:-limx59/flexric-ric:arm64-multi-agent}"
     extends:
       file: compose.emulator.yaml
       service: ric

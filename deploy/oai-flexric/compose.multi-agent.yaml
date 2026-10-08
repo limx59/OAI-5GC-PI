@@ -1,4 +1,7 @@
 services:
+  ric:
+    image: "${FLEXRIC_RIC_IMAGE:-limx59/flexric-ric:arm64-multi-agent}"
+
   emulator:
     image: "${FLEXRIC_EMULATOR_IMAGE:-limx59/flexric-emulator:arm64-multi-agent}"
     environment:

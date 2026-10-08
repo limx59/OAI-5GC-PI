@@ -12,7 +12,7 @@ exactly one request at the selected Agent during the validation window.
 
 | Component | Docker Hub image |
 | --- | --- |
-| RIC | limx59/flexric-ric:arm64 |
+| RIC | limx59/flexric-ric:arm64-multi-agent |
 | Emulator | limx59/flexric-emulator:arm64-multi-agent |
 | xApps | limx59/flexric-xapp:arm64-multi-agent |
 
@@ -187,3 +187,79 @@ If terminal echo or newline handling changes, restore it with:
 ```bash
 stty sane echo opost onlcr
 ```
+
+## Agent recreation and xApp connection cleanup
+
+The multi-agent and multi-RIC overlays now default to
+limx59/flexric-ric:arm64-multi-agent. FLEXRIC_RIC_IMAGE can override the RIC
+image for local development. The base single-emulator deployment retains
+its original image setting.
+
+Validated RIC image-index digest:
+
+sha256:3574ec908944e75cc569cfb2326e6f1c3506d58682d464dd04d34cbd69c0aee4
+
+An initial Agent 2 recreation test failed with the original RIC image:
+the Agent retried E2 Setup after receiving no response, and the RIC aborted
+when registering the duplicate node ID. The Agent then aborted as well.
+
+The RIC changes enable normal xApp SCTP shutdown notifications, remove
+disconnected xApps from the connection map, and send node updates to actual
+registered xApp IDs. Node-update sends use the existing SCTP association
+and are nonblocking. The generated node array is freed after notification.
+Failed node-update sends are logged; this path does not retry them.
+
+Start the desired topology using the Docker Hub workflow above, then run
+the recovery test. The script stops and recreates emulator-2 while leaving
+the RIC containers running.
+
+Single RIC:
+
+```bash
+python3 test/flexric/validate-agent-recovery.py \
+  --scenario multi-agent \
+  --output-dir /tmp/flexric-agent-recovery-single
+```
+
+Dual RIC:
+
+```bash
+python3 test/flexric/validate-agent-recovery.py \
+  --scenario multi-ric \
+  --output-dir /tmp/flexric-agent-recovery-dual
+```
+
+The test verifies baseline discovery and KPM, disappearance of node 2,
+rediscovery after recreation, and fresh KPM subscriptions after recovery.
+It checks that the RIC container identities are unchanged and that the
+containers are running at the final inspection. The topology remains
+running after the test; use the corresponding cleanup command above.
+
+On 2026-10-07, single-RIC and dual-RIC recovery passed with the local fixed
+RIC image. Dual-RIC recovery also passed after pulling the published image.
+Both running RIC image references and the published digest were checked.
+The existing targeted-control test passed with the fixed dual-RIC topology.
+
+Evidence directories and logs:
+
+- /tmp/flexric-agent-recovery-fixed-single
+- /tmp/flexric-agent-recovery-fixed-dual
+- /tmp/flexric-agent-recovery-fixed-control
+- /tmp/flexric-agent-recovery-fixed-events.log
+- /tmp/flexric-dockerhub-agent-recovery-dual
+
+The local dual-RIC event log recorded 12 xApp disconnections and no matching
+assertion or send-error messages. Experiment containers were removed after
+validation.
+
+These tests cover normal xApp shutdown and one Agent recreation per run.
+They do not validate abrupt xApp failure, active subscription cleanup on
+disconnect, automatic restoration of an existing subscription, RIC
+failover, or handling of arbitrary duplicate E2 Setup requests.
+A timed-out Compose client may leave its one-off xApp container running;
+inspect the experiment containers and clean them up before another run.
+
+## Agent recovery experiment
+
+See [Agent recreation experiment](README.agent-recovery.md) for the initial failure, source changes, build and
+Docker Hub publication, recovery validation, evidence and cleanup.

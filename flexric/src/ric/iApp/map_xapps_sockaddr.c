@@ -158,7 +158,7 @@ void rm_map_xapps_sad(map_xapps_sockaddr_t* m, uint16_t xapp_id)
 {
   assert(m != NULL);
 
-  assert(0!=0 && "Not tested, it should work");
+  // The caller has identified an existing connection.
 
   int rc = pthread_rwlock_wrlock(&m->rw);
   assert(rc == 0);
@@ -230,4 +230,29 @@ size_t get_num_connected_xapps(map_xapps_sockaddr_t* m)
 {
   assert(m != NULL);
   return assoc_rb_tree_size(&m->bimap.left);
+}
+
+bool find_map_xapps_assoc(map_xapps_sockaddr_t* m, sctp_assoc_t association,
+                          uint16_t* xapp_id)
+{
+  assert(m != NULL);
+  assert(xapp_id != NULL);
+  int rc = pthread_rwlock_rdlock(&m->rw);
+  assert(rc == 0);
+
+  bool found = false;
+  assoc_rb_tree_t* tree = &m->bimap.left;
+  void* end = assoc_end(tree);
+  for (void* it = assoc_front(tree); it != end; it = assoc_next(tree, it)) {
+    sctp_info_t const* info = assoc_value(tree, it);
+    if (info->sri.sinfo_assoc_id == association) {
+      *xapp_id = *(uint16_t*)assoc_key(tree, it);
+      found = true;
+      break;
+    }
+  }
+
+  rc = pthread_rwlock_unlock(&m->rw);
+  assert(rc == 0);
+  return found;
 }

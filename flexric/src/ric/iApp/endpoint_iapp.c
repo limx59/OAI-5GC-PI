@@ -65,7 +65,7 @@ int init_sctp_conn_server(const char* addr, int port)
   assert(rc != -1);
 
   struct sctp_event_subscribe evnts = {.sctp_data_io_event = 1, 
-                                       /*.sctp_shutdown_event = 1,*/ 
+                                       .sctp_shutdown_event = 1,
                                        .sctp_send_failure_event = 1
                                        /*.sctp_association_event = 1*/
                                        /*.sctp_peer_error_event = 1,
