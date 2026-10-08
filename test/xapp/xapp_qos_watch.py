@@ -3,6 +3,7 @@
 
 import math
 import os
+import threading
 from collections import defaultdict
 
 import xapp_kpm as demo
@@ -24,6 +25,22 @@ class QoSCallback(RecorderCallback):
         super().__init__()
         self.low_counts = defaultdict(int)
         self.alerts = set()
+        self.report_lock = threading.Lock()
+        self.report_node = None
+
+    def record(self, indication):
+        # The SDK routes all KPM subscriptions through one callback.
+        # Keep missing-data resets scoped to this indication's node.
+        with self.report_lock:
+            identity = indication.id
+            self.report_node = (
+                identity.nb_id.nb_id, identity.plmn.mcc,
+                identity.plmn.mnc, identity.type,
+            )
+            try:
+                super().record(indication)
+            finally:
+                self.report_node = None
 
     def write_records(self, records):
         groups = defaultdict(list)
@@ -37,10 +54,14 @@ class QoSCallback(RecorderCallback):
             if math.isfinite(value) and value >= 0:
                 key = (row[1], row[2], row[3], row[4], metric)
                 groups[key].append(value)
-        self.evaluate(groups)
+        self.evaluate(groups, self.report_node)
 
-    def evaluate(self, groups):
-        for key in set(self.low_counts) - set(groups):
+    def evaluate(self, groups, reporting_node=None):
+        missing = set(self.low_counts) - set(groups)
+        if reporting_node is not None:
+            missing = {key for key in missing
+                       if key[:4] == reporting_node}
+        for key in missing:
             self.low_counts[key] = 0
             if key in self.alerts:
                 self.alerts.remove(key)

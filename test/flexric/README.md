@@ -21,7 +21,7 @@ Published image-index digests for the validated upload:
 | Component | Digest |
 | --- | --- |
 | Emulator | sha256:24d8510c75501d02496247a21967c55e48696d54f0208c88d3131c60807c4236 |
-| xApps | sha256:aec1fb4b061a53a11a653df0b622b0167135e6195cdaccb831a9dfe215779bd3 |
+| xApps | sha256:413acdbecc5c6cf04b878d1f3ac9de4cf1dd9a8a7bc1a4e5433228b0dc808bbf |
 
 The topology overrides retain build settings and default to Docker Hub
 images. FLEXRIC_EMULATOR_IMAGE and FLEXRIC_XAPP_IMAGE can override those
@@ -267,3 +267,9 @@ Docker Hub publication, recovery validation, evidence and cleanup.
 ## Multi-agent and multi-RIC KPM CSV recording
 
 See [the KPM CSV recording guide](README.kpm-recording.md) for Docker Hub deployment steps, reusable validation, observed results and cleanup.
+
+## Multi-node QoS monitoring
+
+See [the QoS experiment guide](README.qos-watch.md) for the multi-node state fix, regression tests, Docker Hub validation and cleanup.
+
+The xApp digest above reflects the QoS-fixed upload. Earlier topology and CSV tests used the previous xApp digest documented in that guide.
