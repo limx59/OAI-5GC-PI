@@ -285,3 +285,9 @@ See [the slice-control guide](README.slice-control.md) for target selection, Doc
 ## Python steering with multiple source nodes
 
 See [the steering-control guide](README.steering-control.md) for mapping validation, Docker Hub tests, target reception and cleanup.
+
+## OAI UE traffic KPM CSV recording
+
+See [the OAI KPM recording guide](README.oai-kpm-recording.md) for
+RFSim UE uplink/downlink traffic, CSV validation, published images,
+observed results and cleanup.

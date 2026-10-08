@@ -252,3 +252,9 @@ Local evidence files:
 The event log was collected after UE recreation, so it contains the
 replacement UE's logs rather than the removed UE's earlier logs.
 The traffic server and OAI test containers were removed after validation.
+
+## OAI UE traffic KPM CSV recording
+
+The [OAI KPM recording experiment](../../test/flexric/README.oai-kpm-recording.md)
+records CSV during separate UE uplink and downlink transfers using
+the published recorder image and a reusable host-side validator.
