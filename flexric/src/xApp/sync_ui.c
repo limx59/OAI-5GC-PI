@@ -68,8 +68,6 @@ void cond_wait_sync_ui(sync_ui_t* s, uint32_t wait_ms)
 
   pthread_mutex_lock(&s->mtx_sync);
 
-  s->flag_sync = false;
-  s->msg_ack = false;
   struct timespec ts = {0};
   int rc = clock_gettime(CLOCK_REALTIME, &ts);
   assert(rc == 0);
@@ -82,9 +80,11 @@ void cond_wait_sync_ui(sync_ui_t* s, uint32_t wait_ms)
   assert(rc != ETIMEDOUT && "Timeout. No response from the E2 Node received, and neither from epoll. Unforeseen path");
   assert(rc == 0);
 
-  pthread_mutex_unlock(&s->mtx_sync);
-
   assert(s->msg_ack == true && "No response to subscription from the RIC received\n" );
+  // Consume the ACK under the lock; preserve ACKs that precede the wait.
+  s->flag_sync = false;
+  s->msg_ack = false;
+  pthread_mutex_unlock(&s->mtx_sync);
 }
 
 void signal_sync_ui(sync_ui_t* s)

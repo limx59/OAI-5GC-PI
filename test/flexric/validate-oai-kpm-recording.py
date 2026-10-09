@@ -29,6 +29,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--xapp-image",
                         default="limx59/flexric-xapp:arm64-multi-agent")
+    parser.add_argument("--pull-policy", choices=("always", "never"),
+                        default="always")
     parser.add_argument("--server", default="172.22.0.151")
     parser.add_argument("--node-id", type=int, default=3584)
     parser.add_argument("--output-dir", type=Path,
@@ -58,11 +60,15 @@ def main():
     ue_ip = addresses[0]
     print(f"UE TUN address: {ue_ip}", flush=True)
 
-    with (output / "image-pull.log").open("w", encoding="utf-8") as stream:
-        result = subprocess.run(
-            docker + ["pull", args.xapp_image], stdout=stream,
-            stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL, timeout=120)
-    require(result.returncode == 0, "Image pull failed; inspect image-pull.log.")
+    if args.pull_policy == "always":
+        with (output / "image-pull.log").open("w", encoding="utf-8") as stream:
+            result = subprocess.run(
+                docker + ["pull", args.xapp_image], stdout=stream,
+                stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL, timeout=120)
+        require(result.returncode == 0, "Image pull failed; inspect image-pull.log.")
+    else:
+        (output / "image-pull.log").write_text(
+            "Pull skipped: using local image.\n", encoding="utf-8")
     image = subprocess.run(
         docker + ["image", "inspect", args.xapp_image, "--format",
                   "{{json .RepoDigests}}"],

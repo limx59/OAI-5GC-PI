@@ -556,7 +556,6 @@ e2ap_msg_t e2ap_handle_e42_subscription_delete_request_xapp(e42_xapp_t* xapp, co
   byte_array_t ba_msg = e2ap_enc_e42_ric_subscription_delete_xapp(&xapp->ap,( e42_ric_subscription_delete_request_t* ) e42_sdr);
   defer({ free_byte_array(ba_msg) ;}; );
 
-  e2ap_send_bytes_xapp(&xapp->ep, ba_msg);
 
   // A pending event is created along with a timer of 10000 ms,
   // after which an event will be generated
@@ -564,6 +563,9 @@ e2ap_msg_t e2ap_handle_e42_subscription_delete_request_xapp(e42_xapp_t* xapp, co
                               .id = e42_sdr->sdr.ric_id,
                               .wait_ms = 10000};
   add_pending_event_xapp(xapp, &ev);
+
+  // Register the pending request before a fast response can arrive.
+  e2ap_send_bytes_xapp(&xapp->ep, ba_msg);
 
 
   e2ap_msg_t ans = {.type = NONE_E2_MSG_TYPE};

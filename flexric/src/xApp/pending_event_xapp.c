@@ -65,13 +65,24 @@ void free_pending_ev(void* key, void* value)
   free(value);
 }
 
+static
+int cmp_pending_event_xapp(void const* v0, void const* v1)
+{
+  assert(v0 != NULL);
+  assert(v1 != NULL);
+  pending_event_xapp_t const* e0 = v0;
+  pending_event_xapp_t const* e1 = v1;
+  int cmp = cmp_pending_event(&e0->ev, &e1->ev);
+  return cmp != 0 ? cmp : cmp_ric_gen_id(&e0->id, &e1->id);
+}
+
 void init_pending_events(pending_event_xapp_ds_t* p)
 {
   assert(p != NULL);
 
   size_t fd_sz = sizeof(int);
   size_t event_sz = sizeof( pending_event_xapp_t );
-  bi_map_init(&p->pending , fd_sz, event_sz, cmp_fd, cmp_pending_event, free_fd, free_pending_ev );
+  bi_map_init(&p->pending , fd_sz, event_sz, cmp_fd, cmp_pending_event_xapp, free_fd, free_pending_ev );
 
   pthread_mutexattr_t *mtx_attr = NULL;
 #ifdef DEBUG
