@@ -325,3 +325,15 @@ Both directions passed with the published radio-statistics gNB and updated
 xApp on 2026-10-09. Validation covers report delivery, nonempty record lists
 and subscription cleanup; individual counter accuracy and physical RF
 remain unvalidated.
+
+## RIC restart and cross-RIC Agent migration
+
+See [the RIC recovery guide](README.ric-recovery.md) for published images,
+independent-container deployment, reusable ric-restart and ric-migration
+scenarios, pass criteria, observed results, evidence archiving and cleanup.
+
+Both scenarios passed on an ARM64 Raspberry Pi on 2026-10-09.
+Validation covers graceful same-address RIC restart, explicit Agent
+migration between RICs, fresh KPM subscriptions and baseline restoration.
+Automatic cross-RIC failover and restoration of old subscriptions remain
+unvalidated.
