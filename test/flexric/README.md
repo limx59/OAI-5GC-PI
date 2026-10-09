@@ -300,6 +300,11 @@ uplink/downlink alert cases, published images, evidence and cleanup.
 ## OAI KPM subscription cleanup regression
 
 See [the OAI KPM subscription cleanup guide](README.oai-kpm-subscription-cleanup.md)
-for environment preparation, pulling the recorder image, running the
-three-round uplink/downlink regression, pass criteria, observed results,
-evidence archiving and cleanup.
+for environment preparation, published recorder images, reusable regression
+commands, pass criteria, observed results, evidence archiving and cleanup.
+
+Three uplink/downlink rounds passed with the published recorder on an
+ARM64 Raspberry Pi on 2026-10-08, using the existing local radio-statistics
+gNB image. Validation covers RFSim traffic, KPM CSV recording and normal
+subscription cleanup; measurement accuracy and physical RF remain
+unvalidated.
