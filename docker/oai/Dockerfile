@@ -37,7 +37,7 @@ RUN cmake -S /src/oai -B /build/oai -G Ninja \
     -DKPM_VERSION=KPM_V3_00 \
     -DOAI_USRP=OFF \
     && cmake --build /build/oai \
-       --target nr-softmodem rfsimulator coding dfts params_libconfig params_yaml kpm_sm \
+       --target nr-softmodem rfsimulator coding dfts params_libconfig params_yaml kpm_sm mac_sm rlc_sm pdcp_sm \
        --parallel "${BUILD_JOBS}"
 
 RUN mkdir -p /stage/opt/oai-gnb/bin/e2-sm-plugins-kpm \
@@ -48,6 +48,14 @@ RUN mkdir -p /stage/opt/oai-gnb/bin/e2-sm-plugins-kpm \
     && install -m 755 \
        /build/oai/openair2/E2AP/flexric/src/sm/kpm_sm/kpm_sm_v03.00/libkpm_sm.so \
        /stage/opt/oai-gnb/bin/e2-sm-plugins-kpm/
+
+# Keep the configured plugin directory while adding custom statistics models.
+RUN set -eu; \
+    for model in mac rlc pdcp; do \
+      install -m 755 \
+        "/build/oai/openair2/E2AP/flexric/src/sm/${model}_sm/lib${model}_sm.so" \
+        /stage/opt/oai-gnb/bin/e2-sm-plugins-kpm/; \
+    done
 
 FROM ubuntu:24.04 AS gnb
 

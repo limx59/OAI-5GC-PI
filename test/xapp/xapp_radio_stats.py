@@ -3,6 +3,7 @@
 
 import os
 import sys
+import threading
 import time
 
 sys.path.insert(0, os.environ.get(
@@ -11,17 +12,27 @@ sys.path.insert(0, os.environ.get(
 import xapp_sdk as ric
 
 
+_LOG_LOCK = threading.Lock()
+
+
+def write_line(message, stream=None):
+    if stream is None:
+        stream = sys.stdout
+    with _LOG_LOCK:
+        stream.write(message + "\n")
+        stream.flush()
+
+
 def print_report(model, indication, field):
     try:
         records = getattr(indication, field)
-        print(
+        write_line(
             f"{model} node={indication.id.nb_id.nb_id} "
-            f"records={len(records)} timestamp={indication.tstamp}",
-            flush=True,
+            f"records={len(records)} timestamp={indication.tstamp}"
         )
     except Exception as error:
-        print(f"{model} callback error: {error}",
-              file=sys.stderr, flush=True)
+        write_line(f"{model} callback error: {error}",
+                   stream=sys.stderr)
 
 
 class MACCallback(ric.mac_cb):
@@ -77,8 +88,8 @@ def main():
                 callbacks.append(callback)
                 handle = subscribe(node.id, interval, callback)
                 subscriptions.append((unsubscribe, handle))
-                print(f"Subscribed: {config.name}, "
-                      f"node={node.id.nb_id.nb_id}", flush=True)
+                write_line(f"Subscribed: {config.name}, "
+                           f"node={node.id.nb_id.nb_id}")
         if subscriptions:
             time.sleep(10)
         else:

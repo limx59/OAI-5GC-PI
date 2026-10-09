@@ -422,9 +422,9 @@ The published regression image was subsequently pulled through Compose
 and tested on 2026-10-09. Both checks passed again:
 one CTest test completed with zero failures.
 
-This source lookup change has not yet been incorporated into the
-published recorder image. The earlier published-image RFSim results
-validate that image's existing behavior.
+The source lookup change is now incorporated into the updated published
+recorder image. The earlier RFSim results above describe the previous
+image digest; the updated-image integration results are recorded below.
 
 ### Scope and limitations
 
@@ -435,3 +435,64 @@ It does not exercise SCTP, actual subscription request/response traffic,
 registration-before-send ordering, concurrent callbacks, timeout
 recovery or every possible race. It supplements the RFSim regression;
 it does not replace an integration run with a rebuilt recorder image.
+
+## Updated published recorder integration regression
+
+On 2026-10-09, Pacific time, the updated
+limx59/flexric-xapp:arm64-subscription-cleanup image was pulled and tested
+against limx59/oai-gnb:arm64-radio-stats.
+
+Updated recorder image-index digest:
+
+sha256:195b2136818b58d2684f7499e822d810fd1d6ad0712dfedee020e52b049e88fc
+
+The image includes the pending-event lookup fix and serialized Python
+radio-statistics logging. The RIC, gNB, UE and independent traffic server
+used the environment documented in the
+[OAI radio statistics guide](README.oai-radio-stats.md).
+
+After pulling the updated recorder, run:
+
+```bash
+python3 test/flexric/validate-oai-kpm-subscription-cleanup.py \
+  --xapp-image limx59/flexric-xapp:arm64-subscription-cleanup \
+  --pull-policy never \
+  --rounds 3 \
+  --output-dir /tmp/oai-dockerhub-kpm-cleanup-updated-validation
+```
+
+UE address: 192.168.100.252. gNB node ID: 3584.
+
+| Round | Direction | CSV rows | Positive later reports | Receiver bitrate | Cleanup |
+| --- | --- | --- | --- | --- | --- |
+| 1 | Uplink | 18 | 8 | 931004 bit/s | PASS |
+| 1 | Downlink | 20 | 9 | 990047 bit/s | PASS |
+| 2 | Uplink | 18 | 8 | 998409 bit/s | PASS |
+| 2 | Downlink | 20 | 9 | 1001899 bit/s | PASS |
+| 3 | Uplink | 18 | 8 | 964373 bit/s | PASS |
+| 3 | Downlink | 20 | 9 | 999285 bit/s | PASS |
+
+All six directional tests and the regression wrapper passed.
+
+Evidence directories under
+/tmp/oai-dockerhub-kpm-cleanup-updated-validation:
+
+- oai-1zbuoqxn
+- oai-ahlif67e
+- oai-anf9ryla
+
+Archive the evidence:
+
+```bash
+tar -czf "$HOME/oai-dockerhub-kpm-cleanup-updated-validation-$(date +%Y%m%d-%H%M%S).tar.gz" \
+  -C /tmp oai-dockerhub-kpm-cleanup-updated-validation
+```
+
+The archive command completed successfully. After all radio-statistics
+and KPM tests, the traffic server and OAI RIC, gNB and UE containers were
+removed using the cleanup steps in the radio-statistics guide.
+The existing running Open5GS, UERANSIM and ReDroid services were retained.
+
+These results validate short RFSim recording and normal subscription
+cleanup with the updated image. They do not establish measurement
+accuracy, physical RF behavior or absence of every concurrency race.

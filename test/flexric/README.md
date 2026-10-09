@@ -312,5 +312,16 @@ unvalidated.
 The same guide includes an independent Docker Compose source-level
 regression for early ACK handling and distinct pending-request lookup
 and removal. It passed on 2026-10-09 without enabling the upstream
-UNIT_TEST suite. The additional lookup fix is not yet included in the
-published recorder image.
+UNIT_TEST suite. The updated published recorder includes the lookup fix
+and passed a further three-round OAI KPM cleanup regression on 2026-10-09.
+
+## OAI UE traffic MAC/RLC/PDCP reporting
+
+See [the OAI radio statistics guide](README.oai-radio-stats.md) for
+independent-container communication, Docker Hub images, Compose deployment,
+uplink/downlink validation, observed results, evidence archiving and cleanup.
+
+Both directions passed with the published radio-statistics gNB and updated
+xApp on 2026-10-09. Validation covers report delivery, nonempty record lists
+and subscription cleanup; individual counter accuracy and physical RF
+remain unvalidated.
