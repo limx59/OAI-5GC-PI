@@ -296,3 +296,10 @@ observed results and cleanup.
 
 See [the OAI QoS guide](README.oai-qos-watch.md) for four
 uplink/downlink alert cases, published images, evidence and cleanup.
+
+## OAI KPM subscription cleanup regression
+
+See [the OAI KPM subscription cleanup guide](README.oai-kpm-subscription-cleanup.md)
+for environment preparation, pulling the recorder image, running the
+three-round uplink/downlink regression, pass criteria, observed results,
+evidence archiving and cleanup.
