@@ -2,7 +2,7 @@ name: oai-pi-subscription-cleanup-test
 
 services:
   regression:
-    image: oai-pi-flexric-xapp:subscription-cleanup-regression-test
+    image: limx59/flexric-xapp:arm64-subscription-cleanup-regression
     build:
       context: ../..
       dockerfile: docker/flexric/Dockerfile.regression

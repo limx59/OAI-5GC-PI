@@ -336,17 +336,17 @@ suite or require a running RIC, gNB, UE or Open5GS core.
 Requirements: Docker Compose and network access to obtain the Debian
 base image and build packages. Run from the repository root.
 
-### Build and run
+### Pull and run the published regression image
 
-Build the regression image from the current checkout:
+Pull the regression image from Docker Hub:
 
 ```bash
 sudo docker compose \
   -f deploy/oai-flexric/compose.subscription-cleanup-test.yaml \
-  build regression
+  pull regression
 ```
 
-Run the test using the built image:
+Run the test using the explicitly pulled image:
 
 ```bash
 sudo docker compose \
@@ -354,10 +354,28 @@ sudo docker compose \
   run --rm --no-deps --pull never regression
 ```
 
-The local image is
-oai-pi-flexric-xapp:subscription-cleanup-regression-test.
-It contains a CTest executable and is separate from the Python recorder
-image used by the RFSim workflow.
+Published image:
+limx59/flexric-xapp:arm64-subscription-cleanup-regression.
+
+Validated image-index digest:
+
+sha256:84be0994893389707197b13b560bf883d4c6a2f9a8915528b28f5bc7b4b056fb
+
+Tags are mutable. Pull explicitly before testing.
+This image contains a CTest executable and is separate from the Python
+recorder image used by the RFSim workflow.
+
+To test source changes in the current checkout, build before running:
+
+```bash
+sudo docker compose \
+  -f deploy/oai-flexric/compose.subscription-cleanup-test.yaml \
+  build regression
+```
+
+Then run the same Compose command with --pull never. Building locally
+replaces the local image associated with the published tag. Pull again
+before validating the Docker Hub image.
 
 The test container has networking disabled and is removed after the run.
 No OAI experiment containers or core services are started or stopped.
@@ -399,7 +417,9 @@ searches the right-hand tree using find_if, which passes the event keys
 to the comparison callback. The existing mutex and event identity
 comparison are retained.
 
-After rebuilding the regression image, both checks passed:
+After rebuilding the regression image, both checks passed.
+The published regression image was subsequently pulled through Compose
+and tested on 2026-10-09. Both checks passed again:
 one CTest test completed with zero failures.
 
 This source lookup change has not yet been incorporated into the
