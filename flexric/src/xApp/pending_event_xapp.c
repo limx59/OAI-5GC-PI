@@ -169,10 +169,12 @@ bool find_pending_event_ev(pending_event_xapp_ds_t* p, pending_event_xapp_t* ev)
 
   lock_guard(&p->pend_mtx);
 
-  bmr_iter_t it = bi_map_front_right(&p->pending); 
-  bmr_iter_t end = bi_map_end_right(&p->pending); 
-  it = find_if_bi_map_right(&p->pending, it, end, ev, eq_ev);
-  return it.it != end.it;
+  assoc_rb_tree_t* map = &p->pending.right;
+  void* it = assoc_front(map);
+  void* end = assoc_end(map);
+  // Compare event keys, not the tree iterator addresses.
+  it = find_if(map, it, end, ev, eq_ev);
+  return it != end;
 }
 
 int* rm_pending_event_ev(pending_event_xapp_ds_t* p, pending_event_xapp_t* ev )

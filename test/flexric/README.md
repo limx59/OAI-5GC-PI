@@ -308,3 +308,9 @@ ARM64 Raspberry Pi on 2026-10-08, using the existing local radio-statistics
 gNB image. Validation covers RFSim traffic, KPM CSV recording and normal
 subscription cleanup; measurement accuracy and physical RF remain
 unvalidated.
+
+The same guide includes an independent Docker Compose source-level
+regression for early ACK handling and distinct pending-request lookup
+and removal. It passed on 2026-10-09 without enabling the upstream
+UNIT_TEST suite. The additional lookup fix is not yet included in the
+published recorder image.

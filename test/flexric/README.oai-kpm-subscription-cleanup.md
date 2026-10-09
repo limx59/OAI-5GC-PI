@@ -325,3 +325,93 @@ Positive reports do not establish measurement accuracy or exact
 equivalence between iperf and KPM values.
 Physical RF, per-UE identity mapping, real handover, scheduler enforcement,
 throughput benchmarking and latency benchmarking remain unvalidated.
+
+## Source-level subscription cleanup regression
+
+Validated on an ARM64 Raspberry Pi on 2026-10-09, Pacific time.
+This independent test compiles the relevant FlexRIC source files and
+runs through Docker Compose. It does not enable the upstream UNIT_TEST
+suite or require a running RIC, gNB, UE or Open5GS core.
+
+Requirements: Docker Compose and network access to obtain the Debian
+base image and build packages. Run from the repository root.
+
+### Build and run
+
+Build the regression image from the current checkout:
+
+```bash
+sudo docker compose \
+  -f deploy/oai-flexric/compose.subscription-cleanup-test.yaml \
+  build regression
+```
+
+Run the test using the built image:
+
+```bash
+sudo docker compose \
+  -f deploy/oai-flexric/compose.subscription-cleanup-test.yaml \
+  run --rm --no-deps --pull never regression
+```
+
+The local image is
+oai-pi-flexric-xapp:subscription-cleanup-regression-test.
+It contains a CTest executable and is separate from the Python recorder
+image used by the RFSim workflow.
+
+The test container has networking disabled and is removed after the run.
+No OAI experiment containers or core services are started or stopped.
+
+### Checks and pass criteria
+
+The test checks:
+
+- An ACK signalled before entering the wait is preserved.
+- Three successive ACK/wait cycles consume and reset the ACK flags.
+- Four pending deletion requests with the same event type remain distinct
+  when the request ID, instance ID or RAN function ID differs.
+- Requests can be removed independently by event identity or descriptor.
+- The removed descriptor matches the requested event.
+- Changing wait_ms does not change the request identity.
+- Remaining requests stay discoverable and removed requests are absent.
+
+Assertions remain enabled in the Release build.
+CTest applies a ten-second timeout.
+
+Expected successful output includes:
+
+```text
+PASS: early ACK preserved and consumed across repeated waits
+PASS: same-type pending requests remain independently removable
+100% tests passed, 0 tests failed out of 1
+```
+
+Both checks must complete and the Compose command must exit successfully.
+
+### Observed result and lookup fix
+
+The initial source-level run failed while checking event lookup after
+removing a request. The bimap-specific search helper passed a tree
+iterator to the event comparison callback instead of an event key.
+
+find_pending_event_ev in flexric/src/xApp/pending_event_xapp.c now
+searches the right-hand tree using find_if, which passes the event keys
+to the comparison callback. The existing mutex and event identity
+comparison are retained.
+
+After rebuilding the regression image, both checks passed:
+one CTest test completed with zero failures.
+
+This source lookup change has not yet been incorporated into the
+published recorder image. The earlier published-image RFSim results
+validate that image's existing behavior.
+
+### Scope and limitations
+
+This is a deterministic source-level regression for an ACK received
+before the wait and for pending-request identity, lookup and removal.
+
+It does not exercise SCTP, actual subscription request/response traffic,
+registration-before-send ordering, concurrent callbacks, timeout
+recovery or every possible race. It supplements the RFSim regression;
+it does not replace an integration run with a rebuilt recorder image.
