@@ -189,3 +189,24 @@ The external network and cached images remain available.
 ## Detailed native patch rationale
 
 See [the patch reference](patches/README.md) for the Agent epoll EINTR fix, inherited KPM patches and upgrade guidance.
+
+## Docker lab addresses and reproduction
+
+172.29.0.10 is the fixed container address of RIC A on the Docker lab
+network, not the Raspberry Pi host address. RIC B uses 172.29.0.11.
+Developers reproducing the same Compose topology normally keep these
+addresses unchanged.
+
+The lab expects the external Docker network oai-pi-flexric-lab to have
+a subnet compatible with the configured static addresses. Before deployment,
+check that the lab subnet does not overlap existing host, VPN or Docker
+networks. An existing network with the same name may have a different subnet.
+
+If the subnet changes, update the Docker network, Compose static addresses,
+Agent e2agent.conf and xApp xapp.conf NearRT_RIC_IP settings together.
+Some validators also check fixed addresses; inspect their expectations
+before running against a changed topology.
+
+If RIC runs on another host, use its reachable address in the Agent and
+xApp configuration and review routing, SCTP connectivity and configured
+ports. This differs from the validated single-host Docker topology.
