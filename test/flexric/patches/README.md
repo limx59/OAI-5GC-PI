@@ -137,3 +137,34 @@ the corresponding project patch.
 After changing the source version or patches, rebuild and rerun the
 relevant native regressions, topology baseline and integration tests.
 A previous image's passing result does not validate an upgraded build.
+
+## Controlled Emulator MAC load: apply-steering-load.py
+
+This is a dedicated test-data adaptation, not a correction to actual
+radio measurement semantics.
+
+| Source file or helper | Problem or test requirement | Change |
+| --- | --- | --- |
+| examples/emulator/agent/sm_mac.c | Default random MAC reports cannot supply known normalized load for deterministic steering tests | Replaces fill_mac_ind_data with steering_fill_mac_report in the copied Docker build source |
+| test/flexric/native/steering_mac_report.h | The test needs a stable UE and counters based on elapsed time | Generates one synthetic UE, monotonic timestamps and controlled DL/UL PRB counters |
+| test/flexric/native/steering_mac_load.h | The original project helper aborted when repeated subscriptions were separated by more than 60 seconds | Uses 128-bit intermediate arithmetic without the 60-second assertion; preserves fractional increments and wraps the uint32 counter |
+| test/xapp/xapp_mac_load.py | Wire counters wrap and repeated reports must be converted to normalized load | Uses modular counter differences and the configured test capacity |
+
+The assumed capacity is 106 PRBs per 500-microsecond slot for both DL
+and UL. It is synthetic and is not measured radio capacity.
+A full counter cycle between samples cannot be recovered from the wire
+counter. A load-file update applies its current percentage to the
+interval since the previous generated report.
+
+The patch script modifies only /src/flexric inside the dedicated Agent
+image build. Tracked FlexRIC source remains unchanged. The image also
+applies the preceding KPM recovery and Agent epoll EINTR patches.
+
+Native checks cover capacity, changing load, fractional accumulation,
+zero elapsed time, a five-minute idle interval and uint32 counter wrap.
+Automated published-image checks cover three-node MAC load, forward and
+reverse steering recommendations, balanced-load suppression, cooldown,
+unchanged processes and subscription deletion.
+
+See [the live steering guide](../README.live-steering.md) for reproduction
+and validation boundaries.

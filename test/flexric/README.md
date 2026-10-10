@@ -362,3 +362,18 @@ QoS alerts rearmed independently, and subscription cleanup completed.
 Nodes 1 and 3 continued reporting; container identities and startup
 times remained unchanged. Agent termination, recreation and long outages
 remain unvalidated by this scenario.
+
+## Live steering from controlled Emulator MAC load
+
+See [the live steering guide](README.live-steering.md) for published
+ARM64 images, deployment, automated MAC baseline and online policy tests,
+controlled load generation, evidence archiving and cleanup.
+
+The published-image tests passed on 2026-10-10: nodes 1, 2 and 3 reported
+90%, 20% and 40% controlled MAC load; the online policy produced forward
+and reverse recommendations, suppressed recommendations at balanced load,
+respected cooldown and completed normal subscription cleanup.
+
+This validates controlled Emulator reports and recommendations.
+Actual multicell radio load, cross-RIC policy aggregation and closed-loop
+UE handover remain unvalidated.
