@@ -30,3 +30,15 @@ enable_testing()
 add_test(NAME xapp_subscription_cleanup
   COMMAND test_xapp_subscription_cleanup)
 set_tests_properties(xapp_subscription_cleanup PROPERTIES TIMEOUT 10)
+
+# Subscription request ownership regression
+add_executable(test_subscription_request_copy
+  tst-subscription-request-copy.c
+  ${FLEXRIC}/src/util/byte_array.c)
+target_include_directories(test_subscription_request_copy
+  PRIVATE ${FLEXRIC}/src)
+target_compile_definitions(test_subscription_request_copy PRIVATE E2AP_V2)
+target_compile_options(test_subscription_request_copy PRIVATE -UNDEBUG)
+add_test(NAME subscription_request_copy
+  COMMAND test_subscription_request_copy)
+set_tests_properties(subscription_request_copy PROPERTIES TIMEOUT 10)

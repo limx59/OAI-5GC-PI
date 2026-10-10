@@ -337,3 +337,15 @@ Validation covers graceful same-address RIC restart, explicit Agent
 migration between RICs, fresh KPM subscriptions and baseline restoration.
 Automatic cross-RIC failover and restoration of old subscriptions remain
 unvalidated.
+
+## Persistent KPM subscription recovery
+
+See [the persistent KPM recovery guide](README.kpm-recovery.md) for
+Docker Hub images, independent-container deployment, the automated
+ric-restart scenario, build-time patches, evidence archiving and cleanup.
+
+The published-image test passed on an ARM64 Raspberry Pi on 2026-10-09:
+the same xApp processes resumed reports after graceful RIC A restart,
+RIC B continued reporting, and normal subscription deletion completed.
+Repeated restarts, abrupt crashes and automatic cross-RIC failover remain
+unvalidated.
