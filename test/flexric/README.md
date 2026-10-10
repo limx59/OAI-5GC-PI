@@ -349,3 +349,16 @@ the same xApp processes resumed reports after graceful RIC A restart,
 RIC B continued reporting, and normal subscription deletion completed.
 Repeated restarts, abrupt crashes and automatic cross-RIC failover remain
 unvalidated.
+
+## QoS monitoring with online Agent pause
+
+See [the QoS fault guide](README.qos-fault.md) for published images,
+deployment, the automated agent-pause scenario, isolated build patches,
+pass criteria, evidence archiving and cleanup.
+
+The published-image test passed on an ARM64 Raspberry Pi on 2026-10-09:
+Agent 2 report silence was detected, valid reports resumed after unpause,
+QoS alerts rearmed independently, and subscription cleanup completed.
+Nodes 1 and 3 continued reporting; container identities and startup
+times remained unchanged. Agent termination, recreation and long outages
+remain unvalidated by this scenario.
