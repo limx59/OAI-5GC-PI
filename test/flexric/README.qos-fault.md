@@ -185,3 +185,7 @@ sudo docker ps -a \
 ```
 
 The external network and cached images remain available.
+
+## Detailed native patch rationale
+
+See [the patch reference](patches/README.md) for the Agent epoll EINTR fix, inherited KPM patches and upgrade guidance.

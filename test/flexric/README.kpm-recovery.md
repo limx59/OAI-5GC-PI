@@ -186,3 +186,7 @@ and Kubernetes deployment remain unvalidated.
 Replay recreates RIC subscriptions; it does not preserve RIC-side state
 or establish lossless delivery. Old Agent subscription state and
 repeated-restart behavior require additional review.
+
+## Detailed native patch rationale
+
+See [the patch reference](patches/README.md) for affected FlexRIC source files, recovery changes, validation limits and upgrade guidance.
