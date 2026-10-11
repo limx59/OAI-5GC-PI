@@ -390,7 +390,7 @@ different validation scopes.
 
 | Test case | Completed | Remaining |
 | --- | --- | --- |
-| Node discovery | ✅ Multiple Agents and RICs; discovery after Agent recreation; graceful RIC restart recovery; explicit cross-RIC attachment; automatic failover after primary RIC SIGKILL in the dedicated patched Emulator image, without Agent restart; fresh backup KPM subscriptions and cleanup; automated validation and topology restoration | ☐ Existing xApp subscription migration during failover; network blackhole scenarios; automatic failback; repeated failure cycles |
+| Node discovery | ✅ Multiple Agents and RICs; discovery after Agent recreation; graceful RIC restart recovery; explicit cross-RIC attachment; automatic RIC failover after primary SIGKILL in the dedicated patched Emulator image, without Agent restart during failover; fresh backup KPM subscriptions and cleanup; three consecutive automated regression runs passed, including explicit topology restoration after each run | ☐ Existing xApp subscription migration during failover; network blackhole scenarios; automatic failback; repeated failures within one uninterrupted Agent process |
 | KPM monitoring | ✅ Multiple topologies; OAI UE traffic; new subscription recovery; existing subscription recovery and normal cleanup in the validated restart scenarios | — |
 | KPM CSV recording | ✅ Multiple Agents and RICs; OAI UE uplink/downlink recording | — |
 | QoS monitoring | ✅ Multi-topology alerts; independent per-node state; policy regression; OAI UE traffic; live Agent pause and recovery | — |

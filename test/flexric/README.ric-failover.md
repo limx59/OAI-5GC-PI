@@ -44,7 +44,32 @@ access and host SCTP support are required.
 
 ## Build and deploy
 
-The failover image is a local test image; it has not been published.
+The published Agent image is
+`limx59/flexric-emulator:arm64-ric-failover`.
+
+Validated image-index digest:
+`sha256:5d54abeae940c2dce69e817ad864e1ade6c269867134a9ff6dd279673412d321`.
+
+The Docker Hub image passed the automated failover validator on
+2026-10-10, Pacific time. Evidence was archived as
+`flexric-dockerhub-ric-failover-20261010-205007.tar.gz`
+under `~/Work/oai-test-evidence/`.
+
+Tags are mutable. Pull explicitly before deployment. Runtime image IDs
+recorded by Docker inspection differ from image-index digests.
+
+```bash
+sudo docker compose \
+  -f deploy/oai-flexric/compose.emulator.yaml \
+  -f deploy/oai-flexric/compose.multi-agent.yaml \
+  -f deploy/oai-flexric/compose.multi-ric.yaml \
+  -f deploy/oai-flexric/compose.ric-failover.yaml \
+  pull emulator emulator-2
+```
+
+The following build command is optional for local patch development.
+It creates a local test tag; the deployment overlay uses the published
+Docker Hub tag.
 Patches are stored in `test/flexric/patches/` and apply only to the
 Docker build source copy `/src/flexric`. Repository FlexRIC source
 must remain unchanged.
@@ -139,3 +164,28 @@ Do not edit repository FlexRIC source to apply these patches.
 Source-anchor checks reject incompatible upstream changes during the
 Docker build. Adapt project patches and rerun the validator after
 upgrading FlexRIC.
+
+## Three-run regression
+
+Three consecutive automated runs passed on 2026-10-10, Pacific time.
+Each run verified active-subscription primary RIC SIGKILL, Agent failover
+without restart during the fault interval, fresh backup KPM reports for
+nodes 1, 2 and 3, three subscription deletions, and baseline restoration.
+
+The validator explicitly recreates Agents 1 and 2 between runs to restore
+their primary-RIC assignment. These results demonstrate repeatability
+across restored baselines. They do not validate repeated failures within
+one uninterrupted Agent process or automatic failback.
+
+Evidence runs:
+
+- `run-i7t6tkxf`
+- `run-8yf3oaj4`
+- `run-i82lwerb`
+
+Archive:
+`flexric-ric-failover-three-rounds-20261010-204239.tar.gz`
+under `~/Work/oai-test-evidence/`.
+
+Existing xApp subscription migration and network blackhole scenarios
+remain unvalidated.
