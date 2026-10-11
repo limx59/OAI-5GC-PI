@@ -215,3 +215,41 @@ and production availability remain unvalidated.
 
 The Compose overlay is `deploy/oai-flexric/compose.ric-failover.yaml`.
 It enables the dedicated image and backup address for Agents 1 and 2.
+
+## Experimental SCTP blackhole and RIC rejoin recovery
+
+Both patches apply only to `/src/flexric` inside dedicated Docker builds.
+Repository FlexRIC source must remain unchanged.
+
+- `apply-ric-blackhole.py`: opt-in Agent socket settings enabled by
+  `RIC_BLACKHOLE_TEST=1`; SCTP RTO initial/minimum 1000 ms, maximum
+  2000 ms, association maximum retransmissions 3. These are experimental
+  per-socket settings, not host sysctl changes or production recommendations.
+- `apply-ric-rejoin.py`: subscribes the RIC to association events; removes
+  old socket mappings, connected-node entries and iApp registrations;
+  ignores notifications for unmapped associations; clears an existing
+  node before repeated Setup; serializes E2 payload handling and disconnect
+  cleanup with a dedicated mutex. Payload serialization changes concurrency
+  and has not been validated for production throughput.
+
+`Dockerfile.ric-blackhole-agent` applies KPM recovery, QoS fault handling,
+Agent failover, then the blackhole socket patch.
+`Dockerfile.ric-rejoin` applies the same first three patches, then RIC rejoin
+recovery. Both Dockerfiles are under `docker/flexric/`.
+
+The default published Agent image did not switch during the earlier
+386-second observation. Tuned Agents switched in subsequent experiments.
+The original RIC aborted on duplicate node registration during restoration;
+the rejoin image passed explicit Agent recreation without restarting RICs.
+
+Manual validation, one automated run and both three-round sequences passed
+on 2026-10-10, Pacific time. The dedicated regression script validates
+summaries and archives evidence automatically. Agent processes remain
+unchanged during failover; Agents 1 and 2 are recreated for restoration.
+RIC processes remain unchanged through restoration.
+
+These results do not establish proactive automatic failback, existing
+xApp subscription migration, active-subscription rejoin, or production
+availability. After upgrading FlexRIC, review source anchors, rebuild and
+repeat validation. See [the blackhole guide](../README.ric-blackhole.md)
+for deployment and cleanup.

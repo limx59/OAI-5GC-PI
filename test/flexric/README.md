@@ -390,12 +390,12 @@ different validation scopes.
 
 | Test case | Completed | Remaining |
 | --- | --- | --- |
-| Node discovery | ✅ Multiple Agents and RICs; discovery after Agent recreation; graceful RIC restart recovery; explicit cross-RIC attachment; automatic RIC failover in the dedicated patched Emulator image; three consecutive regression runs; published-image validation; manual and automated A -> B -> A failover with Agent 1 and 2 processes unchanged throughout; fresh KPM subscriptions, cleanup and baseline restoration | ☐ Network blackhole scenarios; proactive automatic failback (implementation and validation required) |
+| 🔴 **Node discovery** | ✅ Multiple Agents and RICs; discovery after Agent recreation; graceful RIC restart recovery; explicit cross-RIC attachment; automatic RIC failover in the dedicated patched Emulator image; three consecutive SIGKILL regression runs; published-image validation; manual and automated A -> B -> A failover with Agent 1 and 2 processes unchanged throughout; network blackhole failover with opt-in SCTP socket settings and the experimental RIC rejoin patch; dedicated three-round regression script passed with local and published Docker Hub images, including rule removal and explicit Agent rejoin without RIC restart; fresh KPM subscriptions, cleanup and baseline restoration | ☐ **Next: proactive automatic failback — implementation and validation required** |
 | KPM monitoring | ✅ Multiple topologies; OAI UE traffic; new subscription recovery; existing subscription recovery and normal cleanup in the validated restart scenarios | — |
 | KPM CSV recording | ✅ Multiple Agents and RICs; OAI UE uplink/downlink recording | — |
 | QoS monitoring | ✅ Multi-topology alerts; independent per-node state; policy regression; OAI UE traffic; live Agent pause and recovery | — |
 | MAC / RLC / PDCP statistics | ✅ Non-empty reports and subscription cleanup across multiple Agents and RICs; non-empty OAI records | — |
-| 🔴 **Traffic steering policy** | ✅ Synthetic policy tests; live controlled Emulator MAC load; forward/reverse recommendations; balanced-load suppression; cooldown; automated tests | ☐ **Live multi-cell load: concurrent dual-cell RFsim tests did not pass; experimental configurations and failure evidence saved; deferred** |
+| Traffic steering policy | ✅ Synthetic policy tests; live controlled Emulator MAC load; forward/reverse recommendations; balanced-load suppression; cooldown; automated tests | ☐ **Live multi-cell load: concurrent dual-cell RFsim tests did not pass; experimental configurations and failure evidence saved; deferred** |
 | Traffic steering control | ✅ Directed multi-Agent control; multi-RIC ACKs; Python source-node mapping | ☐ UE handover and closed-loop feedback; assess RFsim validation first |
 | Multi-Agent slicing control | ✅ Slicing policy; directed single/multi-Agent and multi-RIC control with ACKs | ☐ Actual PRB allocation execution; prioritize simulation |
 | Energy-saving control | ✅ Policy and state-feedback simulation | ☐ Physical device control and power measurements; deferred due to unavailable hardware |
@@ -453,3 +453,5 @@ acceptance criteria and cleanup alongside their results.
 [Experimental OAI dual-cell RFsim guide](README.oai-multi-cell.md) includes reproduction, failure status and cleanup.
 
 [Automatic RIC failover guide](README.ric-failover.md) covers patch builds, automated testing, validation limits and cleanup.
+
+[Experimental RIC blackhole guide](README.ric-blackhole.md) covers experimental images, automated regression and cleanup.
