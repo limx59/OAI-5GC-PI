@@ -187,5 +187,61 @@ Archive:
 `flexric-ric-failover-three-rounds-20261010-204239.tar.gz`
 under `~/Work/oai-test-evidence/`.
 
-Existing xApp subscription migration and network blackhole scenarios
-remain unvalidated.
+Existing xApp subscription migration remains a known limitation and is
+outside the current TODO scope. Network blackhole scenarios remain
+unvalidated.
+
+## Same-process bidirectional failover
+
+Manual and automated A -> B -> A validation passed on 2026-10-10,
+Pacific time, using `limx59/flexric-emulator:arm64-ric-failover`.
+
+1. Inject SIGKILL into RIC A; Agents 1 and 2 switch to B.
+2. Fresh KPM on B reports nodes 1, 2 and 3, with three subscription deletions.
+3. Restart A without recreating Agents.
+4. Inject SIGKILL into B; Agents 1 and 2 switch back to A.
+5. Fresh KPM on A reports nodes 1 and 2, with two subscription deletions.
+6. Restart B and validate the restored discovery and KPM topology.
+
+Agent 1 and 2 container IDs, image IDs, PIDs, start times and restart
+counts remain unchanged throughout. Returning to A is triggered by
+B failure; proactive automatic failback is not implemented.
+
+The three-run regression above restores its baseline by recreating
+Agents. This separate test validates one A -> B -> A sequence within
+the same Agent processes. Extended failure cycles are not covered.
+
+### Automated test
+
+Run from the repository root with the initial topology running:
+RIC A serves nodes 1 and 2; RIC B serves node 3.
+
+```bash
+python3 test/flexric/validate-ric-failover-bidirectional.py \
+  --output-dir /tmp/flexric-ric-failover-bidirectional-automated \
+  </dev/null
+```
+
+The script performs the sequence above, checks process identities,
+saves logs and inspection records, removes temporary xApps, and restores
+the baseline without recreating Agents. Do not run concurrently with
+other lab tests. Inspect `summary.json` and the lab after any failure;
+restoration errors are recorded and cause validation to fail.
+
+Successful validation leaves the restored lab running. Use the existing
+Cleanup section after archiving evidence.
+
+### Evidence
+
+- Manual archive: `flexric-ric-failover-bidirectional-20261010-211927.tar.gz`
+- Automated run: `run-m326ygzc`
+- Automated archive: `flexric-ric-failover-bidirectional-automated-20261010-212458.tar.gz`
+
+Archives are stored under `~/Work/oai-test-evidence/`.
+
+Fresh xApp subscriptions are used; existing subscriptions do not migrate.
+This remains a known limitation, not an additional KPM monitoring TODO.
+Network blackhole validation and proactive failback implementation and
+validation remain pending.
+
+No new Agent image or repository FlexRIC source changes were required.
