@@ -168,3 +168,50 @@ unchanged processes and subscription deletion.
 
 See [the live steering guide](../README.live-steering.md) for reproduction
 and validation boundaries.
+
+## Experimental native Agent RIC failover: apply-ric-failover.py
+
+This patch implements an experimental primary/backup RIC selection path
+for native Emulator Agents with periodic subscriptions.
+
+The dedicated Dockerfile is
+`docker/flexric/Dockerfile.ric-failover-agent`.
+It copies the patch scripts into the build container and applies them
+before compilation, in this order:
+
+1. `apply-kpm-recovery.py`
+2. `apply-qos-fault.py`
+3. `apply-ric-failover.py`
+
+Patches modify only the copied source at `/src/flexric` inside the Docker
+build. Do not modify the repository's `flexric/` source to apply these
+changes. Exact source-anchor checks stop the build if an upstream update
+changes the expected code. Adapt the patches and repeat validation after
+upgrading FlexRIC.
+
+Set `RIC_BACKUP_IP` to the backup RIC IPv4 address. On a detected
+disconnect, the Agent clears its old periodic subscriptions. A setup
+timeout selects the alternate RIC and replaces the SCTP endpoint.
+Further setup timeouts alternate the configured endpoints.
+
+Subscription cleanup executes independently of C assertions.
+The experiment does not support Proxy Agents or aperiodic subscriptions.
+
+Validated on the ARM64 Raspberry Pi on 2026-10-10, Pacific time:
+
+- Primary RIC SIGKILL with active KPM subscriptions.
+- Agents 1 and 2 connected to the backup RIC without restarting.
+- Backup RIC and Agent 3 processes remained unchanged.
+- Fresh backup-RIC KPM subscriptions reported nodes 1, 2 and 3.
+- The fresh xApp exited normally with three subscription delete responses.
+- The rebuilt image passed after removing the assertion-dependent
+  cleanup call.
+
+Existing xApp subscriptions do not migrate to the backup RIC.
+The old xApp can wait for a deletion response from the unavailable
+primary RIC and required manual termination in this experiment.
+Network blackhole detection, automatic failback, repeated failure cycles
+and production availability remain unvalidated.
+
+The Compose overlay is `deploy/oai-flexric/compose.ric-failover.yaml`.
+It enables the dedicated image and backup address for Agents 1 and 2.

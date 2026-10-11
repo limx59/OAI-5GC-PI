@@ -388,18 +388,18 @@ within those cases rather than creating additional test cases.
 load, RFsim protocol-stack statistics and physical RF measurements are
 different validation scopes.
 
-| # | Original test case | Completed scope | Remaining work and conditions |
-| --- | --- | --- | --- |
-| 1 | Node discovery | Multiple Agents and RICs; discovery after Agent recreation; graceful RIC restart recovery; explicit Agent migration between RICs | Automatic RIC failover remains unvalidated; continue with simulation |
-| 2 | KPM monitoring | Multiple topologies; OAI UE traffic; new subscription recovery; existing subscription recovery in the patched Emulator experiment; normal subscription cleanup | Completed for the documented simulation scope |
-| 3 | KPM CSV recording | Multiple Agents and RICs; OAI RFsim UE uplink and downlink recording | Completed for the documented simulation scope |
-| 4 | QoS monitoring | Multiple topologies; alerts; independent per-node state; policy regression; OAI UE traffic; controlled Agent pause and recovery | Completed for the documented simulation scope |
-| 5 | MAC/RLC/PDCP statistics | Multiple Agents and RICs; non-empty reports; subscription cleanup; OAI RFsim non-empty statistics | Completed for report delivery; physical measurement accuracy remains outside this scope |
-| 6 | Traffic steering policy | Synthetic policy inputs; live controlled Emulator MAC load; forward and reverse recommendations; balanced-load suppression; cooldown; reusable automated validators | Simultaneous load from multiple OAI RFsim cells remains unvalidated on this Pi; retry on a suitable simulation host or distributed setup |
-| 7 | Traffic steering control | Directed multi-Agent control; multi-RIC acknowledgements; Python source-to-target mapping | UE handover and closed-loop feedback remain unvalidated; first assess RFsim support and the required control path; physical RF acceptance requires an equipped lab |
-| 8 | Multi-Agent slice control | Slice policy; single- and multi-Agent control; directed multi-RIC acknowledgements | Actual scheduler PRB allocation remains unvalidated; verify scheduler/control integration and allocation under simulated traffic before physical RF tests |
-| 9 | Energy-saving control | Policy and simulated state feedback | Actual equipment control and power measurement are deferred; require supported hardware, its control interface and power measurement equipment |
-| 10 | Integrated regression | Reusable Emulator regression workflow | Physical RF regression is deferred; requires compatible SDR/RF equipment, UE, a suitable host and an appropriate RF test environment |
+| Test case | Completed | Remaining |
+| --- | --- | --- |
+| Node discovery | ✅ Multiple Agents and RICs; discovery after Agent recreation; graceful RIC restart recovery; explicit cross-RIC attachment; automatic failover after primary RIC SIGKILL in the dedicated patched Emulator image, without Agent restart; fresh backup KPM subscriptions and cleanup; automated validation and topology restoration | ☐ Existing xApp subscription migration during failover; network blackhole scenarios; automatic failback; repeated failure cycles |
+| KPM monitoring | ✅ Multiple topologies; OAI UE traffic; new subscription recovery; existing subscription recovery and normal cleanup in the validated restart scenarios | — |
+| KPM CSV recording | ✅ Multiple Agents and RICs; OAI UE uplink/downlink recording | — |
+| QoS monitoring | ✅ Multi-topology alerts; independent per-node state; policy regression; OAI UE traffic; live Agent pause and recovery | — |
+| MAC / RLC / PDCP statistics | ✅ Non-empty reports and subscription cleanup across multiple Agents and RICs; non-empty OAI records | — |
+| 🔴 **Traffic steering policy** | ✅ Synthetic policy tests; live controlled Emulator MAC load; forward/reverse recommendations; balanced-load suppression; cooldown; automated tests | ☐ **Live multi-cell load: concurrent dual-cell RFsim tests did not pass; experimental configurations and failure evidence saved; deferred** |
+| Traffic steering control | ✅ Directed multi-Agent control; multi-RIC ACKs; Python source-node mapping | ☐ UE handover and closed-loop feedback; assess RFsim validation first |
+| Multi-Agent slicing control | ✅ Slicing policy; directed single/multi-Agent and multi-RIC control with ACKs | ☐ Actual PRB allocation execution; prioritize simulation |
+| Energy-saving control | ✅ Policy and state-feedback simulation | ☐ Physical device control and power measurements; deferred due to unavailable hardware |
+| Combined regression | ✅ Reusable Emulator regression tests | ☐ Physical RF validation; deferred due to unavailable SDR hardware |
 
 ### Current laboratory limits and RFsim result
 
@@ -451,3 +451,5 @@ hardware models, software versions, RF setup, measurement method,
 acceptance criteria and cleanup alongside their results.
 
 [Experimental OAI dual-cell RFsim guide](README.oai-multi-cell.md) includes reproduction, failure status and cleanup.
+
+[Automatic RIC failover guide](README.ric-failover.md) covers patch builds, automated testing, validation limits and cleanup.
