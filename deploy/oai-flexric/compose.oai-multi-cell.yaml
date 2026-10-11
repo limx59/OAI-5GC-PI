@@ -1,0 +1,29 @@
+services:
+  gnb:
+    command: ["-O", "/etc/oai/gnb-multi-cell.conf", "--rfsim"]
+
+  gnb-2:
+    extends:
+      file: compose.oai.yaml
+      service: gnb
+    image: limx59/oai-gnb:arm64-radio-stats
+    networks:
+      lab:
+        ipv4_address: 172.29.0.31
+      core:
+        ipv4_address: 172.22.0.152
+    command: ["-O", "/etc/oai/gnb-2.conf", "--rfsim"]
+
+  nrue:
+    command: ["-O", "/etc/oai/ue.conf", "--rfsim", "-C", "3604800000", "-r", "24", "--numerology", "1", "--ssb", "24", "--num-dl-actors", "1", "--num-ul-actors", "1"]
+
+  nrue-2:
+    extends:
+      file: compose.oai.yaml
+      service: nrue
+    depends_on:
+      gnb-2:
+        condition: service_started
+    volumes:
+      - ./config/oai/ue-2.conf:/etc/oai/ue.conf:ro
+    command: ["-O", "/etc/oai/ue.conf", "--rfsim", "-C", "3604800000", "-r", "24", "--numerology", "1", "--ssb", "24", "--num-dl-actors", "1", "--num-ul-actors", "1"]

@@ -377,3 +377,77 @@ respected cooldown and completed normal subscription cleanup.
 This validates controlled Emulator reports and recommendations.
 Actual multicell radio load, cross-RIC policy aggregation and closed-loop
 UE handover remain unvalidated.
+
+## Test TODO and validation status
+
+Updated after the Raspberry Pi experiments on 2026-10-10.
+This table retains the original ten test cases. Follow-up work stays
+within those cases rather than creating additional test cases.
+
+“Completed” applies only to the scope stated below. Emulator-generated
+load, RFsim protocol-stack statistics and physical RF measurements are
+different validation scopes.
+
+| # | Original test case | Completed scope | Remaining work and conditions |
+| --- | --- | --- | --- |
+| 1 | Node discovery | Multiple Agents and RICs; discovery after Agent recreation; graceful RIC restart recovery; explicit Agent migration between RICs | Automatic RIC failover remains unvalidated; continue with simulation |
+| 2 | KPM monitoring | Multiple topologies; OAI UE traffic; new subscription recovery; existing subscription recovery in the patched Emulator experiment; normal subscription cleanup | Completed for the documented simulation scope |
+| 3 | KPM CSV recording | Multiple Agents and RICs; OAI RFsim UE uplink and downlink recording | Completed for the documented simulation scope |
+| 4 | QoS monitoring | Multiple topologies; alerts; independent per-node state; policy regression; OAI UE traffic; controlled Agent pause and recovery | Completed for the documented simulation scope |
+| 5 | MAC/RLC/PDCP statistics | Multiple Agents and RICs; non-empty reports; subscription cleanup; OAI RFsim non-empty statistics | Completed for report delivery; physical measurement accuracy remains outside this scope |
+| 6 | Traffic steering policy | Synthetic policy inputs; live controlled Emulator MAC load; forward and reverse recommendations; balanced-load suppression; cooldown; reusable automated validators | Simultaneous load from multiple OAI RFsim cells remains unvalidated on this Pi; retry on a suitable simulation host or distributed setup |
+| 7 | Traffic steering control | Directed multi-Agent control; multi-RIC acknowledgements; Python source-to-target mapping | UE handover and closed-loop feedback remain unvalidated; first assess RFsim support and the required control path; physical RF acceptance requires an equipped lab |
+| 8 | Multi-Agent slice control | Slice policy; single- and multi-Agent control; directed multi-RIC acknowledgements | Actual scheduler PRB allocation remains unvalidated; verify scheduler/control integration and allocation under simulated traffic before physical RF tests |
+| 9 | Energy-saving control | Policy and simulated state feedback | Actual equipment control and power measurement are deferred; require supported hardware, its control interface and power measurement equipment |
+| 10 | Integrated regression | Reusable Emulator regression workflow | Physical RF regression is deferred; requires compatible SDR/RF equipment, UE, a suitable host and an appropriate RF test environment |
+
+### Current laboratory limits and RFsim result
+
+The current Raspberry Pi has four Cortex-A76 CPU cores and about 8 GiB
+RAM. No SDR is available. Continue software simulation where supported;
+skip physical-equipment-only execution in this laboratory and retain
+those items above for future contributors.
+
+Two RFsim gNBs completed NG, F1 and E2 setup. Each gNB/UE pair separately
+established a session and reached the UPF during the 106 PRB experiments.
+That does not establish simultaneous dual-cell operation.
+
+Concurrent dual-cell attempts failed at both 106 PRB and 24 PRB.
+The UE RRC queues accumulated messages and a UE aborted at
+fill_msg3_pdu_from_rlc() with “no data for Msg3/MsgA_PUSCH”.
+Reducing each UE to one DL actor and one UL actor did not resolve the
+failure. In that run, UE1 aborted; UE2 received Registration Accept but
+had no TUN interface at inspection.
+
+Resource contention is a working hypothesis, not an isolated root
+cause. Simultaneous two-UE traffic, measured multi-cell load and
+closed-loop handover have not passed. The multi-cell Compose overlay
+and configurations are experimental and must not be treated as a
+validated deployment.
+
+Diagnostic archives were saved locally under ~/Work/oai-test-evidence/:
+
+- oai-multi-cell-24prb-diagnostic-20261010-141308.tar.gz
+- oai-multi-cell-actors-diagnostic-20261010-185550.tar.gz
+
+These local archives are not included in Git. They contain selected
+diagnostic events and container state; avoid publishing UE credentials
+or unrestricted authentication logs.
+
+### Contributor continuation
+
+For case 6, establish stable simultaneous UE sessions first, then run
+independent traffic flows and collect per-node MAC/KPM reports.
+Record process health, queue growth, CPU usage, traffic results and
+subscription cleanup. CPU scheduling changes or a stronger/distributed
+host need fresh validation.
+
+For cases 7 and 8, a control acknowledgement alone does not prove
+handover or scheduler execution. Collect the corresponding UE/session
+or scheduler evidence and verify the resulting data-plane behavior.
+
+For cases 9 and 10, contributors with physical equipment should document
+hardware models, software versions, RF setup, measurement method,
+acceptance criteria and cleanup alongside their results.
+
+[Experimental OAI dual-cell RFsim guide](README.oai-multi-cell.md) includes reproduction, failure status and cleanup.

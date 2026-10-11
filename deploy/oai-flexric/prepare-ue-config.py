@@ -2,6 +2,7 @@
 """Create a local OAI UE configuration from an existing Open5GS subscriber."""
 
 import argparse
+import ipaddress
 import json
 import os
 import re
@@ -15,13 +16,21 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--imsi", required=True)
     parser.add_argument("--mongo-container", default="mongo")
+    parser.add_argument("--output-name", default="ue.conf")
+    parser.add_argument("--rfsim-server", default="172.29.0.30")
     args = parser.parse_args()
+    if not re.fullmatch(r"ue(?:-[0-9]+)?\.conf", args.output_name):
+        parser.error("Output name must be ue.conf or ue-N.conf.")
+    try:
+        ipaddress.IPv4Address(args.rfsim_server)
+    except ValueError:
+        parser.error("RFsim server must be an IPv4 address.")
     if not re.fullmatch(r"[0-9]{15}", args.imsi):
         parser.error("IMSI must contain exactly 15 digits.")
 
-    path = DIRECTORY / "ue.conf"
+    path = DIRECTORY / args.output_name
     if path.exists():
-        parser.error("ue.conf already exists; no changes made.")
+        parser.error(f"{path.name} already exists; no changes made.")
 
     query = r'''
 const s = db.subscribers.findOne({imsi:IMSI_VALUE});
@@ -73,15 +82,15 @@ thread-pool = "-1,-1";
 
 rfsimulator = (
   {{
-    serveraddr = "172.29.0.30";
+    serveraddr = "{args.rfsim_server}";
     serverport = 4043;
   }}
 );
 '''
     ignore = DIRECTORY / ".gitignore"
     ignored = ignore.read_text(encoding="utf-8") if ignore.exists() else ""
-    if "ue.conf" not in ignored.splitlines():
-        parser.error("Add ue.conf to config/oai/.gitignore before generating credentials.")
+    if path.name not in ignored.splitlines():
+        parser.error(f"Add {path.name} to config/oai/.gitignore before generating credentials.")
     descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
     with os.fdopen(descriptor, "w", encoding="utf-8") as output:
         output.write(text)
