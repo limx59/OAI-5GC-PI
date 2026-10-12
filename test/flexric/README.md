@@ -378,6 +378,18 @@ This validates controlled Emulator reports and recommendations.
 Actual multicell radio load, cross-RIC policy aggregation and closed-loop
 UE handover remain unvalidated.
 
+## OAI E2 RC-triggered N2 handover
+
+See [the N2 handover experiment guide](README.oai-n2-handover.md) for
+matched OAI SDK images, dedicated container CPU allocation, automated
+validation, three-round regression tests, Docker Hub validation and cleanup.
+
+Validation covers forward RFsim UE handover, target RRC completion and
+NGAP Handover Notify, PDU session establishment, unchanged UE IP,
+post-handover connectivity and unchanged container processes.
+Load-driven closed-loop policy, reverse handover and interruption-time
+validation remain pending.
+
 ## Test TODO and validation status
 
 Updated after the Raspberry Pi experiments on 2026-10-11.
@@ -460,15 +472,3 @@ acceptance criteria and cleanup alongside their results.
 [Experimental RIC blackhole guide](README.ric-blackhole.md) covers experimental images, automated regression and cleanup.
 
 - [Experimental proactive RIC failback](README.ric-failback.md)
-
-## OAI E2 RC-triggered N2 handover
-
-See [the N2 handover experiment guide](README.oai-n2-handover.md) for
-matched OAI SDK images, dedicated container CPU allocation, automated
-validation, three-round regression tests, Docker Hub validation and cleanup.
-
-Validation covers forward RFsim UE handover, target RRC completion and
-NGAP Handover Notify, PDU session establishment, unchanged UE IP,
-post-handover connectivity and unchanged container processes.
-Load-driven closed-loop policy, reverse handover and interruption-time
-validation remain pending.
