@@ -375,8 +375,9 @@ and reverse recommendations, suppressed recommendations at balanced load,
 respected cooldown and completed normal subscription cleanup.
 
 This validates controlled Emulator reports and recommendations.
-Actual multicell radio load, cross-RIC policy aggregation and closed-loop
-UE handover remain unvalidated.
+Actual multicell radio load and cross-RIC policy aggregation remain
+unvalidated in this Emulator experiment. The separate OAI N2 experiment
+below validates bounded one-UE RFsim handover and closed-loop feedback.
 
 ## Experimental OAI dual-cell RFsim
 
@@ -422,15 +423,19 @@ See [the N2 handover experiment guide](README.oai-n2-handover.md) for
 matched OAI SDK images, dedicated container CPU allocation, automated
 validation, three-round regression tests, Docker Hub validation and cleanup.
 
-Validation covers forward RFsim UE handover, target RRC completion and
-NGAP Handover Notify, PDU session establishment, unchanged UE IP,
-post-handover connectivity and unchanged container processes.
-Load-driven closed-loop policy, reverse handover and interruption-time
-validation remain pending.
+See [the UE handover and closed-loop feedback guide](README.oai-n2-closed-loop.md)
+for actual OAI MAC-rate-triggered A -> B -> A, explicit empty-target RC
+inventory, cooldown, feedback, isolated UE NCC rollover correction,
+three local and three published-image regression rounds, and cleanup.
+
+Validation includes target RRC completion and NGAP Notify, PDU session,
+unchanged IP and processes, target MAC counter growth and data-plane
+feedback. Continuous ICMP observations are recorded with their loss and
+measurement limits; they do not establish exact radio interruption time.
 
 ## Test TODO and validation status
 
-Updated after the Raspberry Pi experiments on 2026-10-11.
+Updated after the Raspberry Pi experiments on 2026-10-12.
 This table retains the original ten test cases. Follow-up work stays
 within those cases rather than creating additional test cases.
 
@@ -446,7 +451,7 @@ different validation scopes.
 | QoS monitoring | ✅ Multi-topology alerts; independent per-node state; policy regression; OAI UE traffic; live Agent pause and recovery | — |
 | MAC / RLC / PDCP statistics | ✅ Non-empty reports and subscription cleanup across multiple Agents and RICs; non-empty OAI records | — |
 | Traffic steering policy | ✅ Synthetic policy tests; live controlled Emulator MAC load; forward/reverse recommendations; balanced-load suppression; cooldown; automated tests | ☐ **Live multi-cell load: concurrent dual-cell RFsim tests did not pass; experimental configurations and failure evidence saved; deferred** |
-| 🔴 **Traffic steering control** | ✅ Directed multi-Agent control; multi-RIC ACKs; Python source-node mapping; real E2 RC-triggered forward N2 RFsim UE handover; target RRC completion and NGAP Notify, PDU session, unchanged IP and post-handover traffic feedback; dedicated CPU allocation; three local and three published-image regression rounds | ☐ Load-driven closed-loop policy; reverse handover and interruption-time validation |
+| Traffic steering control | ✅ Directed multi-Agent control; multi-RIC ACKs; Python source-node mapping; RFsim UE handover and closed-loop feedback: actual MAC-rate-triggered A -> B -> A to an RC-confirmed empty target; idle suppression, cooldown and low-rate rearming; RRC completion/NGAP Notify, PDU session, unchanged IP/processes, target MAC growth and traffic feedback; NCC rollover correction; three local and three published-image continuous regression rounds; bounded ICMP reply-gap measurements with recorded loss | — |
 | Multi-Agent slicing control | ✅ Slicing policy; directed single/multi-Agent and multi-RIC control with ACKs | ☐ Actual PRB allocation execution; prioritize simulation |
 | Energy-saving control | ✅ Policy and state-feedback simulation | ☐ Physical device control and power measurements; deferred due to unavailable hardware |
 | Combined regression | ✅ Reusable Emulator regression tests | ☐ Physical RF validation; deferred due to unavailable SDR hardware |
@@ -472,9 +477,10 @@ had no TUN interface at inspection.
 Resource contention is a working hypothesis, not an isolated root
 cause. Simultaneous two-UE traffic and measured multi-cell load
 have not passed. A separate one-UE/two-gNB N2 mobility experiment passed
-forward handover with state and post-handover data-plane feedback under
-dedicated container CPU allocation. Load-driven closed-loop policy remains
-unvalidated. The multi-cell Compose overlay
+bidirectional handover and actual-MAC-rate-triggered closed-loop feedback
+under dedicated container CPU allocation, including unchanged processes
+and NCC rollover. This one-UE result does not validate concurrent two-UE
+traffic or normalized multi-cell load balancing. The multi-cell Compose overlay
 and configurations are experimental and must not be treated as a
 validated deployment.
 

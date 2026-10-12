@@ -6,9 +6,10 @@ These patches address issues encountered in persistent KPM recovery and
 online QoS Agent pause tests on an ARM64 Raspberry Pi.
 
 Patch scripts are maintained in this project's test/flexric/patches.
-They modify only the copied /src/flexric tree during dedicated Docker
-image builds. The repository's tracked flexric/src files remain unchanged.
-The resulting images contain modified FlexRIC binaries.
+FlexRIC patches modify only the copied /src/flexric tree during dedicated
+Docker image builds. The OAI UE NCC patch described below modifies only
+the copied /src/oai tree. Repository FlexRIC and OAI sources remain unchanged.
+The dedicated images contain the corresponding modified binaries.
 
 These are project-maintained patches, not claims of upstream acceptance.
 Upstream UNIT_TEST remains OFF.
@@ -287,3 +288,34 @@ and SQLite database. Repository SDK sources remain unchanged.
 The gNB Dockerfile installs the existing RC plugin without OAI source patches.
 
 See [N2 handover validation and Cleanup](../README.oai-n2-handover.md).
+
+## Actual OAI MAC collection: prepare-oai-mac-counters.py
+
+This preparation script adds a dedicated C MAC collector target only to
+the copied /src/flexric/examples/CMakeLists.txt after UE-context preparation.
+It does not change MAC measurement or decoder behavior.
+The matched SDK supports 10_ms MAC subscriptions; 100_ms is unsupported.
+Reports retain actual cumulative byte/PRB counters, RNTI and timestamps.
+Missing reports from an empty OAI cell are not treated as zero load.
+A separate query-only RC inventory explicitly confirms zero UEs.
+
+## Experimental OAI UE NCC rollover: apply-oai-ue-ncc-wrap.py
+
+The patch changes only /src/oai/openair2/RRC/NR_UE/rrc_UE.c inside
+Dockerfile.nrue-ncc-wrap. It replaces NH synchronization and NCC key-update
+handling with a cumulative local count and three-bit NCC comparison.
+The initial derivation remains distinct from rollover; integrity checks
+remain enabled. Source anchors and duplicate application are checked.
+
+The original UE skipped key derivation at NCC 7 -> 0. Target PDCP then
+reported integrity failures and no RRC completion was confirmed.
+The failure evidence is retained. Stub-based C logic checks and
+three local-image plus three published-image continuous closed-loop
+rounds passed, including runtime NCC rollover and process identity checks.
+
+The patch preserves the existing initial NAS COUNT convention.
+General security-context replacement, reestablishment and production
+security behavior are not established by these handover experiments.
+
+See [the closed-loop guide](../README.oai-n2-closed-loop.md) for
+image digests, reproduction, measurement boundaries and Cleanup.

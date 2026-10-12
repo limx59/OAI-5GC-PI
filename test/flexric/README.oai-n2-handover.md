@@ -1,6 +1,11 @@
 # Experimental OAI E2 RC-triggered N2 handover
 
 Validated on ARM64 Raspberry Pi on 2026-10-11, Pacific time.
+
+This guide records the original forward-only validation.
+See [UE handover and closed-loop feedback](README.oai-n2-closed-loop.md)
+for the 2026-10-12 bidirectional, actual-MAC-rate-driven extension,
+NCC rollover correction, published images and ICMP observations.
 These dedicated test images are not replacements for the regular images.
 
 ## Validated scope
