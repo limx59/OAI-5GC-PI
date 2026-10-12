@@ -390,7 +390,7 @@ different validation scopes.
 
 | Test case | Completed | Remaining |
 | --- | --- | --- |
-| 🔴 **Node discovery** | ✅ Multiple Agents and RICs; discovery after Agent recreation; graceful RIC restart recovery; explicit cross-RIC attachment; automatic RIC failover in the dedicated patched Emulator image; three consecutive SIGKILL regression runs; published-image validation; manual and automated A -> B -> A failover with Agent 1 and 2 processes unchanged throughout; network blackhole failover with opt-in SCTP socket settings and the experimental RIC rejoin patch; dedicated three-round regression script passed with local and published Docker Hub images, including rule removal and explicit Agent rejoin without RIC restart; fresh KPM subscriptions, cleanup and baseline restoration | ☐ **Next: proactive automatic failback — implementation and validation required** |
+| Node discovery | ✅ Multiple Agents and RICs; discovery after Agent recreation; graceful RIC restart recovery; explicit cross-RIC attachment; automatic RIC failover in the dedicated patched Emulator image; three consecutive SIGKILL regression runs; published-image validation; manual and automated A -> B -> A failover with Agent 1 and 2 processes unchanged throughout; network blackhole failover with opt-in SCTP socket settings and the experimental RIC rejoin patch; dedicated three-round regression script passed with local and published Docker Hub images, including rule removal and explicit Agent rejoin without RIC restart; fresh KPM subscriptions, cleanup and baseline restoration; proactive automatic failback after primary recovery while backup remains running; dedicated three-round regression passed for local and published images, without Agent recreation between rounds | — |
 | KPM monitoring | ✅ Multiple topologies; OAI UE traffic; new subscription recovery; existing subscription recovery and normal cleanup in the validated restart scenarios | — |
 | KPM CSV recording | ✅ Multiple Agents and RICs; OAI UE uplink/downlink recording | — |
 | QoS monitoring | ✅ Multi-topology alerts; independent per-node state; policy regression; OAI UE traffic; live Agent pause and recovery | — |
@@ -455,3 +455,5 @@ acceptance criteria and cleanup alongside their results.
 [Automatic RIC failover guide](README.ric-failover.md) covers patch builds, automated testing, validation limits and cleanup.
 
 [Experimental RIC blackhole guide](README.ric-blackhole.md) covers experimental images, automated regression and cleanup.
+
+- [Experimental proactive RIC failback](README.ric-failback.md)

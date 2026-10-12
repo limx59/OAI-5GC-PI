@@ -253,3 +253,23 @@ xApp subscription migration, active-subscription rejoin, or production
 availability. After upgrading FlexRIC, review source anchors, rebuild and
 repeat validation. See [the blackhole guide](../README.ric-blackhole.md)
 for deployment and cleanup.
+
+## Experimental proactive RIC failback
+
+`apply-ric-failback.py` adds opt-in native Emulator proactive return
+to the primary RIC. Apply it after the KPM recovery, QoS fault,
+RIC failover and SCTP blackhole patches using
+`docker/flexric/Dockerfile.ric-failback-agent`.
+
+Set `RIC_FAILBACK_TEST=1`. Nonblocking SCTP transport probes require
+three consecutive successes before requesting E2 Setup on the primary.
+Use the rejoin-patched RIC, which handles unmapped probe associations.
+
+Repository FlexRIC source remains unchanged. Only `/src/flexric`
+inside the Docker build is accepted by the patch script.
+
+Manual, automated and three-round local and published-image validation
+passed. Fresh subscriptions are used; existing subscriptions do not migrate.
+SCTP transport readiness does not establish E2 application health.
+
+See [failback validation and Cleanup](../README.ric-failback.md).
