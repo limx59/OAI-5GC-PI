@@ -378,6 +378,44 @@ This validates controlled Emulator reports and recommendations.
 Actual multicell radio load, cross-RIC policy aggregation and closed-loop
 UE handover remain unvalidated.
 
+## Experimental OAI dual-cell RFsim
+
+See [the dual-cell RFsim experiment guide](README.oai-multi-cell.md) for
+deployment prerequisites, reproduction, failure evidence and cleanup.
+
+Concurrent two-UE tests did not pass. The configurations remain experimental;
+simultaneous two-UE traffic and measured multi-cell load remain unvalidated.
+
+## Automatic RIC failover
+
+See [the automatic RIC failover guide](README.ric-failover.md) for
+dedicated patch builds, automated tests, regression results, Docker Hub
+validation, validation limits and cleanup.
+
+Validation includes fault-driven RIC failover and bidirectional A -> B -> A
+reconnection within unchanged Agent processes in the stated experiment scope.
+
+## Experimental RIC network blackhole
+
+See [the RIC blackhole experiment guide](README.ric-blackhole.md) for
+dedicated images, namespace-isolated SCTP packet drops, automated validation,
+three-round regression tests, Docker Hub validation and cleanup.
+
+Validation uses opt-in Agent socket settings and the RIC rejoin patch.
+Agents fail over without restarting; restoration explicitly recreates
+Agents 1 and 2 without restarting the RICs.
+
+## Experimental proactive RIC failback
+
+See [the proactive RIC failback guide](README.ric-failback.md) for
+dedicated patch builds, automated validation, three-round regression tests,
+Docker Hub validation, validation limits and cleanup.
+
+After primary recovery, Agents proactively return while the backup RIC
+remains running. Agent and backup RIC processes remain unchanged.
+Transport probes do not establish E2 application health, and existing
+xApp subscriptions do not migrate.
+
 ## OAI E2 RC-triggered N2 handover
 
 See [the N2 handover experiment guide](README.oai-n2-handover.md) for
@@ -464,11 +502,3 @@ or scheduler evidence and verify the resulting data-plane behavior.
 For cases 9 and 10, contributors with physical equipment should document
 hardware models, software versions, RF setup, measurement method,
 acceptance criteria and cleanup alongside their results.
-
-[Experimental OAI dual-cell RFsim guide](README.oai-multi-cell.md) includes reproduction, failure status and cleanup.
-
-[Automatic RIC failover guide](README.ric-failover.md) covers patch builds, automated testing, validation limits and cleanup.
-
-[Experimental RIC blackhole guide](README.ric-blackhole.md) covers experimental images, automated regression and cleanup.
-
-- [Experimental proactive RIC failback](README.ric-failback.md)
