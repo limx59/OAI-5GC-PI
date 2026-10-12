@@ -380,7 +380,7 @@ UE handover remain unvalidated.
 
 ## Test TODO and validation status
 
-Updated after the Raspberry Pi experiments on 2026-10-10.
+Updated after the Raspberry Pi experiments on 2026-10-11.
 This table retains the original ten test cases. Follow-up work stays
 within those cases rather than creating additional test cases.
 
@@ -396,7 +396,7 @@ different validation scopes.
 | QoS monitoring | ✅ Multi-topology alerts; independent per-node state; policy regression; OAI UE traffic; live Agent pause and recovery | — |
 | MAC / RLC / PDCP statistics | ✅ Non-empty reports and subscription cleanup across multiple Agents and RICs; non-empty OAI records | — |
 | Traffic steering policy | ✅ Synthetic policy tests; live controlled Emulator MAC load; forward/reverse recommendations; balanced-load suppression; cooldown; automated tests | ☐ **Live multi-cell load: concurrent dual-cell RFsim tests did not pass; experimental configurations and failure evidence saved; deferred** |
-| Traffic steering control | ✅ Directed multi-Agent control; multi-RIC ACKs; Python source-node mapping | ☐ UE handover and closed-loop feedback; assess RFsim validation first |
+| 🔴 **Traffic steering control** | ✅ Directed multi-Agent control; multi-RIC ACKs; Python source-node mapping; real E2 RC-triggered forward N2 RFsim UE handover; target RRC completion and NGAP Notify, PDU session, unchanged IP and post-handover traffic feedback; dedicated CPU allocation; three local and three published-image regression rounds | ☐ Load-driven closed-loop policy; reverse handover and interruption-time validation |
 | Multi-Agent slicing control | ✅ Slicing policy; directed single/multi-Agent and multi-RIC control with ACKs | ☐ Actual PRB allocation execution; prioritize simulation |
 | Energy-saving control | ✅ Policy and state-feedback simulation | ☐ Physical device control and power measurements; deferred due to unavailable hardware |
 | Combined regression | ✅ Reusable Emulator regression tests | ☐ Physical RF validation; deferred due to unavailable SDR hardware |
@@ -420,8 +420,11 @@ failure. In that run, UE1 aborted; UE2 received Registration Accept but
 had no TUN interface at inspection.
 
 Resource contention is a working hypothesis, not an isolated root
-cause. Simultaneous two-UE traffic, measured multi-cell load and
-closed-loop handover have not passed. The multi-cell Compose overlay
+cause. Simultaneous two-UE traffic and measured multi-cell load
+have not passed. A separate one-UE/two-gNB N2 mobility experiment passed
+forward handover with state and post-handover data-plane feedback under
+dedicated container CPU allocation. Load-driven closed-loop policy remains
+unvalidated. The multi-cell Compose overlay
 and configurations are experimental and must not be treated as a
 validated deployment.
 
@@ -457,3 +460,5 @@ acceptance criteria and cleanup alongside their results.
 [Experimental RIC blackhole guide](README.ric-blackhole.md) covers experimental images, automated regression and cleanup.
 
 - [Experimental proactive RIC failback](README.ric-failback.md)
+
+[Experimental OAI N2 handover guide](README.oai-n2-handover.md) covers matched SDK images, CPU allocation, regression evidence and Cleanup.

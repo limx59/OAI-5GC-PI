@@ -273,3 +273,17 @@ passed. Fresh subscriptions are used; existing subscriptions do not migrate.
 SCTP transport readiness does not establish E2 application health.
 
 See [failback validation and Cleanup](../README.ric-failback.md).
+
+## Experimental OAI SDK context and N2 handover build
+
+`prepare-oai-ue-context.py` prepares only `/src/flexric` copied from the
+OAI embedded SDK inside dedicated Docker builds. It replaces the examples
+build entry with the query target and required NR RRC ASN.1 library.
+The dedicated RIC Dockerfile additionally includes the RIC build target.
+
+The regular standalone SDK's neighbour-table decoder is unimplemented.
+Both dedicated RIC and xApp use the matching OAI SDK, its INI configuration
+and SQLite database. Repository SDK sources remain unchanged.
+The gNB Dockerfile installs the existing RC plugin without OAI source patches.
+
+See [N2 handover validation and Cleanup](../README.oai-n2-handover.md).

@@ -1,0 +1,8 @@
+# Experimental CPU allocation; no host scheduling changes.
+services:
+  gnb:
+    cpuset: "1"
+  gnb-2:
+    cpuset: "2"
+  nrue:
+    cpuset: "3"
