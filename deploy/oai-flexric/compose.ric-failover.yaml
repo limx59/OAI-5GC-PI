@@ -1,0 +1,18 @@
+services:
+  emulator:
+    image: limx59/flexric-emulator:arm64-ric-failover
+    build:
+      context: ../..
+      dockerfile: docker/flexric/Dockerfile.ric-failover-agent
+      target: emulator
+    environment:
+      RIC_BACKUP_IP: "172.29.0.11"
+
+  emulator-2:
+    image: limx59/flexric-emulator:arm64-ric-failover
+    build:
+      context: ../..
+      dockerfile: docker/flexric/Dockerfile.ric-failover-agent
+      target: emulator
+    environment:
+      RIC_BACKUP_IP: "172.29.0.11"

@@ -1,0 +1,4 @@
+services:
+  emulator-2:
+    volumes:
+      - ./config/ric-recovery/e2agent-ric2.conf:/usr/local/etc/flexric/e2agent.conf:ro

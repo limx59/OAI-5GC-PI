@@ -1,0 +1,49 @@
+# Build from the open5gs source directory, not docker_open5gs/base.
+# docker build --platform linux/arm64 -f docker_open5gs/base/Dockerfile.local \
+#   -t docker_open5gs:local-arm64 .
+FROM node:20-bullseye-slim AS node
+
+FROM ubuntu:focal AS builder
+ENV DEBIAN_FRONTEND=noninteractive
+RUN test "$(dpkg --print-architecture)" = arm64 && \
+    apt-get update && apt-get install -y --no-install-recommends \
+        build-essential pkg-config meson ninja-build cmake flex bison git \
+        python3 python3-setuptools ca-certificates \
+        libsctp-dev libgnutls28-dev libgcrypt20-dev libssl-dev libidn11-dev \
+        libmongoc-dev libbson-dev libyaml-dev libmicrohttpd-dev \
+        libcurl4-gnutls-dev libnghttp2-dev libtins-dev libtalloc-dev && \
+    rm -rf /var/lib/apt/lists/*
+COPY --from=node /usr/local/ /usr/local/
+WORKDIR /open5gs
+COPY . /open5gs/
+# Never reuse host Meson caches or installation outputs. Both ninja invocations
+# are capped at two jobs, including any work triggered by the install target.
+RUN test ! -e /open5gs/build-local && test ! -e /open5gs/install && \
+    meson setup /open5gs/build-local /open5gs --prefix=/open5gs/install \
+        --libdir=lib/aarch64-linux-gnu && \
+    ninja -C /open5gs/build-local -j 2 && \
+    ninja -C /open5gs/build-local -j 2 install && \
+    mkdir -p /open5gs/install/include
+WORKDIR /open5gs/webui
+# Keep dependencies required by the existing npm run dev deployment script.
+RUN npm ci --no-audit --no-fund
+
+FROM ubuntu:focal AS runtime
+ENV DEBIAN_FRONTEND=noninteractive
+# Retain tools used by the existing component scripts, including the legacy
+# mongo client used by hss_init.sh and Python click used by tun_if.py.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        ca-certificates curl libssl1.1 libyaml-0-2 libmicrohttpd12 \
+        libmongoc-1.0-0 libbson-1.0-0 libsctp1 libcurl3-gnutls libnghttp2-14 \
+        libgnutls30 libgcrypt20 libidn11 libtalloc2 libtins4.0 \
+        netbase ifupdown net-tools iproute2 iputils-ping iptables iperf \
+        python3 python3-click mongodb-clients openssl && \
+    rm -rf /var/lib/apt/lists/*
+COPY --from=node /usr/local/ /usr/local/
+COPY --from=builder /open5gs/install/ /open5gs/install/
+COPY --from=builder /open5gs/webui/ /open5gs/webui/
+COPY --from=builder /open5gs/misc/db/ /open5gs/misc/db/
+COPY docker_open5gs/base/open5gs_init.sh /open5gs_init.sh
+RUN chmod +x /open5gs_init.sh
+WORKDIR /open5gs
+CMD ["/open5gs_init.sh"]

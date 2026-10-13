@@ -1,0 +1,66 @@
+# General parameters
+# -----------------------------------------
+schema: rfnoc_imagebuilder_args         # Identifier for the schema used to validate this file
+copyright: >-                           # Copyright information used in file headers
+  Copyright 2023 Ettus Research, a National Instruments Brand
+license: >-                             # License information used in file headers
+  SPDX-License-Identifier: LGPL-3.0-or-later
+version: '1.0'                          # File version
+chdr_width: 64                          # Bit width of the CHDR bus for this image
+device: 'e310'                          # USRP type
+default_target: 'E310_SG3'
+image_core_name: 'usrp_e310_sg3_fpga'   # Name to use for the generated output files.
+                                        # Change image_core_name and default_target in tandem,
+                                        # because we won't generate the correct DTS files otherwise.
+
+# A list of all stream endpoints in design
+# ----------------------------------------
+stream_endpoints:
+  ep0:                                  # Stream endpoint name
+    ctrl: True                          # Endpoint passes control traffic
+    data: True                          # Endpoint passes data traffic
+    buff_size: 16384                    # Ingress buffer size for data
+  ep1:
+    ctrl: False
+    data: True
+    buff_size: 16384
+
+# A list of all NoC blocks in design
+# ----------------------------------
+noc_blocks:
+  radio0:                               # NoC block name
+    block_desc: 'radio.yml'             # Block device descriptor
+    parameters:
+      NUM_PORTS: 2
+
+# A list of all static connections in design
+# ------------------------------------------
+# Format: A list of connection maps (list of key-value pairs) with the following keys
+#   - srcblk  = Source block to connect
+#   - srcport = Port on the source block to connect
+#   - dstblk  = Destination block to connect
+#   - dstport = Port on the destination block to connect
+connections:
+  # TX A
+  - { srcblk: ep0,    srcport: out0,  dstblk: radio0, dstport: in_0 }
+  # RX A
+  - { srcblk: radio0, srcport: out_0, dstblk: ep0,    dstport: in0  }
+  # TX B
+  - { srcblk: ep1,    srcport: out0,  dstblk: radio0, dstport: in_1 }
+  # RX B
+  - { srcblk: radio0, srcport: out_1, dstblk: ep1,    dstport: in0  }
+  #
+  # BSP Connections
+  - { srcblk: radio0,   srcport: ctrlport, dstblk: _device_, dstport: ctrlport }
+  - { srcblk: _device_, srcport: radio,    dstblk: radio0,   dstport: radio    }
+  - { srcblk: _device_, srcport: time,     dstblk: radio0,   dstport: time     }
+
+# A list of all clock domain connections in design
+# ------------------------------------------------
+# Format: A list of connection maps (list of key-value pairs) with the following keys
+#   - srcblk  = Source block to connect (Always "_device"_)
+#   - srcport = Clock domain on the source block to connect
+#   - dstblk  = Destination block to connect
+#   - dstport = Clock domain on the destination block to connect
+clk_domains:
+  - { srcblk: _device_, srcport: radio, dstblk: radio0, dstport: radio }

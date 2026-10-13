@@ -1,0 +1,136 @@
+#!/bin/groovy
+/*
+ * SPDX-License-Identifier: LicenseRef-CSSL-1.0
+ */
+
+// Location of the python executor node shall be in the same subnet as the others servers
+def nodeExecutor = params.nodeExecutor
+
+// SSH URL of the internal git repository
+def internalRepoURL = params.internalRepoURL
+
+// Name of the resource
+def lockResources = []
+if (params.LockResources != null && params.LockResources.trim().length() > 0)
+  params.LockResources.trim().split(",").each{lockResources += [resource: it.trim()]}
+
+pipeline {
+  agent {
+    label nodeExecutor
+  }
+  options {
+    ansiColor('xterm')
+    lock(extra: lockResources)
+  }
+  stages {
+    stage("Job init") {
+      steps {
+        buildName "${params.requestNumber ?: params.targetBranch}"
+        buildDescription "Branch: ${params.sourceBranch}"
+      }
+    }
+    stage('Checkout and merge') {
+      steps {
+        script {
+          if (params.mergeWithTarget) {
+            echo "PR triggered - merging PR #${params.requestNumber} into latest ${params.targetBranch}"
+            try {
+              checkout([
+                $class: 'GitSCM',
+                branches: [[name: "refs/remotes/origin/${params.targetBranch}"]],
+                userRemoteConfigs: [[
+                  url: params.targetRepo,
+                  refspec: "+refs/heads/${params.targetBranch}:refs/remotes/origin/${params.targetBranch} " +
+                           "+refs/pull/${params.requestNumber}/head:refs/remotes/origin/pr/${params.requestNumber}/head",
+                  credentialsId: 'github-jenkins-duranta'
+                ]]
+              ])
+            } catch (e) {
+              error("Checkout failed for ${params.targetBranch} / PR #${params.requestNumber} " +
+                    "from ${params.targetRepo}. (${e.message})")
+            }
+            if (sh(returnStatus: true, script: "git -c user.email=oaicicdteam@openairinterface.org " +
+                   "-c user.name='Duranta Jenkins' merge --no-ff " +
+                   "-m \"Merge ${params.sourceCommit} into \$(git rev-parse HEAD)\" ${params.sourceCommit}") != 0) {
+              def conflicts = sh(returnStdout: true, script: 'git diff --name-only --diff-filter=U || true').trim()
+              error("PR #${params.requestNumber} (${params.sourceCommit}) does not merge into ${params.targetBranch}." +
+                    (conflicts ? " Rebase onto ${params.targetBranch}, resolve the conflicts and push again." +
+                                 "\nConflicting files:\n${conflicts}" : ""))
+            }
+          } else {
+            echo "Push triggered - checking out branch ${params.targetBranch}"
+            try {
+              checkout([
+                $class: 'GitSCM',
+                branches: [[name: params.targetBranch]],
+                userRemoteConfigs: [[
+                  url: params.targetRepo,
+                  credentialsId: 'github-jenkins-duranta'
+                ]]
+              ])
+            } catch (e) {
+              error("Checkout failed for branch ${params.targetBranch} from ${params.targetRepo}. (${e.message})")
+            }
+          }
+        }
+      }
+    }
+    stage('Verify parameters') {
+      steps {
+        script {
+          def missingParams = []
+          if (!params.sourceBranch?.trim())   { missingParams << 'sourceBranch' }
+          if (!params.sourceCommit?.trim()) { missingParams << 'sourceCommit' }
+          if (params.mergeWithTarget) {
+            if (!params.targetRepo?.trim())   { missingParams << 'targetRepo' }
+            if (!params.targetBranch?.trim()) { missingParams << 'targetBranch' }
+          }
+
+          if (missingParams) {
+            error "Missing required parameters: ${missingParams.join(', ')}"
+          }
+
+          echo "Source Branch : ${params.sourceBranch}"
+          echo "Source Commit : ${params.sourceCommit}"
+          echo "Merge         : ${params.mergeWithTarget}"
+          if (params.mergeWithTarget) {
+            echo "Target Branch : ${params.targetBranch}"
+            echo "Target Repo   : ${params.targetRepo}"
+          }
+        }
+      }
+    }
+    stage('Prepare workspace') {
+      steps {
+        sh """
+          git config user.email "oaicicdteam@openairinterface.org"
+          git config user.name "Duranta Jenkins"
+          git remote remove internal-repo || true
+        """
+      }
+    }
+    stage('Create testing branch for CI') {
+      steps {
+        sh """
+          # Checkout source commit
+          git checkout -B ${params.branch}
+        """
+      }
+    }
+    stage('Push merged branch to internal repository') {
+      steps {
+        sh """
+          git remote add internal-repo ${params.repository} || true
+          echo "Pushing ${params.branch} to internal repo"
+          git push --force internal-repo ${params.branch}
+        """
+      }
+    }
+    stage('Push develop to internal repository') {
+      when { expression { !params.mergeWithTarget && params.targetBranch == 'develop' } }
+      steps {
+        sh "git push internal-repo ${params.sourceCommit}:refs/heads/develop"
+      }
+    }
+  }
+}

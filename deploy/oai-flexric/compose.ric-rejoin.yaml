@@ -1,0 +1,13 @@
+services:
+  ric:
+    image: limx59/flexric-ric:arm64-ric-rejoin
+    build:
+      context: ../..
+      dockerfile: docker/flexric/Dockerfile.ric-rejoin
+      target: ric
+  ric-2:
+    image: limx59/flexric-ric:arm64-ric-rejoin
+    build:
+      context: ../..
+      dockerfile: docker/flexric/Dockerfile.ric-rejoin
+      target: ric

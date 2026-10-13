@@ -1,0 +1,39 @@
+services:
+  ric:
+    image: "${FLEXRIC_RIC_IMAGE:-limx59/flexric-ric:arm64-multi-agent}"
+
+  emulator:
+    image: "${FLEXRIC_EMULATOR_IMAGE:-limx59/flexric-emulator:arm64-multi-agent}"
+    environment:
+      FLEXRIC_EMULATOR_NB_ID: "1"
+
+  emulator-2:
+    extends:
+      file: compose.emulator.yaml
+      service: emulator
+    image: "${FLEXRIC_EMULATOR_IMAGE:-limx59/flexric-emulator:arm64-multi-agent}"
+    environment:
+      FLEXRIC_EMULATOR_NB_ID: "2"
+    networks:
+      lab:
+        ipv4_address: 172.29.0.21
+
+  emulator-3:
+    extends:
+      file: compose.emulator.yaml
+      service: emulator
+    image: "${FLEXRIC_EMULATOR_IMAGE:-limx59/flexric-emulator:arm64-multi-agent}"
+    environment:
+      FLEXRIC_EMULATOR_NB_ID: "3"
+    networks:
+      lab:
+        ipv4_address: 172.29.0.22
+
+  xapp-nodes:
+    image: "${FLEXRIC_XAPP_IMAGE:-limx59/flexric-xapp:arm64-multi-agent}"
+
+  xapp-kpm:
+    image: "${FLEXRIC_XAPP_IMAGE:-limx59/flexric-xapp:arm64-multi-agent}"
+
+  xapp-steering:
+    image: "${FLEXRIC_XAPP_IMAGE:-limx59/flexric-xapp:arm64-multi-agent}"

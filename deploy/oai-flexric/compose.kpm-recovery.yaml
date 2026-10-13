@@ -1,0 +1,35 @@
+services:
+  xapp-kpm:
+    image: limx59/flexric-xapp:arm64-kpm-recovery
+    build:
+      context: ../..
+      dockerfile: docker/flexric/Dockerfile.kpm-recovery
+      target: xapp
+
+  xapp-kpm-ric2:
+    image: limx59/flexric-xapp:arm64-kpm-recovery
+    build:
+      context: ../..
+      dockerfile: docker/flexric/Dockerfile.kpm-recovery
+      target: xapp
+
+  emulator:
+    image: limx59/flexric-emulator:arm64-kpm-recovery
+    build:
+      context: ../..
+      dockerfile: docker/flexric/Dockerfile.kpm-recovery
+      target: emulator
+
+  emulator-2:
+    image: limx59/flexric-emulator:arm64-kpm-recovery
+    build:
+      context: ../..
+      dockerfile: docker/flexric/Dockerfile.kpm-recovery
+      target: emulator
+
+  emulator-3:
+    image: limx59/flexric-emulator:arm64-kpm-recovery
+    build:
+      context: ../..
+      dockerfile: docker/flexric/Dockerfile.kpm-recovery
+      target: emulator

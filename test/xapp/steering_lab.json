@@ -1,0 +1,7 @@
+{
+  "ran_ue_id": 1,
+  "cells": {
+    "cell-a": 256,
+    "cell-b": 512
+  }
+}

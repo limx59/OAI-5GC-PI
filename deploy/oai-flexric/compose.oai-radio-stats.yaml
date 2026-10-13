@@ -1,0 +1,7 @@
+services:
+  gnb:
+    image: limx59/oai-gnb:arm64-radio-stats
+  xapp-nodes:
+    image: limx59/flexric-xapp:arm64-subscription-cleanup
+  xapp-kpm:
+    image: limx59/flexric-xapp:arm64-subscription-cleanup

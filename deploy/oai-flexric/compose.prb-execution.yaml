@@ -1,0 +1,22 @@
+# Experimental E2-triggered independent NR scheduler simulations.
+services:
+  ric:
+    image: limx59/flexric-ric:arm64-multi-agent
+  emulator:
+    image: limx59/oai-pi-flexric-emulator:arm64-prb-execution-test
+    build:
+      context: ../..
+      dockerfile: docker/flexric/Dockerfile.prb-execution
+      target: emulator
+  emulator-2:
+    image: limx59/oai-pi-flexric-emulator:arm64-prb-execution-test
+    build:
+      context: ../..
+      dockerfile: docker/flexric/Dockerfile.prb-execution
+      target: emulator
+  emulator-3:
+    image: limx59/oai-pi-flexric-emulator:arm64-prb-execution-test
+    build:
+      context: ../..
+      dockerfile: docker/flexric/Dockerfile.prb-execution
+      target: emulator

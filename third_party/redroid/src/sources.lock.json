@@ -1,0 +1,61 @@
+{
+  "aosp_tag": "android-12.0.0_r34",
+  "lunch_target": "redroid_arm64_only-userdebug",
+  "build_host_architecture": "x86_64",
+  "image_platform": "linux/arm64",
+  "repositories": [
+    {
+      "directory": "local_manifests",
+      "url": "https://github.com/remote-android/local_manifests.git",
+      "commit": "a8b841983cd28ee1b1b9c4a0d0b1b95a5a7b60f8",
+      "branch": "12.0.0"
+    },
+    {
+      "directory": "redroid-patches",
+      "url": "https://github.com/remote-android/redroid-patches.git",
+      "commit": "a5c70c0dd89c12b5027c902ab4182f31d38f3bb7",
+      "branch": "master"
+    },
+    {
+      "directory": "device_redroid",
+      "url": "https://github.com/remote-android/device_redroid.git",
+      "commit": "f4f6409f7f84dad99442bd188009a2be6ae97229",
+      "branch": "redroid-12.0.0"
+    },
+    {
+      "directory": "redroid-c2",
+      "url": "https://github.com/remote-android/redroid-c2.git",
+      "commit": "98c7c28bb134ea05e020fc29440c809672b6eb3e",
+      "branch": "master"
+    },
+    {
+      "directory": "redroid-omx",
+      "url": "https://github.com/remote-android/redroid-omx.git",
+      "commit": "c1917368fdc999f67574d070488245d357d06dd7",
+      "branch": "master"
+    },
+    {
+      "directory": "vendor_redroid",
+      "url": "https://github.com/remote-android/vendor_redroid.git",
+      "commit": "1686c1825c146891d06004e35e7c362b58d3f1bc",
+      "branch": "master"
+    },
+    {
+      "directory": "chromium-webview-stub",
+      "url": "https://github.com/remote-android/chromium-webview-stub.git",
+      "commit": "5c21d6077d49ee4e651d98206fd6ad74ee7c5860",
+      "branch": "redroid-12.0.0"
+    },
+    {
+      "directory": "redroid-doc",
+      "url": "https://github.com/remote-android/redroid-doc.git",
+      "commit": "eba9a489990f3f558b7115f25fdc782d610ee8ad",
+      "branch": "master"
+    }
+  ],
+  "notes": [
+    "This file records the downloaded ReDroid source snapshots.",
+    "Full AOSP sources and external prebuilt dependencies are not included.",
+    "A complete source build has not been validated."
+  ]
+}

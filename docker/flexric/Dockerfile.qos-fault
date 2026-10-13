@@ -1,0 +1,2 @@
+FROM limx59/flexric-xapp:arm64-kpm-recovery AS xapp
+COPY test/xapp/ /opt/oai-pi/test/xapp/

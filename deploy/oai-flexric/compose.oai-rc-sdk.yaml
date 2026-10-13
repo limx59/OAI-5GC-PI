@@ -1,0 +1,10 @@
+services:
+  ric:
+    image: limx59/oai-pi-flexric-ric:arm64-oai-rc-test
+    build:
+      context: ../..
+      dockerfile: docker/flexric/Dockerfile.oai-rc-ric
+      target: ric
+    volumes:
+      - ./config/oai/xapp-oai-context.conf:/usr/local/etc/flexric/flexric.conf:ro
+    command: ["-c", "/usr/local/etc/flexric/flexric.conf", "-p", "/usr/local/lib/flexric/"]

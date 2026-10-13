@@ -1,0 +1,33 @@
+services:
+  xapp-kpm:
+    image: limx59/flexric-xapp:arm64-qos-fault
+    build:
+      context: ../..
+      dockerfile: docker/flexric/Dockerfile.qos-fault
+
+  xapp-kpm-ric2:
+    image: limx59/flexric-xapp:arm64-qos-fault
+    build:
+      context: ../..
+      dockerfile: docker/flexric/Dockerfile.qos-fault
+
+  emulator:
+    image: limx59/flexric-emulator:arm64-qos-fault
+    build:
+      context: ../..
+      dockerfile: docker/flexric/Dockerfile.qos-fault-agent
+      target: emulator
+
+  emulator-2:
+    image: limx59/flexric-emulator:arm64-qos-fault
+    build:
+      context: ../..
+      dockerfile: docker/flexric/Dockerfile.qos-fault-agent
+      target: emulator
+
+  emulator-3:
+    image: limx59/flexric-emulator:arm64-qos-fault
+    build:
+      context: ../..
+      dockerfile: docker/flexric/Dockerfile.qos-fault-agent
+      target: emulator

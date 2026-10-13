@@ -1,0 +1,47 @@
+services:
+  gnb:
+    image: limx59/oai-pi-oai-gnb:arm64-rc-handover-test
+    build:
+      context: ../..
+      dockerfile: docker/oai/Dockerfile.rc-handover
+      target: gnb
+    command: ["-O", "/etc/oai/gnb-n2-source.conf", "--rfsim"]
+
+  gnb-2:
+    extends:
+      file: compose.oai.yaml
+      service: gnb
+    image: limx59/oai-pi-oai-gnb:arm64-rc-handover-test
+    build:
+      context: ../..
+      dockerfile: docker/oai/Dockerfile.rc-handover
+      target: gnb
+    networks:
+      lab:
+        ipv4_address: 172.29.0.31
+      core:
+        ipv4_address: 172.22.0.152
+    command: ["-O", "/etc/oai/gnb-n2-target.conf", "--rfsim"]
+
+  nrue:
+    networks:
+      lab:
+        ipv4_address: 172.29.0.32
+    command:
+      - "-O"
+      - "/etc/oai/ue.conf"
+      - "--rfsim"
+      - "-C"
+      - "3604800000"
+      - "-r"
+      - "24"
+      - "--numerology"
+      - "1"
+      - "--ssb"
+      - "24"
+      - "--num-dl-actors"
+      - "1"
+      - "--num-ul-actors"
+      - "1"
+      - "--rfsimulator.[0].serveraddr"
+      - "server"

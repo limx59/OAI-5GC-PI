@@ -1,0 +1,8 @@
+# Dedicated custom-SLICE control client for NR PRB execution experiments.
+FROM limx59/flexric-xapp:arm64-multi-agent AS xapp
+
+COPY test/xapp/xapp_prb_control.py /opt/oai-pi/test/xapp/xapp_prb_control.py
+WORKDIR /opt/oai-pi/test/xapp
+RUN python3 -c "from pathlib import Path; p = Path('xapp_prb_control.py'); compile(p.read_text(), str(p), 'exec')"
+ENTRYPOINT ["python3"]
+CMD ["xapp_prb_control.py", "-c", "/usr/local/etc/flexric/xapp.conf"]

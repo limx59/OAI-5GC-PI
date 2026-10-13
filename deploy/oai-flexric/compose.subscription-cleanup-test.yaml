@@ -1,0 +1,13 @@
+name: oai-pi-subscription-cleanup-test
+
+services:
+  regression:
+    image: limx59/flexric-xapp:arm64-subscription-cleanup-regression
+    build:
+      context: ../..
+      dockerfile: docker/flexric/Dockerfile.regression
+      target: regression
+      args:
+        BUILD_JOBS: "2"
+    network_mode: none
+    restart: "no"

@@ -1,0 +1,59 @@
+FROM debian:bookworm-slim AS builder
+
+ARG BUILD_JOBS=2
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential cmake pkg-config git \
+    autoconf automake libtool bison libpcre2-dev \
+    libsctp-dev python3 python3-dev swig \
+    libconfig-dev libconfig++-dev default-libmysqlclient-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /src
+COPY flexric/ /src/flexric/
+COPY test/xapp/ /src/test/xapp/
+
+RUN cmake -S /src/flexric -B /build/flexric \
+    -DCMAKE_BUILD_TYPE=Debug \
+    -DCMAKE_INSTALL_PREFIX=/usr/local \
+    -DCMAKE_INSTALL_LIBDIR=lib \
+    -DE2AP_VERSION=E2AP_V2 \
+    -DKPM_VERSION=KPM_V3_00 \
+    -DXAPP_DB=MYSQL_XAPP \
+    -DUNIT_TEST=OFF \
+    -DBUILD_OAI_PI_XAPP_DEMOS=ON \
+    && cmake --build /build/flexric --parallel "${BUILD_JOBS}" \
+    && DESTDIR=/stage cmake --install /build/flexric \
+    && install -D -m 755 \
+       /build/flexric/oai-pi-xapp/xapp_handover_control \
+       /stage/usr/local/bin/flexric/xApp/c/xapp_handover_control
+
+
+# Apply only to the copied FlexRIC tree; retain the original build cache.
+COPY test/flexric/patches/apply-emulator-prb-execution.py /src/apply-emulator-prb-execution.py
+RUN python3 /src/apply-emulator-prb-execution.py \
+    && cmake --build /build/flexric --parallel "${BUILD_JOBS}" \
+    && DESTDIR=/stage cmake --install /build/flexric
+
+# Ubuntu runtime matches the previously validated NR scheduler binary.
+FROM limx59/oai-pi-oai-prb-bench:arm64-nr-prb-quota-test AS emulator
+
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libconfig++9v5 libmariadb3 \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /stage/usr/local/ /usr/local/
+COPY test/flexric/execute-oai-prb-control.py /opt/oai-pi/execute-oai-prb-control.py
+RUN ldconfig \
+    && ldd /usr/local/bin/flexric/e2agent/emu_agent_gnb > /tmp/agent-ldd.txt \
+    && cat /tmp/agent-ldd.txt \
+    && ! grep -q 'not found' /tmp/agent-ldd.txt \
+    && rm /tmp/agent-ldd.txt
+
+ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
+WORKDIR /opt/oai-prb-bench/bin
+STOPSIGNAL SIGINT
+ENTRYPOINT ["/usr/bin/tini", "-g", "--", "stdbuf", "-oL", "-eL", "/usr/local/bin/flexric/e2agent/emu_agent_gnb"]
+CMD ["-c", "/usr/local/etc/flexric/e2agent.conf"]

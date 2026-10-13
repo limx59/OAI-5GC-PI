@@ -1,0 +1,14 @@
+[
+  {"time_s": 0, "demand_ratio": 0.10, "observed_mode": "active",
+   "active_ues": 0, "neighbor_coverage_confirmed": true},
+  {"time_s": 10, "demand_ratio": 0.12, "observed_mode": "active",
+   "active_ues": 0, "neighbor_coverage_confirmed": true},
+  {"time_s": 20, "demand_ratio": 0.15, "observed_mode": "active",
+   "active_ues": 0, "neighbor_coverage_confirmed": true},
+  {"time_s": 30, "demand_ratio": 0.10, "observed_mode": "active",
+   "active_ues": 0, "neighbor_coverage_confirmed": true},
+  {"time_s": 40, "demand_ratio": 0.10, "observed_mode": "energy_saving",
+   "active_ues": 0, "neighbor_coverage_confirmed": true},
+  {"time_s": 50, "demand_ratio": 0.75, "observed_mode": "energy_saving",
+   "active_ues": 0, "neighbor_coverage_confirmed": true}
+]

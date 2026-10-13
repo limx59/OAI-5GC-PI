@@ -1,0 +1,11 @@
+<!-- SPDX-License-Identifier: LicenseRef-CSSL-1.0 -->
+<testCaseList>
+  <htmlTabName>EPC-Deploy</htmlTabName>
+
+  <testCase>
+    <class>DeployCoreNetwork</class>
+    <desc>Deploy EPC</desc>
+    <cn_id>nano-cn4g</cn_id>
+  </testCase>
+
+</testCaseList>

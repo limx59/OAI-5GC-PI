@@ -1,0 +1,8 @@
+# Experimental UE NCC wrap handling; dedicated test image.
+services:
+  nrue:
+    image: limx59/oai-pi-oai-nr-ue:arm64-ncc-wrap-test
+    build:
+      context: ../..
+      dockerfile: docker/oai/Dockerfile.nrue-ncc-wrap
+      target: nrue

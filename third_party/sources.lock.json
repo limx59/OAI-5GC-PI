@@ -1,0 +1,31 @@
+{
+  "repositories": [
+    {
+      "path": "oai",
+      "url": "https://gitlab.eurecom.fr/oai/openairinterface5g.git",
+      "commit": "f8f769592a7030be88ede4bb5ca66fa1ca6a80e0"
+    },
+    {
+      "path": "oai/openair2/E2AP/flexric",
+      "url": "https://github.com/duranta-project/flexric.git",
+      "commit": "d7a71285f3720fbc1487e9a86309eec5fb61a408"
+    },
+    {
+      "path": "flexric",
+      "url": "https://gitlab.eurecom.fr/mosaic5g/flexric.git",
+      "commit": "736508123fe4b5dc3db83fb5baf5f0a8e9b04fe8"
+    },
+    {
+      "path": "third_party/uhd/src",
+      "url": "https://github.com/EttusResearch/uhd.git",
+      "commit": "308126a479ca19dfaebfe4784b375e608788d763"
+    }
+  ],
+  "applied_patches": [
+    {
+      "source": "third_party/uhd/src",
+      "patch": "oai/cmake_targets/tools/uhd-4.5plus-tdd-patch.diff",
+      "sha256": "459ce5f05a88007c71b904b8c63887522e2e6a5a0c30d6f1c7d7c5e7460887f1"
+    }
+  ]
+}

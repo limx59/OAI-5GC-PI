@@ -1,0 +1,19 @@
+FROM debian:bookworm-slim AS builder
+ARG BUILD_JOBS=2
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential cmake \
+    && rm -rf /var/lib/apt/lists/*
+WORKDIR /src
+COPY flexric/src/ /src/flexric/src/
+COPY test/flexric/native/ /src/test/flexric/native/
+RUN cmake -S /src/test/flexric/native -B /build/regression \
+    -DCMAKE_BUILD_TYPE=Release \
+    && cmake --build /build/regression --parallel "${BUILD_JOBS}"
+
+FROM debian:bookworm-slim AS regression
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    cmake \
+    && rm -rf /var/lib/apt/lists/*
+COPY --from=builder /build/regression/ /build/regression/
+ENTRYPOINT ["ctest"]
+CMD ["--test-dir", "/build/regression", "--verbose", "--output-on-failure", "--no-tests=error"]

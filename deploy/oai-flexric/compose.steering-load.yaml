@@ -1,0 +1,47 @@
+services:
+  emulator:
+    image: limx59/flexric-emulator:arm64-steering-load
+    build:
+      context: ../..
+      dockerfile: docker/flexric/Dockerfile.steering-load-agent
+      target: emulator
+    environment:
+      STEERING_LOAD_FILE: /opt/steering-load/node-1.txt
+    volumes:
+      - ./config/steering-load:/opt/steering-load:ro
+
+  emulator-2:
+    image: limx59/flexric-emulator:arm64-steering-load
+    build:
+      context: ../..
+      dockerfile: docker/flexric/Dockerfile.steering-load-agent
+      target: emulator
+    environment:
+      STEERING_LOAD_FILE: /opt/steering-load/node-2.txt
+    volumes:
+      - ./config/steering-load:/opt/steering-load:ro
+
+  emulator-3:
+    image: limx59/flexric-emulator:arm64-steering-load
+    build:
+      context: ../..
+      dockerfile: docker/flexric/Dockerfile.steering-load-agent
+      target: emulator
+    environment:
+      STEERING_LOAD_FILE: /opt/steering-load/node-3.txt
+    volumes:
+      - ./config/steering-load:/opt/steering-load:ro
+
+  xapp-kpm:
+    image: limx59/flexric-xapp:arm64-steering-load
+    build:
+      context: ../..
+      dockerfile: docker/flexric/Dockerfile.steering-load-xapp
+      target: xapp
+
+  xapp-kpm-ric2:
+    image: limx59/flexric-xapp:arm64-steering-load
+    build:
+      context: ../..
+      dockerfile: docker/flexric/Dockerfile.steering-load-xapp
+      target: xapp
