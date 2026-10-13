@@ -1,0 +1,3 @@
+[submodule "ocudu"]
+	path = ocudu
+	url = https://gitlab.com/ocudu/ocudu.git
