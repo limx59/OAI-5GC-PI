@@ -1,0 +1,89 @@
+# Experimental real NR DL scheduler benchmark.
+# Build target: bench. Trace patch applies only to Docker's source copy.
+FROM ubuntu:24.04 AS builder
+
+ARG BUILD_JOBS=2
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential cmake ninja-build pkg-config git ca-certificates \
+    autoconf automake libtool bison flex patch ccache \
+    python3 python3-dev python3-yaml xxd \
+    libreadline-dev libconfig-dev libsctp-dev libssl-dev zlib1g-dev \
+    libyaml-cpp-dev libpcre2-dev libcap-dev libzstd-dev \
+    flatbuffers-compiler libflatbuffers-dev libnanomsg-dev libzmq3-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN git clone https://github.com/mouse07410/asn1c /tmp/asn1c \
+    && cd /tmp/asn1c \
+    && git checkout 940dd5fa9f3917913fd487b13dfddfacd0ded06e \
+    && autoreconf -iv \
+    && CFLAGS="-O2 -fno-strict-aliasing" ./configure --prefix=/opt/asn1c \
+    && make -j"${BUILD_JOBS}" \
+    && make install \
+    && rm -rf /tmp/asn1c
+
+RUN git clone https://github.com/simd-everywhere/simde-no-tests.git /tmp/simde \
+    && cd /tmp/simde \
+    && git checkout 1c68d9ad60bf63f3fb527c4ee3b2319d828ffcc6 \
+    && cp -r /tmp/simde /usr/include/ \
+    && rm -rf /tmp/simde
+
+COPY oai/ /src/oai/
+WORKDIR /src/oai
+
+RUN cmake -S /src/oai -B /build/oai -G Ninja \
+    -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+    -DE2_AGENT=OFF \
+    -DE2AP_VERSION=E2AP_V2 \
+    -DKPM_VERSION=KPM_V3_00 \
+    -DOAI_USRP=OFF \
+    && cmake --build /build/oai \
+       --target nr_dlbench coding dfts params_libconfig params_yaml \
+       --parallel "${BUILD_JOBS}"
+
+# Runtime-loaded LDPC modules are not dependencies of nr_dlbench.
+RUN cmake --build /build/oai --target ldpc ldpc_orig \
+       --parallel "${BUILD_JOBS}" \
+    && test -s /build/oai/libldpc.so \
+    && test -s /build/oai/libldpc_orig.so
+
+COPY test/flexric/patches/apply-oai-prb-bench-trace.py /src/apply-oai-prb-bench-trace.py
+RUN python3 /src/apply-oai-prb-bench-trace.py \
+    && cmake --build /build/oai --target nr_dlbench \
+       --parallel "${BUILD_JOBS}"
+
+COPY test/flexric/patches/apply-oai-prb-bench-quota.py /src/apply-oai-prb-bench-quota.py
+RUN python3 /src/apply-oai-prb-bench-quota.py \
+    && cmake --build /build/oai --target nr_dlbench \
+       --parallel "${BUILD_JOBS}"
+
+RUN mkdir -p /stage/opt/oai-prb-bench/bin /stage/opt/oai-prb-bench/lib \
+    && install -m 755 /build/oai/tests/nrdlbench/nr_dlbench /stage/opt/oai-prb-bench/bin/ \
+    && find /build/oai -maxdepth 1 -name '*.so' -type f \
+       -exec cp '{}' /stage/opt/oai-prb-bench/lib/ ';'
+
+FROM ubuntu:24.04 AS bench
+
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    tini python3 libsctp1 libconfig9 libyaml-cpp0.8 \
+    libssl3t64 libreadline8t64 zlib1g libcap2 libzstd1 \
+    libnanomsg5 libzmq5 libstdc++6 libgcc-s1 \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /stage/opt/oai-prb-bench/ /opt/oai-prb-bench/
+ENV LD_LIBRARY_PATH=/opt/oai-prb-bench/lib
+WORKDIR /opt/oai-prb-bench/bin
+
+RUN set -eu; \
+    for library in ./nr_dlbench /opt/oai-prb-bench/lib/*.so; do \
+      ldd "$library" > /tmp/ldd-check.txt; \
+      cat /tmp/ldd-check.txt; \
+      if grep -q 'not found' /tmp/ldd-check.txt; then exit 1; fi; \
+    done; \
+    rm /tmp/ldd-check.txt
+
+STOPSIGNAL SIGINT
+ENTRYPOINT ["/usr/bin/tini", "-g", "--", "/opt/oai-prb-bench/bin/nr_dlbench"]
+CMD ["-u", "1", "-R", "24", "-n", "200", "-L", "0"]

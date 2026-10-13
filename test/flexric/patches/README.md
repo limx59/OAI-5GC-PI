@@ -319,3 +319,22 @@ security behavior are not established by these handover experiments.
 
 See [the closed-loop guide](../README.oai-n2-closed-loop.md) for
 image digests, reproduction, measurement boundaries and Cleanup.
+
+## Experimental E2-directed NR PRB execution
+
+- `apply-oai-prb-bench-trace.py` modifies only Docker's copied
+  `/src/oai/tests/nrdlbench/dlbench.c` to record actual PDSCH grants.
+- `apply-oai-prb-bench-quota.py` adds benchmark-only S-NSSAI metadata and
+  per-slot hard PRB caps through the real scheduler allocation hook.
+  Existing CCE/PUCCH and VRB commit functions remain in use.
+- `apply-emulator-prb-execution.py` modifies only Docker's copied
+  `/src/flexric/examples/emulator/agent/sm_slice.c`. Valid custom SLICE
+  capacity controls invoke the bounded project executor; success requires
+  actual grant verification. Random slice indications are suppressed.
+
+Each command starts an independent scheduler simulation. This does not
+integrate slicing into a continuously running OAI gNB.
+Client-side rejection and successful execution passed; Agent-side error
+responses and execution-failure recovery remain untested.
+
+See [PRB execution validation and cleanup](../README.prb-execution.md).

@@ -280,7 +280,17 @@ See [the radio statistics guide](README.radio-stats.md) for Docker Hub deploymen
 
 ## Multi-node slice control
 
-See [the slice-control guide](README.slice-control.md) for target selection, Docker Hub tests, control reception checks and cleanup. The guide also records the preceding QoS image digest.
+See [the slice-control guide](README.slice-control.md) for the original
+target-routing and ACK tests, Docker Hub validation and cleanup.
+
+See [the PRB execution experiment guide](README.prb-execution.md) for
+E2-directed real NR downlink scheduler simulations, actual PDSCH grant
+audits, quota changes, zero-quota suppression, three-round regression,
+Docker Hub validation and cleanup.
+
+Execution is bounded to independent scheduler simulations with synthetic
+UE state; continuous live-gNB and real-UE slice enforcement remain unvalidated.
+
 
 ## Python steering with multiple source nodes
 
@@ -452,7 +462,7 @@ different validation scopes.
 | MAC / RLC / PDCP statistics | ✅ Non-empty reports and subscription cleanup across multiple Agents and RICs; non-empty OAI records | — |
 | Traffic steering policy | ✅ Synthetic policy tests; live controlled Emulator MAC load; forward/reverse recommendations; balanced-load suppression; cooldown; automated tests | ☐ **Live multi-cell load: concurrent dual-cell RFsim tests did not pass; experimental configurations and failure evidence saved; deferred** |
 | Traffic steering control | ✅ Directed multi-Agent control; multi-RIC ACKs; Python source-node mapping; RFsim UE handover and closed-loop feedback: actual MAC-rate-triggered A -> B -> A to an RC-confirmed empty target; idle suppression, cooldown and low-rate rearming; RRC completion/NGAP Notify, PDU session, unchanged IP/processes, target MAC growth and traffic feedback; NCC rollover correction; three local and three published-image continuous regression rounds; bounded ICMP reply-gap measurements with recorded loss | — |
-| Multi-Agent slicing control | ✅ Slicing policy; directed single/multi-Agent and multi-RIC control with ACKs | ☐ Actual PRB allocation execution; prioritize simulation |
+| Multi-Agent slicing control | ✅ Slicing policy; directed single/multi-Agent and multi-RIC ACKs; actual downlink PRB cap execution in E2-triggered independent NR scheduler simulations; three local and three published-image rounds with raw PDSCH audits | ☐ Continuous live-gNB/real-UE enforcement and uplink execution; outside the validated simulation scope |
 | Energy-saving control | ✅ Policy and state-feedback simulation | ☐ Physical device control and power measurements; deferred due to unavailable hardware |
 | Combined regression | ✅ Reusable Emulator regression tests | ☐ Physical RF validation; deferred due to unavailable SDR hardware |
 

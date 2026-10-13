@@ -190,6 +190,13 @@ Directories contain invalid-ID logs, per-case xApp logs and per-case logs
 for all three Agents. Future runs use unique directory suffixes.
 Generated evidence remains outside Git.
 
+## Follow-up PRB execution experiment
+
+The dedicated [PRB execution guide](README.prb-execution.md) extends these
+original routing tests with E2-triggered independent real NR downlink
+scheduler simulations and verified actual PDSCH grants.
+The limits below describe the original Emulator images used in this guide.
+
 ## Limits
 
 The emulator accepts and acknowledges the message without applying or
