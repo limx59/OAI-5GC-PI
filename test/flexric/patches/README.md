@@ -338,3 +338,19 @@ Client-side rejection and successful execution passed; Agent-side error
 responses and execution-failure recovery remain untested.
 
 See [PRB execution validation and cleanup](../README.prb-execution.md).
+
+## Dedicated 100 ms OAI MAC collection
+
+`prepare-oai-mac-100ms.py` adds the explicit `100_ms` MAC subscription
+option and changes both collector subscriptions to that interval only in
+Docker's copied SDK/xApp tree. It retains the original interval options
+and rejects duplicate patch application or unexpected source anchors.
+
+`docker/flexric/Dockerfile.oai-mac-100ms` reuses the existing build and
+rebuilds the MAC collector/plugin. Repository OAI/FlexRIC sources and the
+original 10 ms collector source remain unchanged. Running gNBs and the
+RIC do not require source patches for this collector experiment.
+
+The two-second report freshness requirement remains unchanged.
+See [the dual-cell guide](../README.oai-multi-cell.md) for successful
+bounded validations and retained failure evidence.

@@ -37,7 +37,7 @@ RUN python3 /src/apply-emulator-prb-execution.py \
     && DESTDIR=/stage cmake --install /build/flexric
 
 # Ubuntu runtime matches the previously validated NR scheduler binary.
-FROM oai-pi-oai-prb-bench:nr-prb-quota-test AS emulator
+FROM limx59/oai-pi-oai-prb-bench:arm64-nr-prb-quota-test AS emulator
 
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \

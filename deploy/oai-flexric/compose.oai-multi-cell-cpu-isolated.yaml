@@ -1,0 +1,10 @@
+# Experimental per-process CPU placement; no host affinity changes.
+services:
+  gnb:
+    cpuset: "1"
+  nrue:
+    cpuset: "2"
+  gnb-2:
+    cpuset: "3"
+  nrue-2:
+    cpuset: "0"

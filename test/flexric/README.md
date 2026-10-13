@@ -394,8 +394,11 @@ below validates bounded one-UE RFsim handover and closed-loop feedback.
 See [the dual-cell RFsim experiment guide](README.oai-multi-cell.md) for
 deployment prerequisites, reproduction, failure evidence and cleanup.
 
-Concurrent two-UE tests did not pass. The configurations remain experimental;
-simultaneous two-UE traffic and measured multi-cell load remain unvalidated.
+Bounded concurrent two-UE UL/DL traffic and per-node MAC measurements passed
+with separate container CPU placement and 100 ms collection; three local-image
+rounds passed. A later published-image regression failed in round two.
+After cleanup, fresh single validation and all three published-image
+regression rounds passed with unchanged five processes and two UE IPs. See the guide for both successful and failed evidence.
 
 ## Automatic RIC failover
 
@@ -460,7 +463,7 @@ different validation scopes.
 | KPM CSV recording | ✅ Multiple Agents and RICs; OAI UE uplink/downlink recording | — |
 | QoS monitoring | ✅ Multi-topology alerts; independent per-node state; policy regression; OAI UE traffic; live Agent pause and recovery | — |
 | MAC / RLC / PDCP statistics | ✅ Non-empty reports and subscription cleanup across multiple Agents and RICs; non-empty OAI records | — |
-| Traffic steering policy | ✅ Synthetic policy tests; live controlled Emulator MAC load; forward/reverse recommendations; balanced-load suppression; cooldown; automated tests | ☐ **Live multi-cell load: concurrent dual-cell RFsim tests did not pass; experimental configurations and failure evidence saved; deferred** |
+| Traffic steering policy | ✅ Synthetic policy tests; live controlled Emulator MAC load; forward/reverse recommendations; balanced-load suppression; cooldown; automated tests | — (Bounded concurrent dual-cell RFsim UL/DL and actual per-node MAC measurements passed; three local-image and three fresh published-image rounds passed. Earlier failures retained; normalized utilization and long-term reliability are outside this validation.) |
 | Traffic steering control | ✅ Directed multi-Agent control; multi-RIC ACKs; Python source-node mapping; RFsim UE handover and closed-loop feedback: actual MAC-rate-triggered A -> B -> A to an RC-confirmed empty target; idle suppression, cooldown and low-rate rearming; RRC completion/NGAP Notify, PDU session, unchanged IP/processes, target MAC growth and traffic feedback; NCC rollover correction; three local and three published-image continuous regression rounds; bounded ICMP reply-gap measurements with recorded loss | — |
 | Multi-Agent slicing control | ✅ Slicing policy; directed single/multi-Agent and multi-RIC ACKs; actual downlink PRB cap execution in E2-triggered independent NR scheduler simulations; three local and three published-image rounds with raw PDSCH audits | ☐ Continuous live-gNB/real-UE enforcement and uplink execution; outside the validated simulation scope |
 | Energy-saving control | ✅ Policy and state-feedback simulation | ☐ Physical device control and power measurements; deferred due to unavailable hardware |
@@ -477,7 +480,7 @@ Two RFsim gNBs completed NG, F1 and E2 setup. Each gNB/UE pair separately
 established a session and reached the UPF during the 106 PRB experiments.
 That does not establish simultaneous dual-cell operation.
 
-Concurrent dual-cell attempts failed at both 106 PRB and 24 PRB.
+Earlier concurrent dual-cell attempts failed at both 106 PRB and 24 PRB.
 The UE RRC queues accumulated messages and a UE aborted at
 fill_msg3_pdu_from_rlc() with “no data for Msg3/MsgA_PUSCH”.
 Reducing each UE to one DL actor and one UL actor did not resolve the
@@ -485,8 +488,11 @@ failure. In that run, UE1 aborted; UE2 received Registration Accept but
 had no TUN interface at inspection.
 
 Resource contention is a working hypothesis, not an isolated root
-cause. Simultaneous two-UE traffic and measured multi-cell load
-have not passed. A separate one-UE/two-gNB N2 mobility experiment passed
+cause. Bounded simultaneous two-UE traffic and measured MAC byte/PRB rates
+subsequently passed with dedicated CPU placement and 100 ms collection.
+A later published-image regression failed; after cleanup, the fresh retry
+passed single validation and three consecutive published-image rounds.
+These results do not establish normalized utilization or isolate the earlier failure cause. A separate one-UE/two-gNB N2 mobility experiment passed
 bidirectional handover and actual-MAC-rate-triggered closed-loop feedback
 under dedicated container CPU allocation, including unchanged processes
 and NCC rollover. This one-UE result does not validate concurrent two-UE
@@ -518,3 +524,7 @@ or scheduler evidence and verify the resulting data-plane behavior.
 For cases 9 and 10, contributors with physical equipment should document
 hardware models, software versions, RF setup, measurement method,
 acceptance criteria and cleanup alongside their results.
+
+## Additional published test images
+
+See [additional published ARM64 test images](README.published-test-images.md) for the supplementary image tags, verified digests and publication scope.
