@@ -1,0 +1,84 @@
+name: oai-pi-ocudu-zmq-lab
+
+services:
+  gnb:
+    image: oai-pi-ocudu-gnb:zmq-test
+    cpuset: "1-2"
+    networks:
+      core:
+        ipv4_address: 172.22.0.160
+    volumes:
+      - ./config/gnb-zmq.yml:/etc/ocudu/gnb.yml:ro
+    cap_add:
+      - SYS_NICE
+      - IPC_LOCK
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      rtprio:
+        soft: 99
+        hard: 99
+      core:
+        soft: 0
+        hard: 0
+    stop_signal: SIGINT
+    stop_grace_period: 15s
+    restart: "no"
+
+  nrue:
+    image: oai-pi-oai-nr-ue:zmq-test
+    cpuset: "3"
+    profiles: ["ue"]
+    depends_on:
+      - gnb
+    networks:
+      core:
+        ipv4_address: 172.22.0.161
+    volumes:
+      - ./.local/ue-zmq.conf:/etc/oai/ue.conf:ro
+      - ../../oai/targets/PROJECTS/GENERIC-NR-5GC/CONF/uecap_ports1.xml:/etc/oai/uecap.xml:ro
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+      - SYS_NICE
+      - IPC_LOCK
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      rtprio:
+        soft: 99
+        hard: 99
+      core:
+        soft: 0
+        hard: 0
+    command:
+      - "-O"
+      - "/etc/oai/ue.conf"
+      - "-r"
+      - "51"
+      - "--numerology"
+      - "1"
+      - "--band"
+      - "78"
+      - "-C"
+      - "3489420000"
+      - "--ue-scan-carrier"
+      - "--log_config.phy_log_level"
+      - "info"
+      - "-E"
+      - "--uecap_file"
+      - "/etc/oai/uecap.xml"
+      - "--device.name"
+      - "oai_zmqdevif"
+    stop_signal: SIGINT
+    stop_grace_period: 15s
+    restart: "no"
+
+networks:
+  core:
+    external: true
+    name: docker_open5gs_default
