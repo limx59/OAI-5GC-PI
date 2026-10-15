@@ -16,7 +16,9 @@ UE addresses were 192.168.100.26, .27 and .28 across the three rounds.
 Address preservation is checked within each round; allocation can change
 between fresh sessions.
 
-This validates bounded software-radio connectivity. Throughput, long-term
+This validates bounded software-radio connectivity. Separate UDP tests
+passed at 1 Mbps for 10 seconds per direction; see the
+[UDP validation guide](README.zmq-udp.md). Maximum throughput, long-term
 stability, physical RF, E2/FlexRIC interoperability and AI control remain
 unvalidated.
 
@@ -55,12 +57,12 @@ flowchart TB
     U <-->|"ZeroMQ IQ"| G
     G <-->|"N2 / NGAP"| A
     G <-->|"N3 / GTP-U"| P
-    P <-->|"N6 traffic path (planned)"| T
+    P <-->|"N6 traffic path (UDP validated)"| T
 ```
 
 The OAI UE / ZeroMQ / OCUDU / existing Open5GS path has passed bounded
-connectivity checks. The dedicated traffic endpoint and bounded UDP
-uplink/downlink tests remain to be validated. The FlexRIC E2/KPM path,
+connectivity checks. A dedicated traffic endpoint at 172.22.0.151 and
+bounded UDP uplink/downlink tests have also passed. The FlexRIC E2/KPM path,
 subscriptions and CSV recording are planned and have not passed OCUDU
 interoperability tests.
 
@@ -176,6 +178,11 @@ sudo docker build -f docker/ocudu/Dockerfile.worker-test \
 The OCUDU build uses `cortex-a76+crypto` and an ARMv8.2-A fallback.
 The worker test Dockerfile reuses the baseline builder stages when cached.
 
+## Test guides
+
+- Connectivity: the run instructions below and `validate-zmq-connectivity.py`.
+- [Bounded UDP uplink/downlink validation](README.zmq-udp.md): prerequisites, execution, acceptance, results and cleanup.
+
 ## Run validation
 
 Run from the project root. The validator starts the experiment itself;
@@ -255,7 +262,7 @@ support.
 | Test case | Completed | Remaining |
 | --- | --- | --- |
 | Node discovery | ✅ Pinned OCUDU source; NG Setup with existing Open5GS; existing discovery/recovery scripts available for reuse | ☐ E2 Setup; distinguish DU/CU Agent identities; RIC/Agent reconnection; exit cleanup |
-| KPM monitoring | ✅ Existing OAI/FlexRIC KPM regression provides a reusable baseline | ☐ Verify OCUDU protocol and report styles; 1-second monitoring; UL/DL and idle-load response; missing metrics and unsupported subscriptions |
+| 🔴 KPM monitoring | ✅ Existing OAI/FlexRIC KPM regression provides a reusable baseline | ☐ Verify OCUDU protocol and report styles; 1-second monitoring; UL/DL and idle-load response; missing metrics and unsupported subscriptions |
 | KPM CSV recording | ✅ Existing CSV and evidence archiving framework available for reuse | ☐ Record OCUDU node/UE identities, time windows and units; check row counts and missing values; positive values under load; subscription deletion |
 | QoS monitoring | ✅ Existing policy and alert framework available for reuse | ☐ Map OCUDU throughput, latency and packet-loss fields; bounded high/low-load alerts; restore state after reconnection; advisory mode first |
 | MAC / RLC / PDCP statistics | ✅ Differences between standard KPM and existing private service models reviewed | ☐ Verify OCUDU E2/local metric sources; detect duplicates, missing values and counter resets; compare with iperf; verify xApp compatibility |
@@ -263,10 +270,11 @@ support.
 | Traffic steering control | ✅ Existing OAI RFsim handover feedback loop passed as an OAI baseline | ☐ Audit supported OCUDU RC actions; verify control ACK and execution separately; cross-vendor handover remains exploratory |
 | Multi-Agent slicing control | ✅ Existing standalone OAI NR DL scheduler PRB-cap simulation passed as an OAI baseline | ☐ Verify OCUDU slice configuration and control interfaces; offline/startup configuration experiments first; actual grant/counter evidence; verify support before reusing private SLICE commands |
 | Energy-saving control | ✅ Existing policy and state-feedback simulation available for reuse | ☐ OCUDU advisory and state simulation; **physical device control and power measurement deferred pending hardware** |
-| Integrated regression | ✅ ARM64 OCUDU/OAI UE ZeroMQ builds; UE synchronization and PDU session; TUN-bound UPF pings; local and published-image three-round connectivity regressions; image publication/digest verification; evidence archiving and automatic stopping | ☐ Verify dummy/testmode status; **next: bounded UDP UL/DL throughput and packet loss**; longer-session stability and recovery; exact single-worker blocking-path diagnosis; FlexRIC KPM; full-workflow three-round regression and cleanup; **physical RF deferred pending SDR hardware** |
+| Integrated regression | ✅ ARM64 OCUDU/OAI UE ZeroMQ builds; UE synchronization and PDU session; TUN-bound UPF pings; local and published-image three-round connectivity regressions; image publication/digest verification; [bounded UDP UL/DL](README.zmq-udp.md) single-round and three fresh-container rounds passed; evidence archiving and automatic stopping | ☐ Verify dummy/testmode status; longer-session stability and recovery; exact single-worker blocking-path diagnosis; FlexRIC KPM; full-workflow three-round regression and cleanup; **physical RF deferred pending SDR hardware** |
 
-Execution follows the research plan: complete bounded single-UE traffic
-validation (P5), then FlexRIC KPM and CSV validation (P6), followed by
+Execution follows the research plan: bounded single-UE traffic validation
+(P5) passed for the documented load. **🔴 Next: FlexRIC KPM and CSV
+validation (P6)**, followed by
 full-workflow regression (P7), sequential OAI/OCUDU comparison (P8), and
 capability-gated RC/slicing experiments (P9).
 
