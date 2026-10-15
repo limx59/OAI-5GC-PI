@@ -1,5 +1,5 @@
 services:
   gnb:
-    image: oai-pi-ocudu-gnb:zmq-worker-test
+    image: limx59/oai-pi-ocudu-gnb:arm64-zmq-worker-test
     volumes:
       - ./config/gnb-zmq-worker-test.yml:/etc/ocudu/gnb.yml:ro

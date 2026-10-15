@@ -27,7 +27,7 @@ services:
     restart: "no"
 
   nrue:
-    image: oai-pi-oai-nr-ue:zmq-test
+    image: limx59/oai-pi-oai-nr-ue:arm64-zmq-test
     cpuset: "3"
     profiles: ["ue"]
     depends_on:

@@ -52,11 +52,29 @@ CPU sets do not reserve exclusive host cores.
 
 ## Images and source policy
 
-These are local ARM64 experiment images, not published Docker Hub images:
+The passed Compose workflow now defaults to these Docker Hub images.
+Both were published and pull-verified on 2026-10-14, Pacific time.
+ARM64 architecture, original local image identity and registry digest
+were verified.
 
-- `oai-pi-oai-nr-ue:zmq-test`
-- `oai-pi-ocudu-gnb:zmq-test` — original diagnostic baseline
-- `oai-pi-ocudu-gnb:zmq-worker-test` — passed two-worker configuration
+| Component | Published image |
+| --- | --- |
+| OAI UE | `limx59/oai-pi-oai-nr-ue:arm64-zmq-test` |
+| OCUDU two-worker gNB | `limx59/oai-pi-ocudu-gnb:arm64-zmq-worker-test` |
+
+Published image-index digests:
+
+- OAI UE: `sha256:73fa22bcb85f2c040a398d0c3159a7a9083e7dee7db23a7c6fe7e3c26d2110e8`
+- OCUDU gNB: `sha256:1733f139f5e1001ca0c146f8b51e017d9fe71b0c07616beff233b468be8cc608`
+
+Original local tags are retained. The base Compose file's gNB image,
+`oai-pi-ocudu-gnb:zmq-test`, is the original diagnostic baseline.
+Always include `compose.zmq-worker-test.yaml` for the passed workflow.
+
+Three-round functional regressions passed using both the original local
+tags and the updated published Compose references. The published-reference
+regression passed all 30 ping requests, process/address stability checks
+and automatic stopping across three fresh-container rounds.
 
 OCUDU source revision and license location:
 [upstream record](../../docker/ocudu/UPSTREAM.md).
@@ -104,6 +122,10 @@ established. This remains a diagnostic workaround, not an upstream fix.
 Do not commit subscriber keys or private generated configuration.
 
 ## Build
+
+Optional local rebuild commands follow. They retain local tags and do not
+replace the published Compose defaults. To use locally rebuilt images,
+supply an explicit Compose image override.
 
 Run from the project root:
 
@@ -180,6 +202,12 @@ Three-round regression:
 - Directory: `/tmp/ocudu-zmq-connectivity-regression/run-5px273zy`
 - Archive: `ocudu-oai-zmq-connectivity-regression-20261014-221433.tar.gz`
 
+Published-reference three-round regression:
+
+- Directory: `/tmp/ocudu-zmq-dockerhub-connectivity-regression/run-ewtyewbz`
+- Archive: `ocudu-oai-zmq-dockerhub-connectivity-regression-20261014-223545.tar.gz`
+- UE addresses: 192.168.100.29, .30 and .31 across the three rounds.
+
 Archives reside under `~/Work/oai-test-evidence/`, outside the repository.
 Retain failed-run evidence as well as passed results.
 
@@ -196,7 +224,8 @@ Retain failed-run evidence as well as passed results.
 - [ ] Validate bounded UDP uplink/downlink throughput and packet loss.
 - [ ] Validate longer session stability and recovery behavior.
 - [ ] Confirm the exact single-worker blocking path and assess an upstream fix.
-- [ ] Publish tested images and verify registry digests before changing defaults.
+- [x] Publish tested images and verify registry digests before changing defaults.
+- [x] Repeat connectivity regression using published Compose image references.
 - [ ] Validate OCUDU E2 setup and compatible FlexRIC KPM subscriptions.
 - [ ] Validate measured feedback before attempting an AI/control scenario.
 - [ ] Validate physical RF separately when suitable radio hardware is available.
