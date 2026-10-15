@@ -36,6 +36,40 @@ flowchart TD
 Open5GS runs on the existing `docker_open5gs_default` network.
 The experiment does not require a RIC or xApp.
 
+### Planned integration topology
+
+The research plan extends the current connectivity baseline with FlexRIC,
+a KPM xApp / CSV recorder and a dedicated traffic endpoint.
+
+```mermaid
+flowchart TB
+    X["KPM xApp / CSV recorder"]
+    R["FlexRIC near-RT RIC"]
+    G["OCUDU gNB"]
+    U["OAI UE with ZeroMQ driver"]
+    A["Existing Open5GS AMF"]
+    P["Existing Open5GS UPF"]
+    T["Dedicated traffic endpoint"]
+    X <-->|"xApp interface (planned)"| R
+    R <-->|"E2 / KPM (planned)"| G
+    U <-->|"ZeroMQ IQ"| G
+    G <-->|"N2 / NGAP"| A
+    G <-->|"N3 / GTP-U"| P
+    P <-->|"N6 traffic path (planned)"| T
+```
+
+The OAI UE / ZeroMQ / OCUDU / existing Open5GS path has passed bounded
+connectivity checks. The dedicated traffic endpoint and bounded UDP
+uplink/downlink tests remain to be validated. The FlexRIC E2/KPM path,
+subscriptions and CSV recording are planned and have not passed OCUDU
+interoperability tests.
+
+Start with one gNB and one UE. Run the original OAI RFsim baseline and
+the OCUDU ZeroMQ scenario sequentially against the existing core, using
+the same traffic definitions for later comparison. Do not run both full
+RAN stacks concurrently on the four-core Pi without a resource assessment.
+ZeroMQ is a software IQ transport and is not the OAI RFsim protocol.
+
 | Component | Address / setting |
 | --- | --- |
 | AMF | 172.22.0.10:38412 |
@@ -213,19 +247,33 @@ Retain failed-run evidence as well as passed results.
 
 ## TODO
 
-- [x] Vendor pinned OCUDU source with upstream license files and revision record.
-- [x] Build ARM64 OAI UE with the ZeroMQ driver and resolved dependencies.
-- [x] Build ARM64 OCUDU Split 8 gNB with ZeroMQ.
-- [x] Establish NG Setup with existing Open5GS.
-- [x] Diagnose zero-IQ baseline and test the two-worker workaround.
-- [x] Establish OAI UE synchronization and a PDU session.
-- [x] Validate TUN-bound UPF connectivity.
-- [x] Pass three fresh-container connectivity rounds with automatic stopping.
-- [ ] Validate bounded UDP uplink/downlink throughput and packet loss.
-- [ ] Validate longer session stability and recovery behavior.
-- [ ] Confirm the exact single-worker blocking path and assess an upstream fix.
-- [x] Publish tested images and verify registry digests before changing defaults.
-- [x] Repeat connectivity regression using published Compose image references.
-- [ ] Validate OCUDU E2 setup and compatible FlexRIC KPM subscriptions.
-- [ ] Validate measured feedback before attempting an AI/control scenario.
-- [ ] Validate physical RF separately when suitable radio hardware is available.
+Existing OAI/FlexRIC results below are reusable baselines, not evidence
+that the corresponding OCUDU functionality has passed. Completed OCUDU
+connectivity regressions do not establish throughput, E2/KPM or control
+support.
+
+| Test case | Completed | Remaining |
+| --- | --- | --- |
+| Node discovery | ✅ Pinned OCUDU source; NG Setup with existing Open5GS; existing discovery/recovery scripts available for reuse | ☐ E2 Setup; distinguish DU/CU Agent identities; RIC/Agent reconnection; exit cleanup |
+| KPM monitoring | ✅ Existing OAI/FlexRIC KPM regression provides a reusable baseline | ☐ Verify OCUDU protocol and report styles; 1-second monitoring; UL/DL and idle-load response; missing metrics and unsupported subscriptions |
+| KPM CSV recording | ✅ Existing CSV and evidence archiving framework available for reuse | ☐ Record OCUDU node/UE identities, time windows and units; check row counts and missing values; positive values under load; subscription deletion |
+| QoS monitoring | ✅ Existing policy and alert framework available for reuse | ☐ Map OCUDU throughput, latency and packet-loss fields; bounded high/low-load alerts; restore state after reconnection; advisory mode first |
+| MAC / RLC / PDCP statistics | ✅ Differences between standard KPM and existing private service models reviewed | ☐ Verify OCUDU E2/local metric sources; detect duplicates, missing values and counter resets; compare with iperf; verify xApp compatibility |
+| Traffic steering policy | ✅ Existing load-exchange and rule-evaluation methods provide a reusable baseline | ☐ Single-link load response; sequential OAI/OCUDU comparison; dual-node recommendations when resources permit; common metrics and cooldown rules |
+| Traffic steering control | ✅ Existing OAI RFsim handover feedback loop passed as an OAI baseline | ☐ Audit supported OCUDU RC actions; verify control ACK and execution separately; cross-vendor handover remains exploratory |
+| Multi-Agent slicing control | ✅ Existing standalone OAI NR DL scheduler PRB-cap simulation passed as an OAI baseline | ☐ Verify OCUDU slice configuration and control interfaces; offline/startup configuration experiments first; actual grant/counter evidence; verify support before reusing private SLICE commands |
+| Energy-saving control | ✅ Existing policy and state-feedback simulation available for reuse | ☐ OCUDU advisory and state simulation; **physical device control and power measurement deferred pending hardware** |
+| Integrated regression | ✅ ARM64 OCUDU/OAI UE ZeroMQ builds; UE synchronization and PDU session; TUN-bound UPF pings; local and published-image three-round connectivity regressions; image publication/digest verification; evidence archiving and automatic stopping | ☐ Verify dummy/testmode status; **next: bounded UDP UL/DL throughput and packet loss**; longer-session stability and recovery; exact single-worker blocking-path diagnosis; FlexRIC KPM; full-workflow three-round regression and cleanup; **physical RF deferred pending SDR hardware** |
+
+Execution follows the research plan: complete bounded single-UE traffic
+validation (P5), then FlexRIC KPM and CSV validation (P6), followed by
+full-workflow regression (P7), sequential OAI/OCUDU comparison (P8), and
+capability-gated RC/slicing experiments (P9).
+
+For P5, retain iperf JSON and receiver-side results. The initial project
+acceptance thresholds are received throughput of at least 80% of the
+offered load and packet loss no greater than 5%. Record failures without
+silently relaxing these thresholds.
+
+Track sustained-session rounds and fresh-container rounds separately.
+Retain failed-run evidence as well as successful results.
