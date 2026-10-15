@@ -1,0 +1,36 @@
+# SPDX-FileCopyrightText: Copyright (C) 2021-2026 Software Radio Systems Limited
+# SPDX-FileCopyrightText: Copyright (C) 2026 OCUDU contributors
+# SPDX-License-Identifier: BSD-3-Clause-Open-MPI
+
+
+set_directory_properties(PROPERTIES LABELS "transmitter")
+
+add_executable(ofh_data_flow_cplane_scheduling_commands_test ofh_data_flow_cplane_scheduling_commands_test.cpp)
+target_link_libraries(ofh_data_flow_cplane_scheduling_commands_test ocudu_ofh_transmitter ocudu_support GTest::gtest GTest::gtest_main)
+gtest_discover_tests(ofh_data_flow_cplane_scheduling_commands_test)
+
+add_executable(ofh_data_flow_uplane_downlink_data_impl_test ofh_data_flow_uplane_downlink_data_impl_test.cpp)
+target_link_libraries(ofh_data_flow_uplane_downlink_data_impl_test ocudu_ofh_transmitter ocudu_support GTest::gtest GTest::gtest_main)
+gtest_discover_tests(ofh_data_flow_uplane_downlink_data_impl_test)
+
+add_executable(ofh_downlink_handler_impl_test ofh_downlink_handler_impl_test.cpp)
+target_link_libraries(ofh_downlink_handler_impl_test ocudu_ofh_transmitter ocudu_support GTest::gtest GTest::gtest_main)
+target_include_directories(ofh_downlink_handler_impl_test PRIVATE ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/lib/ofh)
+gtest_discover_tests(ofh_downlink_handler_impl_test)
+
+add_executable(ofh_uplane_packet_segment_calculator_test ofh_uplane_packet_segment_calculator_test.cpp)
+target_link_libraries(ofh_uplane_packet_segment_calculator_test ocudu_ofh_transmitter ocudu_support GTest::gtest GTest::gtest_main)
+gtest_discover_tests(ofh_uplane_packet_segment_calculator_test)
+
+add_executable(ofh_uplink_request_handler_impl_test ofh_uplink_request_handler_impl_test.cpp)
+target_link_libraries(ofh_uplink_request_handler_impl_test ocudu_ofh_transmitter ocudu_support GTest::gtest GTest::gtest_main)
+gtest_discover_tests(ofh_uplink_request_handler_impl_test)
+
+add_executable(sequence_identifier_generator_test sequence_identifier_generator_test.cpp)
+target_link_libraries(sequence_identifier_generator_test ocudu_support GTest::gtest GTest::gtest_main)
+gtest_discover_tests(sequence_identifier_generator_test)
+
+add_executable(ofh_message_transmitter_impl_test ofh_message_transmitter_impl_test.cpp)
+target_link_libraries(ofh_message_transmitter_impl_test ocudu_ofh_transmitter ocudu_support GTest::gtest GTest::gtest_main)
+target_include_directories(ofh_message_transmitter_impl_test PRIVATE ${CMAKE_SOURCE_DIR}/lib/ofh)
+gtest_discover_tests(ofh_message_transmitter_impl_test)

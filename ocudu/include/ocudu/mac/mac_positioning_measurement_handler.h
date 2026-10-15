@@ -1,0 +1,69 @@
+// SPDX-FileCopyrightText: Copyright (C) 2021-2026 Software Radio Systems Limited
+// SPDX-FileCopyrightText: Copyright (C) 2026 OCUDU contributors
+// SPDX-License-Identifier: BSD-3-Clause-Open-MPI
+// Portions of this file may implement 3GPP specifications, which may be subject to additional licensing requirements.
+
+#pragma once
+
+#include "ocudu/ran/du_types.h"
+#include "ocudu/ran/rnti.h"
+#include "ocudu/ran/srs/srs_configuration.h"
+#include "ocudu/support/async/async_task.h"
+#include <chrono>
+#include <optional>
+
+namespace ocudu {
+
+/// Request to perform a new positioning measurement.
+struct mac_positioning_measurement_request {
+  struct cell_info {
+    du_cell_index_t cell_index;
+    /// UE identifier in case the SRSConfig belongs to a UE connected to this DU. Otherwise, it is empty.
+    std::optional<du_ue_index_t> ue_index;
+    std::optional<rnti_t>        rnti;
+    /// SRS resources to measure.
+    srs_config srs_to_meas;
+  };
+
+  /// Cells for which to perform measurements.
+  std::vector<cell_info> cells;
+  /// \brief Maximum time the MAC waits for the SRS measurements before it completes the request.
+  ///
+  /// If the UE does not transmit SRS, no measurement arrives. On expiry, the MAC stops the measurement and returns an
+  /// empty response. The value bounds how long the caller waits for a result.
+  std::chrono::milliseconds timeout{500};
+};
+
+/// Result of a positioning measurement request.
+struct mac_positioning_measurement_response {
+  struct ul_srs_pos_meas {
+    std::optional<phy_time_unit> ul_rtoa;
+    std::optional<float>         rsrp_dbfs;
+    /// Azimuth Angle of Arrival, in degrees. Values: [-180, 180).
+    std::optional<float> azimuth_aoa_deg;
+    /// Zenith Angle of Arrival, in degrees. Values: [0, 180).
+    std::optional<float> zenith_aoa_deg;
+  };
+  struct cell_result {
+    /// List of UL SRS-based positioning measurements for the cell for a given request.
+    std::vector<ul_srs_pos_meas> ul_srs_pos_meass;
+  };
+
+  /// Slot at which the measurement (SRS) was received at PHY layer.
+  slot_point sl_rx;
+  /// Results for the cells where positioning measurement occurred.
+  std::vector<cell_result> cell_results;
+};
+
+/// Interface to request positioning measurements from MAC.
+class mac_positioning_measurement_handler
+{
+public:
+  virtual ~mac_positioning_measurement_handler() = default;
+
+  /// Request a new positioning measurement.
+  virtual async_task<mac_positioning_measurement_response>
+  handle_positioning_measurement_request(const mac_positioning_measurement_request& req) = 0;
+};
+
+} // namespace ocudu

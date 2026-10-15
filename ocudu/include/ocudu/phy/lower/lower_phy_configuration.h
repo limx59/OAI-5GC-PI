@@ -1,0 +1,128 @@
+// SPDX-FileCopyrightText: Copyright (C) 2021-2026 Software Radio Systems Limited
+// SPDX-FileCopyrightText: Copyright (C) 2026 OCUDU contributors
+// SPDX-License-Identifier: BSD-3-Clause-Open-MPI
+// Portions of this file may implement 3GPP specifications, which may be subject to additional licensing requirements.
+
+#pragma once
+
+#include "ocudu/gateways/baseband/baseband_gateway.h"
+#include "ocudu/ocudulog/ocudulog.h"
+#include "ocudu/phy/lower/lower_phy_error_notifier.h"
+#include "ocudu/phy/lower/lower_phy_rx_symbol_notifier.h"
+#include "ocudu/phy/lower/sampling_rate.h"
+#include "ocudu/ran/antenna_topology.h"
+#include "ocudu/ran/cyclic_prefix.h"
+#include "ocudu/ran/n_ta_offset.h"
+#include "ocudu/ran/subcarrier_spacing.h"
+#include "ocudu/support/executors/task_executor.h"
+
+namespace ocudu {
+
+class lower_phy_timing_notifier;
+
+/// \brief Lower physical layer baseband gateway buffer size policy.
+///
+/// Determines the policy to select the baseband gateway buffer size.
+enum class lower_phy_baseband_buffer_size_policy : unsigned {
+  /// The buffer size matches the number of samples per slot.
+  slot = 0,
+  /// The buffer size matches the number of samples per half-slot.
+  half_slot,
+  /// The buffer size if equal to \ref baseband_gateway::get_transmitter_optimal_buffer_size for the transmitter and
+  /// \ref baseband_gateway::get_receiver_optimal_buffer_size for the receiver.
+  single_packet,
+  /// The buffer size is is equal to the greatest multiple of \ref baseband_gateway::get_transmitter_optimal_buffer_size
+  /// for the transmitter and \ref baseband_gateway::get_receiver_optimal_buffer_size for the receiver less than the
+  /// number of samples per slot.
+  optimal_slot,
+};
+
+/// Lower physical layer configuration.
+struct lower_phy_configuration {
+  /// Sector identifier.
+  unsigned sector_id;
+  /// Subcarrier spacing for the overall PHY.
+  subcarrier_spacing scs;
+  /// Cyclic prefix.
+  cyclic_prefix cp;
+  /// Indicates the sector bandwidth in resource blocks.
+  unsigned bandwidth_rb;
+  /// Indicates the downlink frequency.
+  double dl_freq_hz;
+  /// Indicates the uplink frequency.
+  double ul_freq_hz;
+  /// Transmit antenna topology.
+  antenna_topology tx_ant_topology;
+  /// Number of receive ports.
+  unsigned nof_rx_ports;
+  /// Shifts the DFT window by a fraction of the cyclic prefix [0, 1).
+  float dft_window_offset;
+  /// \brief Number of slots the timing handler is notified in advance of the transmission time.
+  ///
+  /// Sets the maximum allowed processing delay in slots.
+  unsigned max_processing_delay_slots;
+  /// Sampling rate.
+  sampling_rate srate;
+  /// Time alignment offset.
+  n_ta_offset ta_offset;
+  /// \brief Time alignment calibration in number of samples.
+  ///
+  /// Models the reception and transmission time misalignment inherent to the RF device. This time adjustment is
+  /// subtracted from the UL-to-DL processing time offset for calibrating the baseband device.
+  ///
+  /// \remark Positive values cause a reduction of the RF transmission delay with respect to the RF reception, while
+  /// negative values increase it.
+  int time_alignment_calibration;
+  /// \brief System time-based throttling.
+  ///
+  /// Determines a minimum baseband processor period time between downlink packets. It is expressed as a fraction of the
+  /// time equivalent to the number of samples in the baseband buffer. Set to 0.9 to ensure that the downlink packets
+  /// are processed with a minimum period of 90% of the buffer duration.
+  ///
+  /// Set to zero to disable this feature.
+  float system_time_throttling;
+  /// Maximum number of PRACH concurrent requests.
+  unsigned max_nof_prach_concurrent_requests = 1;
+  /// Baseband receive buffer size policy.
+  lower_phy_baseband_buffer_size_policy baseband_rx_buffer_size_policy;
+  /// \brief Transmit baseband gain back-off in decibels.
+  ///
+  /// The transmit signal is normalized so its average power is equal to the full scale of the radio device. The
+  /// back-off then lowers the signal power to accommodate its peak-to-average power ratio. Samples that exceed the full
+  /// scale saturate.
+  float gain_backoff_dB = 0.0F;
+};
+
+/// Lower physical layer dependencies.
+struct lower_phy_dependencies {
+  /// Logger.
+  ocudulog::basic_logger& logger;
+  /// Provides the baseband gateway.
+  baseband_gateway& bb_gateway;
+  /// Provides a symbol handler to notify the reception of symbols.
+  lower_phy_rx_symbol_notifier& rx_symbol_notifier;
+  /// Provides the timing handler to notify the timing boundaries.
+  lower_phy_timing_notifier& timing_notifier;
+  /// Provides the error handler to notify runtime errors.
+  lower_phy_error_notifier& error_notifier;
+  /// Receive task executor.
+  task_executor& rx_task_executor;
+  /// Transmit task executor.
+  task_executor& tx_task_executor;
+  /// Downlink task executor.
+  task_executor& dl_task_executor;
+  /// Uplink task executor.
+  task_executor& ul_task_executor;
+  /// PRACH asynchronous task executor.
+  task_executor& prach_async_executor;
+};
+
+/// Returns true if the given lower PHY configuration is valid, otherwise false.
+inline bool is_valid_lower_phy_config(const lower_phy_configuration& config)
+{
+  // :TODO: Implement me!
+
+  return true;
+}
+
+} // namespace ocudu

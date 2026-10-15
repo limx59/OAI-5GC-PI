@@ -1,0 +1,8 @@
+**
+!ocudu/
+!ocudu/**
+ocudu/.git
+ocudu/**/.git
+ocudu/build/
+ocudu/build-*/
+ocudu/ccache/

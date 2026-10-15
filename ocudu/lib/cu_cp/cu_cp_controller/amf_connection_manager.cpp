@@ -1,0 +1,204 @@
+// SPDX-FileCopyrightText: Copyright (C) 2021-2026 Software Radio Systems Limited
+// SPDX-FileCopyrightText: Copyright (C) 2026 OCUDU contributors
+// SPDX-License-Identifier: BSD-3-Clause-Open-MPI
+// Portions of this file may implement 3GPP specifications, which may be subject to additional licensing requirements.
+
+#include "amf_connection_manager.h"
+#include "../routines/amf_connection_removal_routine.h"
+#include "../routines/amf_connection_setup_routine.h"
+#include "../routines/amf_reconnection_routine.h"
+#include "ocudu/support/synchronization/sync_event.h"
+
+using namespace ocudu;
+using namespace ocucp;
+
+amf_connection_manager::amf_connection_manager(const amf_connection_manager_dependencies& dependencies) :
+  ngaps(dependencies.ngaps),
+  cu_cp_notifier(dependencies.cu_cp_notifier),
+  timers(dependencies.timers),
+  cu_cp_exec(dependencies.cu_cp_exec),
+  common_task_sched(dependencies.common_task_sched),
+  logger(dependencies.logger),
+  ng_setup_notifier(dependencies.ng_setup_notifier)
+{
+  // Create an entry for each AMF up front, so that no later update changes the structure of the map.
+  for (const auto& [amf_index, ngap] : ngaps.get_ngaps()) {
+    amfs_connected.emplace(amf_index, false);
+  }
+}
+
+void amf_connection_manager::connect_to_amf(std::promise<void>* completion_signal, std::chrono::milliseconds retry_time)
+{
+  // Schedules setup routine to be executed in sequence with other CU-CP procedures.
+  common_task_sched.schedule(launch_async(
+      [this, success = false, p = completion_signal, retry_time](coro_context<async_task<void>>& ctx) mutable {
+        CORO_BEGIN(ctx);
+
+        // Launch procedure to initiate AMF connection.
+        CORO_AWAIT_VALUE(success, start_amf_connection_setup(ngaps, amfs_connected, ng_setup_notifier));
+
+        if (not success) {
+          // Keep trying in the background, so that the CU-CP does not require the AMF to accept it on startup.
+          retry_unconnected_amfs(retry_time);
+        }
+
+        // Signal through the promise the completion of the connection setup.
+        if (p != nullptr) {
+          p->set_value();
+        }
+
+        CORO_RETURN();
+      }));
+}
+
+async_task<void> amf_connection_manager::disconnect_amf()
+{
+  if (ngaps.get_ngaps().empty()) {
+    return launch_async([](coro_context<async_task<void>>& ctx) {
+      CORO_BEGIN(ctx);
+      CORO_RETURN();
+    });
+  }
+
+  return start_amf_connection_removal(ngaps, amfs_connected);
+}
+
+void amf_connection_manager::handle_amf_connection_loss(cu_cp_amf_index_t amf_index)
+{
+  set_amf_connected(amf_index, false);
+}
+
+void amf_connection_manager::reconnect_to_amf(cu_cp_amf_index_t         amf_index,
+                                              ue_manager*               ue_mng,
+                                              std::chrono::milliseconds amf_reconnection_retry_time)
+{
+  if (ngaps.find_ngap(amf_index) == nullptr) {
+    logger.debug("AMF index {} for reconnection not found", amf_index);
+    return;
+  }
+
+  ngaps.get_ngap_task_scheduler().handle_amf_async_task(
+      amf_index,
+      launch_async([this, amf_index, ue_mng, amf_reconnection_retry_time](coro_context<async_task<void>>& ctx) mutable {
+        CORO_BEGIN(ctx);
+
+        CORO_AWAIT(start_amf_reconnection(
+            *ngaps.find_ngap(amf_index), timer_factory{timers, cu_cp_exec}, amf_reconnection_retry_time));
+
+        // Update PLMN lookups in NGAP repository after successful reconnection.
+        ngaps.update_plmn_lookup(amf_index);
+        if (ue_mng != nullptr) {
+          ue_mng->remove_blocked_plmns(ngaps.find_ngap(amf_index)->get_ngap_context().get_supported_plmns());
+        }
+        set_amf_connected(amf_index, true);
+        // Notify CU-CP about the successful reconnection.
+        cu_cp_notifier.handle_amf_reconnection(amf_index);
+
+        CORO_RETURN();
+      }));
+}
+
+void amf_connection_manager::stop()
+{
+  if (stopped) {
+    return;
+  }
+
+  // Stop event used to block while AMF disconnection routine is ongoing.
+  // We pass the token to the routines by value, to make sure that there is no use after-move within
+  // the defer retry loops.
+  sync_event stop_control;
+  auto       stop_token = stop_control.get_token();
+
+  // Stop and delete AMF connections.
+  while (!cu_cp_exec.defer([this, stop_token]() mutable {
+    bool err = common_task_sched.schedule(launch_async([this, stop_token](coro_context<async_task<void>>& ctx) mutable {
+      CORO_BEGIN(ctx);
+      // Disconnect AMF connection.
+      CORO_AWAIT(disconnect_amf());
+
+      // AMF disconnection successfully finished.
+      // Dispatch main async task loop destruction via defer so that the current coroutine ends
+      // successfully.
+      // We capture the token, so that the observer is blocked until the callback is run.
+      while (!cu_cp_exec.defer([stop_token]() mutable {})) {
+        logger.warning("Unable to stop AMF Manager. Retrying...");
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+      }
+
+      CORO_RETURN();
+    }));
+    if (!err) {
+      logger.warning("Failed start AMF disconnection routine");
+    }
+  })) {
+    logger.warning("Failed to dispatch AMF stop task. Retrying...");
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  }
+
+  // Wait for AMF stop to complete.
+  stop_token.reset();
+  stop_control.wait();
+
+  stopped = true;
+}
+
+bool amf_connection_manager::is_amf_connected(plmn_identity plmn) const
+{
+  cu_cp_amf_index_t amf_index = plmn_to_amf_index(plmn);
+  if (amf_index == cu_cp_amf_index_t::invalid) {
+    return false;
+  }
+
+  return is_amf_connected(amf_index);
+}
+
+bool amf_connection_manager::is_amf_connected(cu_cp_amf_index_t amf_index) const
+{
+  const auto& amf_connected = amfs_connected.find(amf_index);
+  if (amf_connected == amfs_connected.end()) {
+    return false;
+  }
+
+  return amf_connected->second.load(std::memory_order_relaxed);
+}
+
+size_t amf_connection_manager::nof_connected_amfs() const
+{
+  return std::count_if(amfs_connected.begin(), amfs_connected.end(), [](const auto& amf_connected) {
+    return amf_connected.second.load(std::memory_order_relaxed);
+  });
+}
+
+void amf_connection_manager::set_amf_connected(cu_cp_amf_index_t amf_index, bool connected)
+{
+  auto amf_connected = amfs_connected.find(amf_index);
+  if (amf_connected == amfs_connected.end()) {
+    logger.error("AMF index {} not found", amf_index);
+    return;
+  }
+
+  amf_connected->second.store(connected, std::memory_order_relaxed);
+}
+
+void amf_connection_manager::retry_unconnected_amfs(std::chrono::milliseconds retry_time)
+{
+  for (const auto& [amf_index, ngap] : ngaps.get_ngaps()) {
+    if (not is_amf_connected(amf_index)) {
+      reconnect_to_amf(amf_index, nullptr, retry_time);
+    }
+  }
+}
+
+cu_cp_amf_index_t amf_connection_manager::plmn_to_amf_index(plmn_identity plmn) const
+{
+  for (const auto& [amf_index, ngap] : ngaps.get_ngaps()) {
+    for (auto& supported_plmn : ngap->get_ngap_context().get_supported_plmns()) {
+      if (plmn == supported_plmn) {
+        return amf_index;
+      }
+    }
+  }
+
+  return cu_cp_amf_index_t::invalid;
+}
