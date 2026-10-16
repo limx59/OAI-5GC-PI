@@ -1,0 +1,22 @@
+services:
+  ric:
+    image: oai-pi-ocudu-flexric-ric:e2ap3-kpm3-test
+    pull_policy: never
+    networks:
+      core:
+        ipv4_address: 172.22.0.162
+    volumes:
+      - ./config/ric.conf:/usr/local/etc/flexric/ric.conf:ro
+    ulimits:
+      core:
+        soft: 0
+        hard: 0
+    stop_signal: SIGINT
+    stop_grace_period: 10s
+    restart: "no"
+
+  gnb:
+    depends_on:
+      - ric
+    volumes:
+      - ./config/gnb-zmq-e2.yml:/etc/ocudu/gnb.yml:ro

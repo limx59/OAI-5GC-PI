@@ -1,0 +1,17 @@
+**
+!flexric/
+!flexric/**
+!test/
+!test/xapp/
+!test/xapp/**
+!test/ocudu/
+!test/ocudu/patches/
+!test/ocudu/patches/patch-flexric-swig-node-id.py
+**/.git
+**/.git/**
+**/build/
+**/build-*/
+**/cmake-build-*/
+**/compile_commands.json
+**/__pycache__/
+**/*.pyc
