@@ -267,6 +267,14 @@ DU KPM/CSV single-round, three-round and interrupted-run evidence:
 
 See [DU KPM and CSV validation](README.zmq-kpm.md) for results and limitations.
 
+Docker Hub reference DU KPM/CSV three-round regression passed on
+2026-10-16, Pacific time: six directional phases, zero packet loss,
+116 CSV rows and normal deletion/cleanup checks passed.
+
+- Directory: `/tmp/ocudu-zmq-dockerhub-kpm-regression/run-jrzfzyab`
+- Archive: `ocudu-dockerhub-kpm-regression-20261016-104059.tar.gz`
+- Published RIC/xApp references and digests: [KPM guide](README.zmq-kpm.md).
+
 Archives reside under `~/Work/oai-test-evidence/`, outside the repository.
 Retain failed-run evidence as well as passed results.
 

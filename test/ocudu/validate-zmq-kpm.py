@@ -247,7 +247,7 @@ def main():
     parser.add_argument("--output-dir", type=Path,
                         default=Path("/tmp/ocudu-zmq-kpm"))
     parser.add_argument("--xapp-image", default=
-        "oai-pi-ocudu-flexric-xapp:e2ap3-kpm3-node-id-fix")
+        "limx59/oai-pi-ocudu-flexric-xapp:arm64-e2ap3-kpm3-node-id-fix")
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[2]
     compose = DOCKER + [

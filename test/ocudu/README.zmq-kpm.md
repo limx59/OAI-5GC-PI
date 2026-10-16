@@ -65,12 +65,25 @@ core-internal failure.
 | --- | --- |
 | gNB | limx59/oai-pi-ocudu-gnb:arm64-zmq-worker-test |
 | UE / traffic server | limx59/oai-pi-oai-nr-ue:arm64-zmq-test |
-| RIC | oai-pi-ocudu-flexric-ric:e2ap3-kpm3-test |
-| xApp | oai-pi-ocudu-flexric-xapp:e2ap3-kpm3-node-id-fix |
+| RIC | limx59/oai-pi-ocudu-flexric-ric:arm64-e2ap3-kpm3-test |
+| xApp | limx59/oai-pi-ocudu-flexric-xapp:arm64-e2ap3-kpm3-node-id-fix |
 
-The RAN references were published previously. The listed RIC and xApp
-references are local test images; this result does not establish their
-Docker Hub publication.
+All listed images are published on Docker Hub. The RIC and xApp were
+pushed and pulled successfully on 2026-10-16, Pacific time. Their registry
+digests matched the push results:
+
+| Image | Registry digest |
+| --- | --- |
+| RIC | sha256:6d4071b6ed77137a9169663b563a04236734fe439fc945625c201d2149920986 |
+| xApp | sha256:e89667f1d8acc348126b3b8651fd41182919408dd58131d41d89afcc94624a21 |
+
+compose.e2.yaml and the validator default use these published references.
+Pull both images before running with the configured never-pull policy:
+
+```bash
+sudo docker pull limx59/oai-pi-ocudu-flexric-ric:arm64-e2ap3-kpm3-test
+sudo docker pull limx59/oai-pi-ocudu-flexric-xapp:arm64-e2ap3-kpm3-node-id-fix
+```
 
 docker/ocudu/Dockerfile.flexric selects E2AP V3 and KPM V3.00.
 Its xApp source-copy patch is:
@@ -210,6 +223,40 @@ ping traffic produced positive UL and DL values with 150/150 replies.
 Despite a configured 1000 ms period, observed wall-clock receive gaps
 varied; the single-round UDP test included gaps of roughly 1.2 to
 4.6 seconds. Precise one-second wall-clock reporting has not passed.
+
+## Docker Hub reference regression
+
+On 2026-10-16, Pacific time, RIC was recreated using the published reference.
+The validator then passed three fresh-RAN rounds using the published xApp,
+gNB and UE references, without rebuilding images.
+
+| Round | UL received bit/s | DL received bit/s | UL / DL loss | UL / DL CSV rows |
+| --- | ---: | ---: | --- | --- |
+| 1 | 994441 | 1001189 | 0% / 0% | 20 / 20 |
+| 2 | 994850 | 1001252 | 0% / 0% | 20 / 20 |
+| 3 | 993183 | 1000225 | 0% / 0% | 18 / 18 |
+
+All six directional phases passed positive-value, normal deletion and
+cleanup checks, with 116 CSV rows in total. Existing limitations still apply,
+including the unresolved abrupt-disconnection crash.
+
+Command:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 python3 test/ocudu/validate-zmq-kpm.py \
+  --rounds 3 \
+  --xapp-image limx59/oai-pi-ocudu-flexric-xapp:arm64-e2ap3-kpm3-node-id-fix \
+  --output-dir /tmp/ocudu-zmq-dockerhub-kpm-regression \
+  </dev/null
+```
+
+Evidence directory:
+
+`/tmp/ocudu-zmq-dockerhub-kpm-regression/run-jrzfzyab`
+
+Verified archive under `~/Work/oai-test-evidence/`:
+
+`ocudu-dockerhub-kpm-regression-20261016-104059.tar.gz`
 
 ## Evidence
 

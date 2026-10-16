@@ -1,6 +1,6 @@
 services:
   ric:
-    image: oai-pi-ocudu-flexric-ric:e2ap3-kpm3-test
+    image: limx59/oai-pi-ocudu-flexric-ric:arm64-e2ap3-kpm3-test
     pull_policy: never
     networks:
       core:
