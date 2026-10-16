@@ -22,6 +22,10 @@ COPY test/xapp/ /src/test/xapp/
 COPY test/ocudu/patches/patch-flexric-swig-node-id.py /tmp/patch-flexric-swig-node-id.py
 RUN python3 /tmp/patch-flexric-swig-node-id.py /src/flexric
 
+# Skip forwarding to disconnected xApps while retaining cleanup.
+COPY test/ocudu/patches/patch-flexric-ric-disconnect.py /tmp/patch-flexric-ric-disconnect.py
+RUN python3 /tmp/patch-flexric-ric-disconnect.py /src/flexric
+
 RUN cmake -S /src/flexric -B /build/flexric \
     -DCMAKE_BUILD_TYPE=Debug \
     -DCMAKE_INSTALL_PREFIX=/usr/local \

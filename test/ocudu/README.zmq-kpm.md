@@ -65,7 +65,7 @@ core-internal failure.
 | --- | --- |
 | gNB | limx59/oai-pi-ocudu-gnb:arm64-zmq-worker-test |
 | UE / traffic server | limx59/oai-pi-oai-nr-ue:arm64-zmq-test |
-| RIC | limx59/oai-pi-ocudu-flexric-ric:arm64-e2ap3-kpm3-test |
+| RIC | limx59/oai-pi-ocudu-flexric-ric:arm64-e2ap3-kpm3-disconnect-fix |
 | xApp | limx59/oai-pi-ocudu-flexric-xapp:arm64-e2ap3-kpm3-node-id-fix |
 
 All listed images are published on Docker Hub. The RIC and xApp were
@@ -74,14 +74,14 @@ digests matched the push results:
 
 | Image | Registry digest |
 | --- | --- |
-| RIC | sha256:6d4071b6ed77137a9169663b563a04236734fe439fc945625c201d2149920986 |
+| RIC | sha256:ab7371fa9a1deac31b393823000ca8247a8bf4db19527e744287c2a35b15d8c5 |
 | xApp | sha256:e89667f1d8acc348126b3b8651fd41182919408dd58131d41d89afcc94624a21 |
 
 compose.e2.yaml and the validator default use these published references.
 Pull both images before running with the configured never-pull policy:
 
 ```bash
-sudo docker pull limx59/oai-pi-ocudu-flexric-ric:arm64-e2ap3-kpm3-test
+sudo docker pull limx59/oai-pi-ocudu-flexric-ric:arm64-e2ap3-kpm3-disconnect-fix
 sudo docker pull limx59/oai-pi-ocudu-flexric-xapp:arm64-e2ap3-kpm3-node-id-fix
 ```
 
@@ -238,7 +238,8 @@ gNB and UE references, without rebuilding images.
 
 All six directional phases passed positive-value, normal deletion and
 cleanup checks, with 116 CSV rows in total. Existing limitations still apply,
-including the unresolved abrupt-disconnection crash.
+with the container-kill scenario subsequently validated separately.
+This earlier normal-flow regression used the original RIC test image.
 
 Command:
 
@@ -280,7 +281,7 @@ Archive sections are single-round, three-round and interrupted-run.
 Evidence includes summaries, CSV files, iperf results and relevant logs.
 Keep failed-run evidence as well as successful results.
 
-## Known abnormal-disconnection failure
+## Historical abnormal-disconnection failure
 
 During the interrupted run, the xApp exited with code 129. RIC logs showed
 xApp disconnection, automatic pending-subscription removal and then:
@@ -294,11 +295,18 @@ The RIC container exited with code 133. Terminal disconnection is a
 plausible trigger for the xApp interruption, but the available evidence
 does not prove the entire causal chain.
 
-The normal-operation regressions passed after restarting RIC. They do
-not demonstrate that this abnormal-disconnection defect is fixed.
+Normal-operation regressions alone did not establish a fix.
 
-Next work is to fix pending-subscription cleanup and separately validate
-RIC survival, Agent cleanup and xApp reconnection.
+The subsequent Docker-source-copy patch added optional xApp connection
+lookup and retained request-map cleanup when forwarding is skipped.
+Local single/three-round and published-reference three-round tests passed
+explicit container-kill, automatic subscription deletion, RIC survival
+and new-xApp subscription checks. See
+[the KPM monitoring disconnection scenario](README.zmq-kpm-disconnect.md)
+for commands, acceptance criteria and evidence.
+
+This result covers the tested container-kill scenario, not every network
+or SCTP failure mode. KPM monitoring remains in progress.
 
 ## Cleanup
 
@@ -331,7 +339,8 @@ it. Retain the external core network and unrelated services.
   ue_report_index is only a position within a report.
 - Units, measurement accuracy and collection windows are not validated.
 - One-second wall-clock cadence is not established.
-- RIC abrupt-disconnection recovery remains defective.
+- Container-kill cleanup passed bounded tests; other disconnect and
+  RIC/Agent restart scenarios remain unvalidated.
 - The earlier core SBI port-selection failure has no confirmed root cause.
 - Long-duration stability, capacity, RC, slicing and physical RF are outside
   this bounded result.

@@ -23,8 +23,9 @@ stability, physical RF and AI control remain unvalidated. The bounded
 DU E2/KPM and CSV subset subsequently passed single-round and three-round
 tests on 2026-10-15, Pacific time; see the
 [KPM validation guide](README.zmq-kpm.md). Complete interoperability,
-precise one-second reporting and abnormal-disconnection recovery remain
-unvalidated.
+precise one-second reporting and broader failure recovery remain
+unvalidated. The bounded xApp container-kill cleanup scenario passed
+separate regression tests.
 
 ## Architecture
 
@@ -70,8 +71,9 @@ connectivity checks. A dedicated traffic endpoint at 172.22.0.151 and
 bounded UDP uplink/downlink tests have also passed. The DU FlexRIC
 E2/KPM path, normal subscriptions, CSV recording and normal deletion
 passed single-round and three fresh-container rounds. This covers only
-the documented subset. Abrupt xApp disconnection exposed an unresolved
-RIC cleanup crash; full protocol compatibility is not established.
+the documented subset. An observed xApp disconnect cleanup crash was
+addressed and the explicit container-kill scenario passed bounded
+regression tests; full protocol compatibility is not established.
 
 Start with one gNB and one UE. Run the original OAI RFsim baseline and
 the OCUDU ZeroMQ scenario sequentially against the existing core, using
@@ -185,11 +187,31 @@ sudo docker build -f docker/ocudu/Dockerfile.worker-test \
 The OCUDU build uses `cortex-a76+crypto` and an ARMv8.2-A fallback.
 The worker test Dockerfile reuses the baseline builder stages when cached.
 
-## Test guides
+## KPM monitoring
 
-- Connectivity: the run instructions below and `validate-zmq-connectivity.py`.
-- [Bounded UDP uplink/downlink validation](README.zmq-udp.md): prerequisites, execution, acceptance, results and cleanup.
-- [DU KPM and CSV validation](README.zmq-kpm.md): configuration, bounded UDP load, CSV checks, regression results and known recovery limitations.
+- [OCUDU DU KPM configuration, execution and validation](README.zmq-kpm.md)
+- [KPM monitoring: abrupt xApp disconnection scenario](README.zmq-kpm-disconnect.md)
+
+The disconnection scenario belongs to KPM monitoring and does not introduce
+another top-level test case. KPM monitoring remains in progress.
+
+## KPM CSV recording
+
+- [KPM CSV recording, acceptance criteria and evidence](README.zmq-kpm.md)
+
+CSV recording currently shares its guide with KPM monitoring. The guide
+covers numeric-value checks, load response and subscription deletion.
+
+## Integrated regression
+
+- Connectivity validation: see Run validation below and validate-zmq-connectivity.py.
+- [Bounded UDP uplink/downlink validation](README.zmq-udp.md)
+- [DU KPM/CSV regression](README.zmq-kpm.md)
+- [KPM disconnection scenario regression](README.zmq-kpm-disconnect.md)
+
+Individual bounded regressions do not establish completion of the full
+integrated regression. Overall progress is maintained in the existing
+TODO table below.
 
 ## Run validation
 
@@ -275,6 +297,13 @@ Docker Hub reference DU KPM/CSV three-round regression passed on
 - Archive: `ocudu-dockerhub-kpm-regression-20261016-104059.tar.gz`
 - Published RIC/xApp references and digests: [KPM guide](README.zmq-kpm.md).
 
+KPM monitoring container-kill scenario: local single/three-round and
+published-reference three-round tests passed. Verified archive:
+
+`ocudu-kpm-disconnect-20261016-114442.tar.gz`
+
+See [scenario details](README.zmq-kpm-disconnect.md).
+
 Archives reside under `~/Work/oai-test-evidence/`, outside the repository.
 Retain failed-run evidence as well as passed results.
 
@@ -284,26 +313,26 @@ Existing OAI/FlexRIC results remain reusable baselines. OCUDU results
 are recorded separately: connectivity, bounded UDP and the documented
 DU KPM/CSV subset have passed their respective tests. These results do
 not establish complete E2 interoperability, precise one-second reporting,
-abnormal-disconnection recovery or control support.
+all failure-recovery modes or control support.
 
 | Test case | Completed | Remaining |
 | --- | --- | --- |
 | Node discovery | ✅ NG Setup and DU E2 Setup; node 420 with DU ID 0 observed | ☐ CU Agent identities; RIC/Agent reconnection; abnormal exit cleanup |
-| KPM monitoring | ✅ DU action Format 4 / indication Format 3; idle zero values and positive UL/DL values under bounded load | ☐ One-second wall-clock cadence; units and accuracy; other report styles; missing metrics and unsupported subscriptions |
+| 🔴 KPM monitoring | ✅ DU action Format 4 / indication Format 3; idle/load response; bounded container-kill cleanup and new-xApp subscription regression | 🔴 In progress: verify OCUDU E2 build configuration and FlexRIC compatibility; ☐ report styles; one-second monitoring; complete UL/DL and idle-response coverage; abnormal subscription handling |
 | KPM CSV recording | ✅ Node/PLMN and UTC receive timestamps; complete finite numeric rows; positive values under directional UDP load; normal subscription deletion guard; single-round and three-round regression | ☐ Actual UE and CU/DU identifiers; measurement units and collection windows; quantitative comparison with traffic results |
-| 🔴 RIC disconnect recovery | ✅ Interrupted-run crash evidence retained | ☐ Fix pending-subscription cleanup after abrupt xApp disconnection; verify RIC survival and reconnection |
 | QoS monitoring | ✅ Existing policy and alert framework available for reuse | ☐ Map OCUDU throughput, latency and packet-loss fields; bounded high/low-load alerts; restore state after reconnection; advisory mode first |
 | MAC / RLC / PDCP statistics | ✅ Differences between standard KPM and existing private service models reviewed | ☐ Verify OCUDU E2/local metric sources; detect duplicates, missing values and counter resets; compare with iperf; verify xApp compatibility |
 | Traffic steering policy | ✅ Existing load-exchange and rule-evaluation methods provide a reusable baseline | ☐ Single-link load response; sequential OAI/OCUDU comparison; dual-node recommendations when resources permit; common metrics and cooldown rules |
 | Traffic steering control | ✅ Existing OAI RFsim handover feedback loop passed as an OAI baseline | ☐ Audit supported OCUDU RC actions; verify control ACK and execution separately; cross-vendor handover remains exploratory |
 | Multi-Agent slicing control | ✅ Existing standalone OAI NR DL scheduler PRB-cap simulation passed as an OAI baseline | ☐ Verify OCUDU slice configuration and control interfaces; offline/startup configuration experiments first; actual grant/counter evidence; verify support before reusing private SLICE commands |
 | Energy-saving control | ✅ Existing policy and state-feedback simulation available for reuse | ☐ OCUDU advisory and state simulation; **physical device control and power measurement deferred pending hardware** |
-| Integrated regression | ✅ ARM64 OCUDU/OAI UE ZeroMQ builds; connectivity and published-image regressions; [bounded UDP UL/DL](README.zmq-udp.md); [DU KPM/CSV](README.zmq-kpm.md) single-round and three fresh-container rounds; evidence archiving and normal cleanup | ☐ Abnormal-disconnection recovery; longer-session stability; precise report timing; full-workflow regression; **physical RF deferred pending SDR hardware** |
+| Integrated regression | ✅ ARM64 builds and published images; connectivity and bounded UDP regressions; DU KPM/CSV normal-flow regressions; bounded container-kill regression using published RIC; evidence archives and documentation | ☐ Verify testmode status; sustained-session and long-term stability; single-worker root cause; complete KPM workflow regression; **physical RF deferred pending SDR** |
 
 Execution follows the research plan: bounded traffic validation (P5) and
 the documented normal-operation DU KPM/CSV subset of P6 passed single
-and three-round tests. **🔴 Next: fix RIC cleanup after abrupt xApp
-disconnection.** Precise timing, metric accuracy and actual UE identity
+and three-round tests. **🔴 Current test case: KPM monitoring remains
+in progress.** The container-kill scenario is documented within that
+test case. Precise timing, metric accuracy and actual UE identity
 remain open. Full-workflow regression (P7), sequential OAI/OCUDU
 comparison (P8), and capability-gated RC/slicing experiments (P9) follow.
 

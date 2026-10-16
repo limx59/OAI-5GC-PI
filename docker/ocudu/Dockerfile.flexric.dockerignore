@@ -7,6 +7,7 @@
 !test/ocudu/
 !test/ocudu/patches/
 !test/ocudu/patches/patch-flexric-swig-node-id.py
+!test/ocudu/patches/patch-flexric-ric-disconnect.py
 **/.git
 **/.git/**
 **/build/

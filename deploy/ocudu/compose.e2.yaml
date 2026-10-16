@@ -1,6 +1,6 @@
 services:
   ric:
-    image: limx59/oai-pi-ocudu-flexric-ric:arm64-e2ap3-kpm3-test
+    image: "${OCUDU_RIC_IMAGE:-limx59/oai-pi-ocudu-flexric-ric:arm64-e2ap3-kpm3-disconnect-fix}"
     pull_policy: never
     networks:
       core:
