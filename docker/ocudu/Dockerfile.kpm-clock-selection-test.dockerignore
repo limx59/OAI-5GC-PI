@@ -1,0 +1,7 @@
+**
+!test/
+!test/ocudu/
+!test/ocudu/patches/
+!test/ocudu/patches/patch-ocudu-kpm-clock-dependencies.py
+!test/ocudu/patches/patch-ocudu-kpm-clock-selection.py
+!test/ocudu/patches/kpm-clock-selection-tests.inc

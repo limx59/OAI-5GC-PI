@@ -1,0 +1,5 @@
+services:
+  gnb:
+    cpuset: "0-2"
+  nrue:
+    cpuset: "0,3"

@@ -1,0 +1,6 @@
+**
+!test/
+!test/ocudu/
+!test/ocudu/patches/
+!test/ocudu/patches/patch-ocudu-kpm-report-lifecycle.py
+!test/ocudu/patches/kpm-report-lifecycle-tests.inc

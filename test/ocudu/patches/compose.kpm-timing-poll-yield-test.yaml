@@ -1,0 +1,6 @@
+services:
+  gnb:
+    image: oai-pi-ocudu-gnb:arm64-zmq-poll-yield-test
+    cpuset: "0-2"
+  nrue:
+    cpuset: "3"

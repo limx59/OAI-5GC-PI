@@ -1,0 +1,13 @@
+**
+!ocudu/
+!ocudu/**
+ocudu/.git
+ocudu/**/.git
+ocudu/build/
+ocudu/build-*/
+ocudu/ccache/
+!test/
+!test/ocudu/
+!test/ocudu/patches/
+!test/ocudu/patches/patch-ocudu-kpm-style4-record-guard.py
+!test/ocudu/patches/kpm-style4-record-guard-tests.inc

@@ -1,0 +1,10 @@
+**
+!test/
+!test/ocudu/
+!test/ocudu/patches/
+!test/ocudu/patches/patch-ocudu-kpm-wall-clock.py
+!test/ocudu/patches/patch-ocudu-kpm-rlc-revisions.py
+!test/ocudu/patches/patch-ocudu-kpm-revision-interface.py
+!test/ocudu/patches/patch-ocudu-kpm-style4-freshness.py
+!test/ocudu/patches/patch-ocudu-rlc-metrics-clock.py
+!test/ocudu/patches/patch-ocudu-rlc-metrics-clock-wiring.py

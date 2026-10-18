@@ -1,0 +1,15 @@
+FROM limx59/oai-pi-ocudu-kpm-tests:arm64-collection-lock@sha256:3e9c2865bc29f4161ab56ae7dd823e33f98c637ee4fbb94840bcd2027df6e855 AS test
+ARG BUILD_JOBS=1
+
+COPY test/ocudu/patches/patch-ocudu-kpm-report-lifecycle.py /tmp/report-lifecycle.py
+COPY test/ocudu/patches/kpm-report-lifecycle-tests.inc /tmp/report-lifecycle-tests.inc
+
+RUN python3 /tmp/report-lifecycle.py /src/ocudu \
+    && printf '\n' >> /src/ocudu/tests/unittests/e2/e2_subscription_setup_test.cpp \
+    && cat /tmp/report-lifecycle-tests.inc >> /src/ocudu/tests/unittests/e2/e2_subscription_setup_test.cpp \
+    && cmake --build /build/ocudu --target e2_subscription_setup_test \
+       --parallel "${BUILD_JOBS}"
+
+RUN timeout --signal=TERM --kill-after=5s 180s \
+    /build/ocudu/tests/unittests/e2/e2_subscription_setup_test \
+    '--gtest_filter=kpm_report_lifecycle.*'

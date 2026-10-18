@@ -1,0 +1,8 @@
+services:
+  gnb:
+    image: limx59/oai-pi-ocudu-gnb:arm64-kpm-collection-clock@sha256:bff13777799f436cb3abdfa9e5433fd7f306c8d8898c69b26b9e664b4160b844
+    cpuset: "0-2"
+    environment:
+      OCUDU_KPM_WALL_CLOCK: "1"
+  nrue:
+    cpuset: "3"

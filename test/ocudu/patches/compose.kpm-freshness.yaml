@@ -1,0 +1,8 @@
+services:
+  gnb:
+    image: limx59/oai-pi-ocudu-gnb:arm64-kpm-freshness@sha256:7ef51767747350497bbcbdc351394a0ee7357772b91aceda88dde26c180e9dca
+    cpuset: "0-2"
+    environment:
+      OCUDU_KPM_WALL_CLOCK: "1"
+  nrue:
+    cpuset: "3"

@@ -1,0 +1,13 @@
+FROM limx59/oai-pi-ocudu-kpm-tests:arm64-report-lifecycle@sha256:12704d32130074b4f1f4370155c26d6e67b83dfdae67ed9abf73632a91cdbaa9 AS test
+ARG BUILD_JOBS=1
+
+COPY test/ocudu/patches/patch-ocudu-kpm-clock-dependencies.py /tmp/clock-dependencies.py
+COPY test/ocudu/patches/patch-ocudu-kpm-clock-selection.py /tmp/clock-selection.py
+COPY test/ocudu/patches/kpm-clock-selection-tests.inc /tmp/clock-selection-tests.inc
+
+RUN python3 /tmp/clock-dependencies.py /src/ocudu \
+    && python3 /tmp/clock-selection.py /src/ocudu \
+    && printf '\n' >> /src/ocudu/tests/unittests/e2/e2_subscription_setup_test.cpp \
+    && cat /tmp/clock-selection-tests.inc >> /src/ocudu/tests/unittests/e2/e2_subscription_setup_test.cpp \
+    && cmake --build /build/ocudu --target e2_subscription_setup_test \
+       --parallel "${BUILD_JOBS}"
