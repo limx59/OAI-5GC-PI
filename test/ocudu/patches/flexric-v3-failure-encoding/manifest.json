@@ -1,0 +1,8 @@
+{
+  "patch": "patch-flexric-v3-subscription-failure-encoding.py",
+  "patch_sha256": "39171cce13185af6d652e61bfe31e2d122cd91a874e9fbea0a58fa6526a8f57b",
+  "source": "src/lib/e2ap/v3_01/enc/e2ap_msg_enc_asn.c",
+  "original_sha256": "1cf6069e2a031fb86a0ef88d2bad2b00801cbd3d61bf27dca36003ffddd4f6db",
+  "patched_sha256": "14dbdb1512f4402f659fe7768fad1522c9a82ad93df6fc223526d5bb4891921d",
+  "validation": "Patch application only; compilation and behavior pending"
+}

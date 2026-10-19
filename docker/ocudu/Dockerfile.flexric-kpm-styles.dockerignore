@@ -1,0 +1,17 @@
+**
+!flexric/
+!flexric/**
+!test/
+!test/xapp/
+!test/xapp/**
+!test/ocudu/
+!test/ocudu/patches/
+!test/ocudu/patches/patch-flexric-swig-node-id.py
+!test/ocudu/patches/patch-flexric-ric-disconnect.py
+!test/ocudu/patches/patch-flexric-kpm-report-style.py
+**/.git
+**/.git/**
+**/build
+**/build/**
+**/__pycache__
+**/*.pyc

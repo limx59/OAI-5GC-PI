@@ -1,0 +1,66 @@
+{
+  "scope": "FlexRIC source snapshots after the six listed patches",
+  "validation": "Patch application only; compilation and behavior tests pending",
+  "patch_order": [
+    "patch-flexric-swig-node-id.py",
+    "patch-flexric-ric-disconnect.py",
+    "patch-flexric-kpm-report-style.py",
+    "patch-flexric-subscription-outcomes.py",
+    "patch-flexric-xapp-subscription-failures.py",
+    "patch-flexric-ric-subscription-failures.py"
+  ],
+  "patch_sha256": {
+    "patch-flexric-swig-node-id.py": "549c0c2de776c683141b272e25878042df60493eb993ebe3292e52c9aff89e46",
+    "patch-flexric-ric-disconnect.py": "61444abfdbf877ec3d0c0067cb7af8149fb08bdd5df40f47cde6e2ab89b27323",
+    "patch-flexric-kpm-report-style.py": "f12a486b1b2f56e94c582e693cb1fc02cf6f7146f696776c90e5f29516997f33",
+    "patch-flexric-subscription-outcomes.py": "dc53d4a28566a20cc227df8643b29b76e1dac0785d71ec22d039760755fab4ba",
+    "patch-flexric-xapp-subscription-failures.py": "b944891cc0109b3775e67425684292c5a898223c2559e3246b646519c7372ece",
+    "patch-flexric-ric-subscription-failures.py": "e485f3c86975e58d41e2ecf7e76cb2fd138a4da4377e3efb3cd3e10b2ccf2cc6"
+  },
+  "files": {
+    "src/xApp/act_proc.h": {
+      "original_sha256": "0d1b5785525772aabe90bfc532b99d83063574dbed83dc26c50df56a05a93ba9",
+      "patched_sha256": "11baf9cf52652e8fd197100993f70d8dd2a0d9563790bd38ff16b05debf08415"
+    },
+    "src/xApp/act_proc.c": {
+      "original_sha256": "a3b179ded7a02bac2c2168f2029c72445ee7065e0387b0b1642bf57a0476b1a5",
+      "patched_sha256": "f8e6ecf3df7cff673b0b28dd3b124dd36ef1b73f7fadefd79fda8175536aafb9"
+    },
+    "src/xApp/msg_handler_xapp.c": {
+      "original_sha256": "d726501c58d476d56d3128d30f5f9375595b89bcfbd21ed59efab2003bd2e84a",
+      "patched_sha256": "44fe89395dd7d3f2a65c56b717251f11f605a6ea69a918ad8036cc8dad085614"
+    },
+    "src/xApp/e42_xapp.c": {
+      "original_sha256": "9e87d8e6e7b067983e5f1d4524aeeb2e0f1180e8dd5272c87be20e99b857ff27",
+      "patched_sha256": "01b722a2c188c5c3038676e2dfec547be6134179203f106174d941af7101c173"
+    },
+    "src/xApp/swig/swig_wrapper.cpp": {
+      "original_sha256": "351476e78239814f00d007cf82b86422d83d94efae649464d233c4d2a0a7445c",
+      "patched_sha256": "fc108a3cd140a39b5aa28c39ebc32cb1a500c95547e16d1d80d8300dd5592023"
+    },
+    "src/ric/msg_handler_ric.c": {
+      "original_sha256": "d8ae91acb0f6bd1a5097a3c05cfff5d0a05f62919d692a8755b549a826395d6a",
+      "patched_sha256": "2fbcd49e1f574ad92c463f35185012b7ac558ba6ff3cc32b34f6622fc5233849"
+    },
+    "src/ric/iApp/e42_iapp.c": {
+      "original_sha256": "d882491e7b584eae4b4570a8c4f78cde73387a91c8870f40ee761cc263fb07cc",
+      "patched_sha256": "5fe521cbfee4a6b279f953fd989abb8d645f2861c3bee8fc457acc5d9fd0fea9"
+    },
+    "src/ric/iApp/msg_handler_iapp.c": {
+      "original_sha256": "3a6b8b21a9383517a0323fa6d46c99aa6af2e2cd2780987a32e7408e1e3e698c",
+      "patched_sha256": "3201fb7e3b403b508006ac1c57e8e710d421fc7720da665a5c98eb8969eaf58d"
+    },
+    "src/ric/iApp/map_xapps_sockaddr.h": {
+      "original_sha256": "92a28a5ee95b594d123a63318a0e1719e8eb8b2a95341e4e4951906919d84add",
+      "patched_sha256": "5a42ec57a349a36e1d7e2d71f15769337940adcfcb816f00c49f9a8f27e06298"
+    },
+    "src/ric/iApp/map_xapps_sockaddr.c": {
+      "original_sha256": "17d3e9ef07b1eaea620edc8ebf02b76482a34e89ba41cbbae0a85bfd42f35d2c",
+      "patched_sha256": "be00b46b5ba569154e853faf06f8348d177286fc706a02ccce08b43ab932fa02"
+    },
+    "src/ric/iApp/endpoint_iapp.c": {
+      "original_sha256": "fdb8b8358d6a3316712ddd3b1f963408a32363e4730ea9f45c202b07983e72a1",
+      "patched_sha256": "f4c803169ff18a83d4dac74ffd49844515c41212ed69893bbb1c2921d0050a92"
+    }
+  }
+}

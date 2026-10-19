@@ -190,6 +190,7 @@ The worker test Dockerfile reuses the baseline builder stages when cached.
 ## KPM monitoring
 
 - [One-second DU KPM monitoring test steps](README.kpm-one-second.md)
+- [KPM subscription rejection and recovery test steps](README.kpm-subscription-rejection.md)
 - [OCUDU DU KPM configuration, execution and validation](README.zmq-kpm.md)
 - [KPM monitoring: abrupt xApp disconnection scenario](README.zmq-kpm-disconnect.md)
 
