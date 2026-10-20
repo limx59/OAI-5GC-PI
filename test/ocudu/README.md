@@ -345,3 +345,5 @@ silently relaxing these thresholds.
 
 Track sustained-session rounds and fresh-container rounds separately.
 Retain failed-run evidence as well as successful results.
+
+- [KPM subscription delete rejection and retry](README.kpm-delete-rejection.md)

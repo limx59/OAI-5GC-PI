@@ -1,0 +1,48 @@
+{
+  "scope": "OCUDU injection and FlexRIC V3 codec source snapshots",
+  "limitations": "FlexRIC snapshots cover codec patches only; the Dockerfile also applies existing xApp/RIC/iApp patches.",
+  "groups": {
+    "ocudu": {
+      "patch_order": [
+        "patch-ocudu-delete-failure-identity.py",
+        "patch-ocudu-test-delete-rejection.py"
+      ],
+      "patch_sha256": {
+        "patch-ocudu-delete-failure-identity.py": "7ef48b739f66edbdf2cdc889d4a57344bd7aa61caece0f84b0f8fa093a433716",
+        "patch-ocudu-test-delete-rejection.py": "c32249b1d76ac6bac3e1951c93f6214d7da26c9ff1767c47782f2698b8949389"
+      },
+      "files": {
+        "lib/e2/common/e2_subscription_manager_impl.cpp": {
+          "original_sha256": "37bb886ff287469625148b7f3e57e58548cf709d3bb63c091ddb85773082b657",
+          "patched_sha256": "6a7a7c6ce22ce67af2eba7f15152c029f6be7de110f43fc12b7dd58c53e4a227"
+        },
+        "lib/e2/common/e2_subscription_manager_impl.h": {
+          "original_sha256": "049cc8add641f9000b390ea4b565de6237d243de801d4ad847c1682f6ba7e456",
+          "patched_sha256": "a1753ae4c8fbda1265d1cbfbcacbb396346df963f3c417ed5d4bc005f9803a35"
+        }
+      }
+    },
+    "flexric": {
+      "patch_order": [
+        "patch-flexric-v3-subscription-failure-encoding.py",
+        "patch-flexric-v3-delete-failure-decoding.py",
+        "patch-flexric-v3-delete-failure-criticality.py"
+      ],
+      "patch_sha256": {
+        "patch-flexric-v3-subscription-failure-encoding.py": "39171cce13185af6d652e61bfe31e2d122cd91a874e9fbea0a58fa6526a8f57b",
+        "patch-flexric-v3-delete-failure-decoding.py": "0a89924b77fa7e61711f3706fe2692adb9136b5364a00654080a336423b79803",
+        "patch-flexric-v3-delete-failure-criticality.py": "08d8769a07e0a3e5d6073ead4b425e3569a4b823408d154d0c1a230719119696"
+      },
+      "files": {
+        "src/lib/e2ap/v3_01/enc/e2ap_msg_enc_asn.c": {
+          "original_sha256": "1cf6069e2a031fb86a0ef88d2bad2b00801cbd3d61bf27dca36003ffddd4f6db",
+          "patched_sha256": "27d313ad325efe3a981646cbc56f0b8b0f8fca649b3098ff871cc837433426e5"
+        },
+        "src/lib/e2ap/v3_01/dec/e2ap_msg_dec_asn.c": {
+          "original_sha256": "0141c7640cb4cb0b78e0243dca707dc73215032d485311347228b3349fbd4f05",
+          "patched_sha256": "8b4ccb0fcf81b5a4cf6af0a94adb6834c5624d477f382d77ff19adfe7b202b36"
+        }
+      }
+    }
+  }
+}

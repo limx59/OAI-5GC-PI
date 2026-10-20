@@ -1,0 +1,76 @@
+FROM limx59/oai-pi-ocudu-kpm-tests:arm64-clock-selection AS build
+ARG BUILD_JOBS=1
+
+COPY test/ocudu/patches/patch-ocudu-kpm-wall-clock.py /tmp/kpm-wall-clock.py
+
+RUN python3 /tmp/kpm-wall-clock.py /src/ocudu
+
+# Retain the explicit-worker behavior used by the runtime baseline.
+RUN python3 - <<'WORKERS'
+from pathlib import Path
+path = Path("/src/ocudu/apps/services/worker_manager/worker_manager.cpp")
+text = path.read_text()
+old = (
+    "  if (worker_cfg.nof_main_pool_threads.has_value()) {\n"
+    "    nof_workers = worker_cfg.nof_main_pool_threads.value();\n"
+    "  } else {"
+)
+new = (
+    "  if (worker_cfg.nof_main_pool_threads.has_value()) {\n"
+    "    return std::max(1U, std::min(worker_cfg.nof_main_pool_threads.value(), avail_cpus));\n"
+    "  } else {"
+)
+if text.count(old) != 1:
+    raise SystemExit("STOP: unexpected worker-count anchor")
+path.write_text(text.replace(old, new, 1))
+WORKERS
+
+COPY test/ocudu/patches/patch-ocudu-kpm-rlc-revisions.py /tmp/patch-ocudu-kpm-rlc-revisions.py
+COPY test/ocudu/patches/patch-ocudu-kpm-revision-interface.py /tmp/patch-ocudu-kpm-revision-interface.py
+COPY test/ocudu/patches/patch-ocudu-kpm-style4-freshness.py /tmp/patch-ocudu-kpm-style4-freshness.py
+
+RUN python3 /tmp/patch-ocudu-kpm-rlc-revisions.py /src/ocudu \
+    && python3 /tmp/patch-ocudu-kpm-revision-interface.py /src/ocudu \
+    && python3 /tmp/patch-ocudu-kpm-style4-freshness.py /src/ocudu
+
+COPY test/ocudu/patches/patch-ocudu-rlc-metrics-clock.py /tmp/patch-ocudu-rlc-metrics-clock.py
+COPY test/ocudu/patches/patch-ocudu-rlc-metrics-clock-wiring.py /tmp/patch-ocudu-rlc-metrics-clock-wiring.py
+
+RUN python3 /tmp/patch-ocudu-rlc-metrics-clock.py /src/ocudu \
+    && python3 /tmp/patch-ocudu-rlc-metrics-clock-wiring.py /src/ocudu
+
+COPY test/ocudu/patches/patch-ocudu-delete-failure-identity.py /tmp/patch-ocudu-delete-failure-identity.py
+COPY test/ocudu/patches/patch-ocudu-test-delete-rejection.py /tmp/patch-ocudu-test-delete-rejection.py
+
+RUN python3 /tmp/patch-ocudu-delete-failure-identity.py /src/ocudu \
+    && python3 /tmp/patch-ocudu-test-delete-rejection.py /src/ocudu
+
+RUN cmake --build /build/ocudu \
+    --target gnb_split_8 \
+    --parallel "${BUILD_JOBS}"
+
+FROM ubuntu:24.04 AS gnb
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    tini libfftw3-single3 libmbedcrypto7t64 libsctp1 libyaml-cpp0.8 \
+    libzmq5 libssl3t64 libstdc++6 libgcc-s1 \
+    iproute2 iputils-ping procps \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=build /build/ocudu/apps/gnb_split_8/gnb /opt/ocudu/bin/gnb
+COPY --from=build /src/ocudu/LICENSE /opt/ocudu/licenses/LICENSE
+COPY --from=build /src/ocudu/COPYRIGHTS.txt /opt/ocudu/licenses/COPYRIGHTS.txt
+COPY --from=build /src/ocudu/LICENSES/ /opt/ocudu/licenses/LICENSES/
+
+WORKDIR /opt/ocudu/bin
+RUN set -eu; \
+    chmod 755 ./gnb; \
+    ldd ./gnb > /tmp/gnb-ldd.txt; \
+    cat /tmp/gnb-ldd.txt; \
+    if grep -q 'not found' /tmp/gnb-ldd.txt; then exit 1; fi; \
+    rm /tmp/gnb-ldd.txt
+
+STOPSIGNAL SIGINT
+ENTRYPOINT ["/usr/bin/tini", "-g", "--", "/opt/ocudu/bin/gnb"]
+CMD ["-c", "/etc/ocudu/gnb.yml"]

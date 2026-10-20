@@ -1,0 +1,4 @@
+# Preserve exact source snapshots and unified diffs.
+**/changes.patch -whitespace
+**/original/** -whitespace
+**/patched/** -whitespace

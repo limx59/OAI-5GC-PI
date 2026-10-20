@@ -1,0 +1,257 @@
+--- a/src/lib/e2ap/v3_01/enc/e2ap_msg_enc_asn.c
++++ b/src/lib/e2ap/v3_01/enc/e2ap_msg_enc_asn.c
+@@ -25,6 +25,9 @@
+ #include "ProtocolIE-Field.h"
+ #include "Cause.h"
+ #include "CriticalityDiagnostics.h"
++#include "CriticalityDiagnostics-IE-Item.h"
++#include "CriticalityDiagnostics-IE-List.h"
++#include "RICrequestID.h"
+ #include "TimeToWait.h"
+ #include "TNLinformation.h"
+ 
+@@ -525,35 +528,83 @@
+   return e2ap_enc_subscription_failure_asn(&msg->u_msgs.ric_sub_fail);
+ }
+ 
+-E2AP_PDU_t* e2ap_enc_subscription_failure_asn_pdu(const ric_subscription_failure_t* sf)
+-{
+-  assert(0!=0 && "Not implemented");
+-
++
++// Encode owned ASN.1 diagnostics without borrowing internal pointers.
++static CriticalityDiagnostics_t oai_pi_encode_failure_diagnostics(
++    criticality_diagnostics_t const* source)
++{
++  assert(source != NULL);
++  CriticalityDiagnostics_t out = {0};
++  if (source->procedure_code != NULL) {
++    out.procedureCode = calloc(1, sizeof(*out.procedureCode));
++    assert(out.procedureCode != NULL);
++    *out.procedureCode = *source->procedure_code;
++  }
++  if (source->trig_msg != NULL) {
++    assert(*source->trig_msg >= INITIATING_MESSAGE &&
++           *source->trig_msg <= UNSUCCESSFUL_OUTCOME);
++    out.triggeringMessage = calloc(1, sizeof(*out.triggeringMessage));
++    assert(out.triggeringMessage != NULL);
++    *out.triggeringMessage = *source->trig_msg;
++  }
++  if (source->proc_crit != NULL) {
++    assert(*source->proc_crit >= REJECT && *source->proc_crit <= NOTIFY);
++    out.procedureCriticality = calloc(1, sizeof(*out.procedureCriticality));
++    assert(out.procedureCriticality != NULL);
++    *out.procedureCriticality = *source->proc_crit;
++  }
++  if (source->req_id != NULL) {
++    out.ricRequestorID = calloc(1, sizeof(*out.ricRequestorID));
++    assert(out.ricRequestorID != NULL);
++    out.ricRequestorID->ricRequestorID = source->req_id->ric_req_id;
++    out.ricRequestorID->ricInstanceID = source->req_id->ric_inst_id;
++  }
++  if (source->len_ie > 0) {
++    assert(source->ie != NULL);
++    out.iEsCriticalityDiagnostics =
++        calloc(1, sizeof(*out.iEsCriticalityDiagnostics));
++    assert(out.iEsCriticalityDiagnostics != NULL);
++    for (size_t i = 0; i < source->len_ie; ++i) {
++      ie_criticality_diagnostics_t const* item = &source->ie[i];
++      assert(item->crit >= REJECT && item->crit <= NOTIFY);
++      assert(item->type == NOT_UNDERSTOOD || item->type == MISSING);
++      CriticalityDiagnostics_IE_Item_t* encoded = calloc(1, sizeof(*encoded));
++      assert(encoded != NULL);
++      encoded->iECriticality = item->crit;
++      encoded->iE_ID = item->id;
++      encoded->typeOfError = item->type;
++      int rc = ASN_SEQUENCE_ADD(
++          &out.iEsCriticalityDiagnostics->list, encoded);
++      assert(rc == 0);
++    }
++  }
++  return out;
++}
++
++E2AP_PDU_t* e2ap_enc_subscription_failure_asn_pdu(const ric_subscription_failure_t* sf)  
++{
++  assert(sf != NULL);
+   // Message Type. Mandatory
+-  E2AP_PDU_t* pdu = calloc(1, sizeof(E2AP_PDU_t));
+-  (void)sf;
+-
+-  /*
+-
++  E2AP_PDU_t* pdu = calloc(1,sizeof(E2AP_PDU_t));
+   pdu->present = E2AP_PDU_PR_unsuccessfulOutcome;
+-  pdu->choice.unsuccessfulOutcome = calloc(1,sizeof(UnsuccessfulOutcome_t)); 
++  pdu->choice.unsuccessfulOutcome = calloc(1, sizeof(UnsuccessfulOutcome_t));
+   pdu->choice.unsuccessfulOutcome->procedureCode = ProcedureCode_id_RICsubscription;
+   pdu->choice.unsuccessfulOutcome->criticality = Criticality_reject;
+   pdu->choice.unsuccessfulOutcome->value.present = UnsuccessfulOutcome__value_PR_RICsubscriptionFailure;
+ 
+-  RICsubscriptionFailure_t *out = &pdu->choice.unsuccessfulOutcome->value.choice.RICsubscriptionFailure;
++  RICsubscriptionFailure_t* out = &pdu->choice.unsuccessfulOutcome->value.choice.RICsubscriptionFailure;
+ 
+   // RIC Request ID. Mandatory
+   RICsubscriptionFailure_IEs_t* req_id = calloc(1,sizeof(RICsubscriptionFailure_IEs_t));
+   req_id->id = ProtocolIE_ID_id_RICrequestID;
+   req_id->criticality = Criticality_reject;
+   req_id->value.present = RICsubscriptionFailure_IEs__value_PR_RICrequestID;
+-  req_id->value.choice.RICrequestID.ricRequestorID = sf->ric_id.ric_req_id;
+-  req_id->value.choice.RICrequestID.ricInstanceID = sf->ric_id.ric_inst_id;
++  req_id->value.choice.RICrequestID.ricRequestorID = sf->ric_id.ric_req_id; 
++  req_id->value.choice.RICrequestID.ricInstanceID = sf->ric_id.ric_inst_id; 
+   int rc = ASN_SEQUENCE_ADD(&out->protocolIEs.list, req_id);
+   assert(rc == 0);
+ 
+-  // RAN Function ID. Mandatory 
++  // RAN Function ID. Mandatory
+   RICsubscriptionFailure_IEs_t* ran_func = calloc(1,sizeof(RICsubscriptionFailure_IEs_t));
+   ran_func->id = ProtocolIE_ID_id_RANfunctionID;
+   ran_func->criticality = Criticality_reject;
+@@ -562,41 +613,29 @@
+   rc = ASN_SEQUENCE_ADD(&out->protocolIEs.list, ran_func);
+   assert(rc == 0);
+ 
+-  // RIC Actions Not Admitted List
+-  RICsubscriptionFailure_IEs_t* act_not_adm_list = calloc(1,sizeof(RICsubscriptionFailure_IEs_t));
+-  act_not_adm_list->id = ProtocolIE_ID_id_RICactions_NotAdmitted;
+-  act_not_adm_list->criticality = Criticality_reject;
+-  act_not_adm_list->value.present = RICsubscriptionFailure_IEs__value_PR_RICaction_NotAdmitted_List;
+-
+-
+-  for(size_t i = 0; i < sf->len_na; ++i) {
+-    // RIC Action ID. Mandatory  
+-    RICaction_NotAdmitted_ItemIEs_t* nai = calloc(1, sizeof(RICaction_NotAdmitted_ItemIEs_t)); 
+-    nai->id = ProtocolIE_ID_id_RICaction_NotAdmitted_Item;	
+-    nai->criticality = Criticality_reject;
+-    nai->value.present = RICaction_NotAdmitted_ItemIEs__value_PR_RICaction_NotAdmitted_Item;
+-    RICaction_NotAdmitted_Item_t* dst =  &nai->value.choice.RICaction_NotAdmitted_Item;
+-    const ric_action_not_admitted_t* src = &sf->not_admitted[i];
+-    dst->ricActionID = src->ric_act_id;
+-    dst->cause = copy_cause(src->cause);
+-    rc = ASN_SEQUENCE_ADD(&act_not_adm_list->value.choice.RICaction_NotAdmitted_List.list,nai);
+-    assert(rc == 0);
+-  }
+-  rc = ASN_SEQUENCE_ADD(&out->protocolIEs.list, act_not_adm_list);
+-  assert(rc == 0);
+-
+- // Criticality Diagnosis. Optional
+- if(sf->crit_diag  != NULL){
+-  RICsubscriptionFailure_IEs_t* crit_diag = calloc(1,sizeof(RICsubscriptionFailure_IEs_t));
+-  crit_diag->id = ProtocolIE_ID_id_CriticalityDiagnostics;
+-  crit_diag->criticality = Criticality_reject;
+-  crit_diag->value.present = RICsubscriptionFailure_IEs__value_PR_CriticalityDiagnostics; 
+-  assert(0!=0 && "Not Implemented yet");
+-  rc = ASN_SEQUENCE_ADD(&out->protocolIEs.list, crit_diag);
+-  assert(rc == 0);
+- }
+-
+-*/
++  // Cause. Mandatory 
++  RICsubscriptionFailure_IEs_t* act_not_adm = calloc(1,sizeof(RICsubscriptionFailure_IEs_t));
++  act_not_adm->id = ProtocolIE_ID_id_Cause;
++  act_not_adm->criticality = Criticality_reject;
++  act_not_adm->value.present = RICsubscriptionFailure_IEs__value_PR_Cause;
++  act_not_adm->value.choice.Cause = copy_cause(sf->cause);
++  rc = ASN_SEQUENCE_ADD(&out->protocolIEs.list,act_not_adm);
++  assert(rc == 0);
++
++  // Criticality Diagnostics. Optional.
++  if (sf->crit_diag != NULL) {
++    RICsubscriptionFailure_IEs_t* diagnostic =
++        calloc(1, sizeof(*diagnostic));
++    assert(diagnostic != NULL);
++    diagnostic->id = ProtocolIE_ID_id_CriticalityDiagnostics;
++    diagnostic->criticality = Criticality_ignore;
++    diagnostic->value.present =
++        RICsubscriptionFailure_IEs__value_PR_CriticalityDiagnostics;
++    diagnostic->value.choice.CriticalityDiagnostics =
++        oai_pi_encode_failure_diagnostics(sf->crit_diag);
++    rc = ASN_SEQUENCE_ADD(&out->protocolIEs.list, diagnostic);
++    assert(rc == 0);
++  }
+   return pdu;
+ }
+ 
+@@ -752,24 +791,27 @@
+ 
+   // Cause. Mandatory 
+   RICsubscriptionDeleteFailure_IEs_t* act_not_adm = calloc(1,sizeof(RICsubscriptionDeleteFailure_IEs_t));
+-  act_not_adm->id = ProtocolIE_ID_id_RICactions_NotAdmitted;
+-  act_not_adm->criticality = Criticality_reject;
++  act_not_adm->id = ProtocolIE_ID_id_Cause;
++  act_not_adm->criticality = Criticality_ignore;
+   act_not_adm->value.present = RICsubscriptionDeleteFailure_IEs__value_PR_Cause;
+   act_not_adm->value.choice.Cause = copy_cause(df->cause);
+   rc = ASN_SEQUENCE_ADD(&out->protocolIEs.list,act_not_adm);
+   assert(rc == 0);
+ 
+- // Criticality Diagnosis. Optional
+- if(df->crit_diag  != NULL){
+- RICsubscriptionDeleteFailure_IEs_t* crit_diag = calloc(1,sizeof(RICsubscriptionDeleteFailure_IEs_t));
+-  crit_diag->id = ProtocolIE_ID_id_CriticalityDiagnostics;
+-  crit_diag->criticality = Criticality_reject;
+-  crit_diag->value.present = RICsubscriptionDeleteFailure_IEs__value_PR_CriticalityDiagnostics; 
+-  assert(0!=0 && "Not implemented");
+-//  crit_diag->value.choice.CriticalityDiagnostics = *df->crit_diagnose; 
+-  rc = ASN_SEQUENCE_ADD(&out->protocolIEs.list, crit_diag);
+-  assert(rc == 0);
+- }
++  // Criticality Diagnostics. Optional.
++  if (df->crit_diag != NULL) {
++    RICsubscriptionDeleteFailure_IEs_t* diagnostic =
++        calloc(1, sizeof(*diagnostic));
++    assert(diagnostic != NULL);
++    diagnostic->id = ProtocolIE_ID_id_CriticalityDiagnostics;
++    diagnostic->criticality = Criticality_ignore;
++    diagnostic->value.present =
++        RICsubscriptionDeleteFailure_IEs__value_PR_CriticalityDiagnostics;
++    diagnostic->value.choice.CriticalityDiagnostics =
++        oai_pi_encode_failure_diagnostics(df->crit_diag);
++    rc = ASN_SEQUENCE_ADD(&out->protocolIEs.list, diagnostic);
++    assert(rc == 0);
++  }
+   return pdu;
+ }
+ 
+--- a/src/lib/e2ap/v3_01/dec/e2ap_msg_dec_asn.c
++++ b/src/lib/e2ap/v3_01/dec/e2ap_msg_dec_asn.c
+@@ -841,18 +841,26 @@
+ {
+   assert(pdu != NULL);
+ 
+-  assert(0!=0 && "Untested code");
++  // Decode the mandatory-field path used by the rejection test.
+ 
+   e2ap_msg_t ret = {.type = RIC_SUBSCRIPTION_DELETE_FAILURE};
+   ric_subscription_delete_failure_t* df = &ret.u_msgs.ric_sub_del_fail;
+ 
+   // Message Type. Mandatory
+   assert(pdu->present == E2AP_PDU_PR_unsuccessfulOutcome);
++  assert(pdu->choice.unsuccessfulOutcome != NULL);
+   assert(pdu->choice.unsuccessfulOutcome->procedureCode == ProcedureCode_id_RICsubscriptionDelete);
+   assert(pdu->choice.unsuccessfulOutcome->criticality == Criticality_reject);
+   assert(pdu->choice.unsuccessfulOutcome->value.present == UnsuccessfulOutcome__value_PR_RICsubscriptionDeleteFailure);
+ 
+   const RICsubscriptionDeleteFailure_t* out = &pdu->choice.unsuccessfulOutcome->value.choice.RICsubscriptionDeleteFailure;
++
++  // Validate mandatory delete-failure IEs before positional access.
++  assert(out->protocolIEs.list.count >= 3);
++  assert(out->protocolIEs.list.array != NULL);
++  for (int i = 0; i < 3; ++i) {
++    assert(out->protocolIEs.list.array[i] != NULL);
++  }
+ 
+   // RIC Request ID. Mandatory
+   RICsubscriptionDeleteFailure_IEs_t* req_id = out->protocolIEs.list.array[0];
+@@ -872,8 +880,8 @@
+  
+  // Cause. Mandatory 
+   RICsubscriptionDeleteFailure_IEs_t* act_not_adm = out->protocolIEs.list.array[2];
+-  assert(act_not_adm->id == ProtocolIE_ID_id_RICactions_NotAdmitted);
+-  assert(act_not_adm->criticality == Criticality_reject);
++  assert(act_not_adm->id == ProtocolIE_ID_id_Cause);
++  assert(act_not_adm->criticality == Criticality_ignore);
+   assert(act_not_adm->value.present == RICsubscriptionDeleteFailure_IEs__value_PR_Cause);
+  df->cause = copy_cause(act_not_adm->value.choice.Cause);
+  

@@ -1,0 +1,45 @@
+--- a/lib/e2/common/e2_subscription_manager_impl.cpp
++++ b/lib/e2/common/e2_subscription_manager_impl.cpp
+@@ -4,6 +4,8 @@
+ // Portions of this file may implement 3GPP specifications, which may be subject to additional licensing requirements.
+ 
+ #include "e2_subscription_manager_impl.h"
++#include <cstdlib>
++#include <cstring>
+ #include "ocudu/asn1/e2ap/e2ap.h"
+ 
+ using namespace asn1::e2ap;
+@@ -76,8 +78,22 @@
+   outcome.request_id.ric_instance_id           = msg->ric_request_id.ric_instance_id;
+   outcome.response->ran_function_id            = msg->ran_function_id;
+   outcome.response->ric_request_id             = msg->ric_request_id;
++  // Preserve correlation fields for unsuccessful outcomes.
++  outcome.failure->ran_function_id = msg->ran_function_id;
++  outcome.failure->ric_request_id = msg->ric_request_id;
+   outcome.success                              = false;
+   if (subscriptions.count({outcome.request_id.ric_requestor_id, outcome.request_id.ric_instance_id})) {
++    const char* enabled = std::getenv("OAI_PI_TEST_REJECT_FIRST_DELETE");
++    if (!oai_pi_test_delete_rejected && enabled != nullptr &&
++        std::strcmp(enabled, "1") == 0) {
++      oai_pi_test_delete_rejected = true;
++      outcome.failure->cause.set_misc();
++      logger.warning("OAI_PI_TEST_DELETE_REJECTED requestor={} instance={} ran_function={}",
++                     msg->ric_request_id.ric_requestor_id,
++                     msg->ric_request_id.ric_instance_id,
++                     msg->ran_function_id);
++      return outcome;
++    }
+     outcome.success = true;
+   } else {
+     outcome.failure->cause.set_misc();
+--- a/lib/e2/common/e2_subscription_manager_impl.h
++++ b/lib/e2/common/e2_subscription_manager_impl.h
+@@ -85,6 +85,8 @@
+   void add_ran_function_oid(uint16_t ran_func_id, std::string oid) override;
+ 
+ private:
++  // Test-only: consume at most one enabled rejection per manager.
++  bool oai_pi_test_delete_rejected = false;
+   using e2_subscription_key_t = std::tuple<uint32_t, uint32_t>;
+   std::map<e2_subscription_key_t, e2_subscription_t>     subscriptions;
+   std::map<std::string, std::unique_ptr<e2sm_interface>> e2sm_iface_list;
