@@ -3,7 +3,8 @@
 ## Validation status
 
 Validated on a four-core Cortex-A76 ARM64 Raspberry Pi with approximately
-8 GiB RAM on 2026-10-14, Pacific time.
+8 GiB RAM. Results below include the documented tests completed through
+2026-10-19, Pacific time.
 
 The dedicated two-worker OCUDU image passed initial UE attachment and
 TUN-bound UPF pings. Three subsequent rounds independently recreated both
@@ -16,16 +17,21 @@ UE addresses were 192.168.100.26, .27 and .28 across the three rounds.
 Address preservation is checked within each round; allocation can change
 between fresh sessions.
 
-This validates bounded software-radio connectivity. Separate UDP tests
-passed at 1 Mbps for 10 seconds per direction; see the
-[UDP validation guide](README.zmq-udp.md). Maximum throughput, long-term
-stability, physical RF and AI control remain unvalidated. The bounded
-DU E2/KPM and CSV subset subsequently passed single-round and three-round
-tests on 2026-10-15, Pacific time; see the
-[KPM validation guide](README.zmq-kpm.md). Complete interoperability,
-precise one-second reporting and broader failure recovery remain
-unvalidated. The bounded xApp container-kill cleanup scenario passed
-separate regression tests.
+Separate UDP tests passed at 1 Mbps for 10 seconds per direction.
+The documented DU E2/KPM and CSV subset passed single-round and
+three-round tests. Subsequent tests validated one-second monitoring within
+the documented timing thresholds, Style 1/4 UL/DL and idle response,
+unsupported-metric rejection with same-xApp recovery, and delete rejection
+with continued reporting, successful retry and post-delete silence.
+
+Subscription rejection/recovery and delete rejection/retry each passed
+three rounds. The bounded xApp container-kill cleanup scenario also
+passed separate regressions.
+
+These results validate the documented software-radio scenarios.
+Maximum throughput, long-term stability, complete E2 interoperability,
+physical RF and OCUDU control capabilities remain outside the completed
+validation scope.
 
 ## Architecture
 
@@ -187,33 +193,310 @@ sudo docker build -f docker/ocudu/Dockerfile.worker-test \
 The OCUDU build uses `cortex-a76+crypto` and an ARMv8.2-A fallback.
 The worker test Dockerfile reuses the baseline builder stages when cached.
 
-## KPM monitoring
+## Test Case: Node discovery
 
-- [One-second DU KPM monitoring test steps](README.kpm-one-second.md)
-- [KPM subscription rejection and recovery test steps](README.kpm-subscription-rejection.md)
-- [OCUDU DU KPM configuration, execution and validation](README.zmq-kpm.md)
-- [KPM monitoring: abrupt xApp disconnection scenario](README.zmq-kpm-disconnect.md)
+Verify that the OCUDU gNB joins Open5GS and exposes the expected DU
+identity through FlexRIC, so an xApp can select the intended E2 node.
 
-The disconnection scenario belongs to KPM monitoring and does not introduce
-another top-level test case. KPM monitoring remains in progress.
+### Source revision and Open5GS NG Setup
 
-## KPM CSV recording
+**Status: Passed for the documented software-radio configuration.**
 
-- [KPM CSV recording, acceptance criteria and evidence](README.zmq-kpm.md)
+Use the recorded OCUDU revision and the two-worker configuration to
+establish NG Setup, UE attachment and a working user-plane path.
+The connectivity regression passed 30 of 30 UPF pings over three rounds.
 
-CSV recording currently shares its guide with KPM monitoring. The guide
-covers numeric-value checks, load response and subscription deletion.
+**Test guide:** [Deployment and configuration](../../deploy/ocudu/README.md).
+See also the connectivity procedure under Integrated regression below.
 
-## Integrated regression
+### DU E2 Setup and xApp discovery
 
-- Connectivity validation: see Run validation below and validate-zmq-connectivity.py.
-- [Bounded UDP uplink/downlink validation](README.zmq-udp.md)
-- [DU KPM/CSV regression](README.zmq-kpm.md)
-- [KPM disconnection scenario regression](README.zmq-kpm-disconnect.md)
+**Status: Passed for the documented DU configuration.**
 
-Individual bounded regressions do not establish completion of the full
-integrated regression. Overall progress is maintained in the existing
-TODO table below.
+Verify E2 Setup, discovery of node 420 with DU ID 0, and the advertised
+KPM RAN function before subscribing.
+
+**Test guide:** [DU E2/KPM setup and validation](README.zmq-kpm.md).
+
+**Remaining:** CU Agent identity coverage, RIC/Agent reconnection and
+abnormal-exit cleanup beyond the completed xApp-disconnection scenario.
+
+## Test Case: KPM monitoring
+
+Verify KPM subscriptions, periodic indications, traffic and idle response,
+and recovery from the selected subscription failures.
+
+### Normal subscription and reporting
+
+**Status: Passed.**
+
+Verify the DU subscription path, action Format 4, indication Format 3,
+normal reporting and subscription deletion.
+
+**Test guide:** [DU KPM configuration and normal-flow validation](README.zmq-kpm.md).
+
+### One-second monitoring
+
+**Status: Passed within the documented timing thresholds.**
+
+Check report timing using the collection-clock configuration, including
+independent measurement collection and report-generation behavior.
+
+**Test guide:** [One-second DU KPM monitoring](README.kpm-one-second.md).
+
+### Report styles, UL/DL and idle response, and abnormal subscription handling
+
+**Status: Completed for the agreed Style 1/4 test scope.**
+
+Verify Style 1 and Style 4 under separate uplink and downlink UDP loads
+and during idle periods. Check one-second reporting, directional load
+response and idle values. Verify unsupported-metric rejection followed
+by normal subscription recovery in the same xApp.
+
+Also verify that a rejected deletion preserves reporting, a retry on the
+same subscription succeeds, and both sender and callback remain silent
+after the deletion grace period. Subscription rejection/recovery and
+delete rejection/retry each passed three rounds.
+
+**Test guides:**
+
+- [Timing configuration and monitoring procedure](README.kpm-one-second.md)
+- [Traffic, CSV and normal deletion checks](README.zmq-kpm.md)
+- [Unsupported-metric rejection and same-xApp recovery](README.kpm-subscription-rejection.md)
+- [Delete rejection, continued reporting, retry and post-delete silence](README.kpm-delete-rejection.md)
+
+The completed scope covers these report styles and rejection scenarios.
+Additional protocol-fault scenarios are outside this item's acceptance
+scope.
+
+### Abrupt xApp disconnection
+
+**Status: Passed for the bounded container-kill scenario.**
+
+Terminate the xApp container, check RIC cleanup, then verify that a new
+xApp can subscribe. Local and published-image regressions passed.
+
+**Test guide:** [Abrupt xApp disconnection](README.zmq-kpm-disconnect.md).
+
+**Remaining:** OCUDU E2 build-configuration and FlexRIC compatibility
+audit. The passed scenarios do not establish complete E2 interoperability.
+
+## Test Case: KPM CSV recording
+
+Verify that the recorder produces usable, attributable KPM rows and
+retains the evidence needed to interpret traffic experiments.
+
+### Node identity, receive timestamps and numeric rows
+
+**Status: Passed for the documented fields.**
+
+Check node/PLMN identity, UTC receive timestamps, finite numeric values,
+row counts and missing records.
+
+**Test guide:** [CSV fields and acceptance checks](README.zmq-kpm.md).
+
+### Directional load response and deletion cleanup
+
+**Status: Passed.**
+
+Verify positive values under the corresponding UL/DL UDP load and check
+normal subscription deletion. Single-round and three-round regressions
+passed.
+
+**Test guide:** [Traffic-backed CSV recording and cleanup](README.zmq-kpm.md).
+
+**Remaining:** Actual UE and CU/DU identifiers, measurement units,
+collection windows and quantitative comparison with traffic results.
+
+## Test Case: QoS monitoring
+
+Map available OCUDU measurements into throughput, latency and packet-loss
+observations, then exercise load alerts and state recovery.
+
+### Reusable policy and alert framework
+
+**Status: Existing OAI/FlexRIC baseline available for reuse.**
+
+The existing framework provides policy and alert logic. This does not
+establish that OCUDU supplies the required fields or passes the same tests.
+
+**Baseline documentation:** [Existing FlexRIC test documentation](../flexric/README.md).
+
+**Remaining:** OCUDU field mapping, bounded high/low-load alerts,
+reconnection state recovery and advisory-mode validation.
+An OCUDU-specific execution guide is planned.
+
+## Test Case: MAC / RLC / PDCP statistics
+
+Establish the source and meaning of available measurements before using
+them for comparison or policy decisions.
+
+### Service-model differences and DU RLC collection
+
+**Status: Model differences reviewed; DU RLC collection path exercised.**
+
+Distinguish standard KPM from existing private service models. The
+completed monitoring work exercised DU RLC metric delivery, independent
+collection timing and collection-batch checks.
+
+**Test guides:**
+
+- [DU KPM measurements](README.zmq-kpm.md)
+- [Collection clock and one-second monitoring](README.kpm-one-second.md)
+
+**Remaining:** Complete source verification, duplicate/missing/reset
+detection, iperf comparison and xApp compatibility checks across the
+intended MAC/RLC/PDCP scope.
+
+## Test Case: Traffic steering policy
+
+Evaluate recommendations using comparable load measurements, consistent
+rules and cooldown behavior before attempting live control.
+
+### Reusable load-exchange and rule-evaluation baseline
+
+**Status: Existing OAI/FlexRIC baseline available for reuse.**
+
+Reuse the existing evaluation method after verifying the OCUDU metric
+mapping. OCUDU steering-policy validation remains planned.
+
+**Baseline documentation:** [Existing FlexRIC test documentation](../flexric/README.md).
+
+**Remaining:** Single-link load response, sequential OAI/OCUDU comparison,
+resource-permitting dual-node recommendations, common metrics and cooldown
+rules. An OCUDU-specific execution guide is planned.
+
+## Test Case: Traffic steering control
+
+Determine which OCUDU RC actions are supported and distinguish a control
+acknowledgement from evidence of actual execution.
+
+### Existing OAI RFsim handover feedback loop
+
+**Status: Passed as an OAI baseline only.**
+
+The existing OAI feedback-loop result provides a comparison point.
+OCUDU control capability and execution have not yet been established.
+
+**Baseline documentation:** [Existing FlexRIC test documentation](../flexric/README.md).
+
+**Remaining:** OCUDU RC capability audit and separate ACK/execution
+validation. Cross-vendor handover remains exploratory.
+An OCUDU-specific execution guide is planned.
+
+## Test Case: Multi-Agent slicing control
+
+Determine the available slice configuration and control interfaces,
+then collect scheduler evidence for any supported experiment.
+
+### Existing OAI NR DL scheduler PRB-cap simulation
+
+**Status: Passed as a standalone OAI simulation baseline only.**
+
+The simulation validates the existing PRB-cap experiment, without
+establishing OCUDU runtime slicing support.
+
+**Baseline documentation:** [Existing FlexRIC test documentation](../flexric/README.md).
+
+**Remaining:** OCUDU configuration/interface audit, offline or startup
+configuration experiments, and actual grant/counter evidence. Verify
+support before reusing private SLICE commands.
+An OCUDU-specific execution guide is planned.
+
+## Test Case: Energy-saving control
+
+Evaluate energy-saving recommendations and simulated state feedback
+before any physical-device experiment.
+
+### Reusable policy and state-feedback simulation
+
+**Status: Existing simulation framework available for reuse.**
+
+Use the existing policy/state model as a baseline for future OCUDU
+advisory-mode and simulated-state checks.
+
+**Baseline documentation:** [Existing FlexRIC test documentation](../flexric/README.md).
+
+**Remaining:** OCUDU advisory-mode and state-simulation validation.
+Physical-device control and power measurement are deferred pending
+hardware. An OCUDU-specific execution guide is planned.
+
+## Test Case: Integrated regression
+
+Verify repeatable operation of the documented software-radio workflow,
+retain failed and successful evidence, and distinguish bounded checks
+from sustained-session validation.
+
+### ARM64 builds and published images
+
+**Status: Images used by the completed tests were built and published.**
+
+Use the image tags specified by each guide. The three delete-rejection
+test images were pushed and successfully pulled by tag. Source patches
+are applied to isolated build copies.
+
+**Test guides:**
+
+- [Deployment and baseline images](../../deploy/ocudu/README.md)
+- [Subscription-rejection images and build steps](README.kpm-subscription-rejection.md)
+- [Delete-rejection images and build steps](README.kpm-delete-rejection.md)
+
+### ZeroMQ connectivity regression
+
+**Status: Three-round regression passed.**
+
+Recreate the experimental RAN, verify UE attachment, run TUN-bound UPF
+pings and check process/address stability within each round.
+All 30 regression pings received replies.
+
+**Procedure:** See [Run validation](#run-validation) below.
+**Deployment guide:** [ZeroMQ setup](../../deploy/ocudu/README.md).
+
+### Bounded UDP uplink/downlink regression
+
+**Status: Passed for the documented offered load and duration.**
+
+Exercise UL and DL independently and retain receiver-side throughput,
+packet-loss results and iperf JSON. The initial acceptance thresholds
+are at least 80% of offered throughput and no more than 5% packet loss.
+
+**Test guide:** [Bounded UDP uplink/downlink validation](README.zmq-udp.md).
+
+### KPM normal-flow, timing and failure-recovery regression
+
+**Status: Documented bounded scenarios passed.**
+
+Cover KPM/CSV normal operation, one-second monitoring, xApp container-kill
+cleanup, unsupported-metric rejection/recovery, and delete rejection/retry
+with post-delete silence.
+
+**Test guides:**
+
+- [KPM/CSV normal-flow regression](README.zmq-kpm.md)
+- [One-second monitoring](README.kpm-one-second.md)
+- [xApp disconnection regression](README.zmq-kpm-disconnect.md)
+- [Subscription rejection and recovery](README.kpm-subscription-rejection.md)
+- [Delete rejection and retry](README.kpm-delete-rejection.md)
+
+### Patch replay and reproducibility records
+
+**Status: Patch scripts, source snapshots, diffs and manifests retained.**
+
+The subscription and deletion work was committed in `aaf54ec9` and
+`e7fe2c57`. The archives preserve the documented patch order and original
+and patched source copies.
+
+**Archive documentation:**
+
+- [Subscription-failure source snapshots](patches/flexric-subscription-failures/README.md)
+- [Delete-rejection source snapshots](patches/kpm-delete-rejection/README.md)
+
+The V3 failure-encoding archive is stored in
+`patches/flexric-v3-failure-encoding/`.
+
+**Remaining:** Testmode verification, sustained-session and long-term
+stability, single-worker root cause and complete integrated-workflow
+regression. Physical RF validation is deferred pending SDR hardware.
 
 ## Run validation
 
@@ -312,31 +595,28 @@ Retain failed-run evidence as well as passed results.
 ## TODO
 
 Existing OAI/FlexRIC results remain reusable baselines. OCUDU results
-are recorded separately: connectivity, bounded UDP and the documented
-DU KPM/CSV subset have passed their respective tests. These results do
-not establish complete E2 interoperability, precise one-second reporting,
-all failure-recovery modes or control support.
+are recorded separately. Completed entries refer to the documented scope.
 
 | Test case | Completed | Remaining |
 | --- | --- | --- |
-| Node discovery | ✅ NG Setup and DU E2 Setup; node 420 with DU ID 0 observed | ☐ CU Agent identities; RIC/Agent reconnection; abnormal exit cleanup |
-| 🔴 KPM monitoring | ✅ DU action Format 4 / indication Format 3; idle/load response; bounded container-kill cleanup and new-xApp subscription regression | 🔴 In progress: verify OCUDU E2 build configuration and FlexRIC compatibility; ☐ report styles; one-second monitoring; complete UL/DL and idle-response coverage; abnormal subscription handling |
-| KPM CSV recording | ✅ Node/PLMN and UTC receive timestamps; complete finite numeric rows; positive values under directional UDP load; normal subscription deletion guard; single-round and three-round regression | ☐ Actual UE and CU/DU identifiers; measurement units and collection windows; quantitative comparison with traffic results |
-| QoS monitoring | ✅ Existing policy and alert framework available for reuse | ☐ Map OCUDU throughput, latency and packet-loss fields; bounded high/low-load alerts; restore state after reconnection; advisory mode first |
-| MAC / RLC / PDCP statistics | ✅ Differences between standard KPM and existing private service models reviewed | ☐ Verify OCUDU E2/local metric sources; detect duplicates, missing values and counter resets; compare with iperf; verify xApp compatibility |
-| Traffic steering policy | ✅ Existing load-exchange and rule-evaluation methods provide a reusable baseline | ☐ Single-link load response; sequential OAI/OCUDU comparison; dual-node recommendations when resources permit; common metrics and cooldown rules |
-| Traffic steering control | ✅ Existing OAI RFsim handover feedback loop passed as an OAI baseline | ☐ Audit supported OCUDU RC actions; verify control ACK and execution separately; cross-vendor handover remains exploratory |
-| Multi-Agent slicing control | ✅ Existing standalone OAI NR DL scheduler PRB-cap simulation passed as an OAI baseline | ☐ Verify OCUDU slice configuration and control interfaces; offline/startup configuration experiments first; actual grant/counter evidence; verify support before reusing private SLICE commands |
-| Energy-saving control | ✅ Existing policy and state-feedback simulation available for reuse | ☐ OCUDU advisory and state simulation; **physical device control and power measurement deferred pending hardware** |
-| Integrated regression | ✅ ARM64 builds and published images; connectivity and bounded UDP regressions; DU KPM/CSV normal-flow regressions; bounded container-kill regression using published RIC; evidence archives and documentation | ☐ Verify testmode status; sustained-session and long-term stability; single-worker root cause; complete KPM workflow regression; **physical RF deferred pending SDR** |
+| Node discovery | ✅ Recorded OCUDU source revision; Open5GS NG Setup; DU E2 Setup | ☐ DU/CU Agent identity distinction; RIC/Agent reconnection; exit cleanup |
+| KPM monitoring | ✅ Normal subscription and reporting; one-second monitoring; **report styles, UL/DL and idle response, and abnormal subscription handling completed within the agreed Style 1/4 scope**; bounded xApp-disconnection cleanup | ☐ OCUDU E2 build-configuration and FlexRIC compatibility audit |
+| KPM CSV recording | ✅ Node/PLMN, receive timestamps, numeric checks, row-count/missing-record checks, positive load response and subscription deletion | ☐ Actual UE identifiers; collection windows; measurement units; quantitative traffic comparison |
+| QoS monitoring | ✅ Existing policy and alert framework available for reuse | ☐ Throughput/latency/loss field mapping; high/low-load alerts; reconnection state recovery; advisory mode |
+| MAC / RLC / PDCP statistics | ✅ Service-model differences reviewed; DU RLC metrics integrated; independent collection clock and batch checks | ☐ Metric-source verification; duplicate/missing/reset detection; iperf comparison; xApp compatibility |
+| Traffic steering policy | ✅ Existing load-exchange and rule-evaluation methods available for reuse | ☐ Single-link load response; sequential OAI/OCUDU comparison; dual-node recommendations; common metrics and cooldown rules |
+| Traffic steering control | ✅ Existing OAI RFsim handover feedback-loop baseline passed | ☐ OCUDU RC capability audit; separate ACK and execution checks; exploratory cross-vendor handover |
+| Multi-Agent slicing control | ✅ Existing OAI NR DL scheduler PRB-cap simulation baseline passed | ☐ OCUDU slice configuration and interface audit; offline/startup experiments; actual grant/counter evidence |
+| Energy-saving control | ✅ Existing policy and state-feedback simulation available for reuse | ☐ OCUDU advisory mode and state simulation; **physical control and power measurement deferred pending hardware** |
+| Integrated regression | ✅ ARM64 builds and published images; bounded connectivity, UDP, KPM/CSV, timing and selected failure-recovery regressions; patch snapshots and documentation | ☐ Testmode verification; sustained-session and long-term stability; single-worker root cause; complete workflow regression; **physical RF deferred pending hardware** |
 
 Execution follows the research plan: bounded traffic validation (P5) and
-the documented normal-operation DU KPM/CSV subset of P6 passed single
-and three-round tests. **🔴 Current test case: KPM monitoring remains
-in progress.** The container-kill scenario is documented within that
-test case. Precise timing, metric accuracy and actual UE identity
-remain open. Full-workflow regression (P7), sequential OAI/OCUDU
-comparison (P8), and capability-gated RC/slicing experiments (P9) follow.
+the documented DU KPM/CSV subset of P6 passed their respective tests.
+The report-style, UL/DL, idle-response and abnormal-subscription-handling
+item is complete within the agreed Style 1/4 and rejection/recovery scope.
+
+Full-workflow regression (P7), sequential OAI/OCUDU comparison (P8),
+and capability-gated RC/slicing experiments (P9) follow.
 
 For P5, retain iperf JSON and receiver-side results. The initial project
 acceptance thresholds are received throughput of at least 80% of the
@@ -345,5 +625,3 @@ silently relaxing these thresholds.
 
 Track sustained-session rounds and fresh-container rounds separately.
 Retain failed-run evidence as well as successful results.
-
-- [KPM subscription delete rejection and retry](README.kpm-delete-rejection.md)
