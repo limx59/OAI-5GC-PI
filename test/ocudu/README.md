@@ -278,8 +278,18 @@ xApp can subscribe. Local and published-image regressions passed.
 
 **Test guide:** [Abrupt xApp disconnection](README.zmq-kpm-disconnect.md).
 
-**Remaining:** OCUDU E2 build-configuration and FlexRIC compatibility
-audit. The passed scenarios do not establish complete E2 interoperability.
+### OCUDU E2 build configuration and FlexRIC compatibility
+
+**Status: Completed for the documented DU KPM subset.**
+
+Verify the actual ARM64 builder cache and configured gNB E2 link
+dependencies, then exercise the current patched runtime image combination.
+Record the differing protocol declarations and the tested scope.
+
+**Test guide:** [Build configuration and compatibility validation](README.e2-kpm-compatibility.md).
+
+The current KPM monitoring acceptance scope is complete. This does not
+establish full E2 protocol conformance or untested control capabilities.
 
 ## Test Case: KPM CSV recording
 
@@ -600,7 +610,7 @@ are recorded separately. Completed entries refer to the documented scope.
 | Test case | Completed | Remaining |
 | --- | --- | --- |
 | Node discovery | ✅ Recorded OCUDU source revision; Open5GS NG Setup; DU E2 Setup | ☐ DU/CU Agent identity distinction; RIC/Agent reconnection; exit cleanup |
-| KPM monitoring | ✅ Normal subscription and reporting; one-second monitoring; **report styles, UL/DL and idle response, and abnormal subscription handling completed within the agreed Style 1/4 scope**; bounded xApp-disconnection cleanup | ☐ OCUDU E2 build-configuration and FlexRIC compatibility audit |
+| KPM monitoring | ✅ Normal subscription and reporting; one-second monitoring; **report styles, UL/DL and idle response, and abnormal subscription handling completed within the agreed Style 1/4 scope**; bounded xApp-disconnection cleanup; E2 build-configuration and FlexRIC compatibility audit | — Completed within the documented DU KPM scope |
 | KPM CSV recording | ✅ Node/PLMN, receive timestamps, numeric checks, row-count/missing-record checks, positive load response and subscription deletion | ☐ Actual UE identifiers; collection windows; measurement units; quantitative traffic comparison |
 | QoS monitoring | ✅ Existing policy and alert framework available for reuse | ☐ Throughput/latency/loss field mapping; high/low-load alerts; reconnection state recovery; advisory mode |
 | MAC / RLC / PDCP statistics | ✅ Service-model differences reviewed; DU RLC metrics integrated; independent collection clock and batch checks | ☐ Metric-source verification; duplicate/missing/reset detection; iperf comparison; xApp compatibility |
