@@ -1,0 +1,104 @@
+--- a/src/xApp/swig/swig_wrapper.cpp
++++ b/src/xApp/swig/swig_wrapper.cpp
+@@ -890,12 +890,9 @@
+     }
+ 
+     // gran_period_ms
+-    size_t idx = 0;
+-    if (msg->gran_period_ms) {
+-      while (msg->gran_period_ms[idx]) {
+-        swig_data.msg.frm_1.gran_period_ms.push_back(msg->gran_period_ms[idx]);
+-        idx++;
+-      }
++    // Optional granularity is one scalar, not a terminated array.
++    if (msg->gran_period_ms != nullptr) {
++      swig_data.msg.frm_1.gran_period_ms.push_back(*msg->gran_period_ms);
+     }
+ 
+   } else if (swig_data.msg.type == FORMAT_3_INDICATION_MESSAGE) {
+@@ -977,12 +974,9 @@
+       }
+ 
+       // gran_period_ms
+-      size_t idx = 0;
+-      if (meas_ue->ind_msg_format_1.gran_period_ms) {
+-        while (meas_ue->ind_msg_format_1.gran_period_ms[idx]) {
+-          tmp.ind_msg_format_1.gran_period_ms.push_back(meas_ue->ind_msg_format_1.gran_period_ms[idx]);
+-          idx++;
+-        }
++      // Optional granularity is one scalar, not a terminated array.
++      if (meas_ue->ind_msg_format_1.gran_period_ms != nullptr) {
++        tmp.ind_msg_format_1.gran_period_ms.push_back(*meas_ue->ind_msg_format_1.gran_period_ms);
+       }
+ 
+ 
+--- a/src/xApp/swig/swig_wrapper.i
++++ b/src/xApp/swig/swig_wrapper.i
+@@ -133,7 +133,7 @@
+ }
+ 
+ /* fix 'cu_du_id' as a <long unsigned int>-vector pointer (in C++) */
+-%typemap(out) std::vector<long unsigned int> * {
++%typemap(out) std::vector<long unsigned int> *cu_du_id {
+     if ($1 == NULL || $1->size() == 0) {
+         $result = PyUnicode_FromString("0");
+     } else {
+@@ -145,6 +145,24 @@
+     }
+ }
+ 
++// Keep granularity numeric despite the generic CU/DU string typemap.
++%typemap(out) std::vector<unsigned long> *gran_period_ms {
++    Py_ssize_t count = $1 == NULL ? 0 : (Py_ssize_t)$1->size();
++    $result = PyList_New(count);
++    if ($result == NULL) {
++        SWIG_fail;
++    }
++    for (Py_ssize_t i = 0; i < count; ++i) {
++        PyObject* item = PyLong_FromUnsignedLong((*$1)[i]);
++        if (item == NULL) {
++            Py_DECREF($result);
++            $result = NULL;
++            SWIG_fail;
++        }
++        PyList_SET_ITEM($result, i, item);
++    }
++}
++
+ /* intXX_t mapping: C -> Python */
+ %typemap(out) int8_t {
+     $result = PyInt_FromLong((long) $1);
+@@ -250,6 +268,7 @@
+   %template(SwigSubCustSmVector) vector<swig_sub_cust_sm_t>;
+   %template(SwigActNameIdVector) vector<swig_act_name_id_t>;
+   %template(IntVector) vector<int>;
++  %template(KPM_GranularityVector) vector<unsigned long>;
+   %template(E2NodeVector) vector<E2Node>;
+   %template(RANVector) vector<swig_ran_function_t>;
+   %template(MACStatsVector) vector<mac_ue_stats_impl_t>;
+--- a/src/sm/kpm_sm/kpm_sm_v03.00/enc/enc_asn/enc_ric_ind_hdr_frm_1.c
++++ b/src/sm/kpm_sm/kpm_sm_v03.00/enc/enc_asn/enc_ric_ind_hdr_frm_1.c
+@@ -20,7 +20,9 @@
+     uint32_t x2 = (uint32_t)(x & 0xFFFFFFFFLL);
+     x1 = htonl(x1);
+     x2 = htonl(x2);
+-    uint64_t v = ((uint64_t)x1) << 32 | x2;
++    // Swap both byte order and word positions on little-endian hosts.
++  uint64_t v = (htonl(1) == 1)
++      ? x : (((uint64_t)x2) << 32) | x1;
+ 
+     return v;
+ }
+--- a/src/sm/kpm_sm/kpm_sm_v03.00/dec/dec_asn/dec_ric_ind_hdr_frm_1.c
++++ b/src/sm/kpm_sm/kpm_sm_v03.00/dec/dec_asn/dec_ric_ind_hdr_frm_1.c
+@@ -21,7 +21,9 @@
+   uint32_t x2 = (uint32_t)(x & 0xFFFFFFFFLL);
+   x1 = ntohl(x1);
+   x2 = ntohl(x2);
+-  uint64_t v = ((uint64_t)x1) << 32 | x2;
++  // Swap both byte order and word positions on little-endian hosts.
++  uint64_t v = (ntohl(1) == 1)
++      ? x : (((uint64_t)x2) << 32) | x1;
+ 
+   return v;
+ }

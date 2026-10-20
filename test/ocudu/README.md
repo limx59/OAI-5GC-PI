@@ -315,8 +315,20 @@ passed.
 
 **Test guide:** [Traffic-backed CSV recording and cleanup](README.zmq-kpm.md).
 
-**Remaining:** Actual UE and CU/DU identifiers, measurement units,
-collection windows and quantitative comparison with traffic results.
+### UE identity, collection windows, units and traffic comparison
+
+**Status: Passed for the documented single-UE configuration.**
+
+Record DU node identity and the UE's CU-F1AP identifier, collection-header
+timestamps, granularity, nominal row windows and throughput units.
+Compare UL/DL KPM rates with application receiver rates under bounded
+UDP traffic. Correlate the CSV UE identifier with independent gNB F1
+context and C-RNTI logs.
+
+The baseline metadata test and the separate identity-correlation test
+both passed. Nominal protocol windows are not exact RLC sample boundaries.
+
+**Test guide:** [CSV metadata, UE identity and UL/DL comparison](README.kpm-csv-metadata.md).
 
 ## Test Case: QoS monitoring
 
@@ -610,8 +622,8 @@ are recorded separately. Completed entries refer to the documented scope.
 | Test case | Completed | Remaining |
 | --- | --- | --- |
 | Node discovery | ✅ Recorded OCUDU source revision; Open5GS NG Setup; DU E2 Setup | ☐ DU/CU Agent identity distinction; RIC/Agent reconnection; exit cleanup |
-| KPM monitoring | ✅ Normal subscription and reporting; one-second monitoring; **report styles, UL/DL and idle response, and abnormal subscription handling completed within the agreed Style 1/4 scope**; bounded xApp-disconnection cleanup; E2 build-configuration and FlexRIC compatibility audit | — Completed within the documented DU KPM scope |
-| KPM CSV recording | ✅ Node/PLMN, receive timestamps, numeric checks, row-count/missing-record checks, positive load response and subscription deletion | ☐ Actual UE identifiers; collection windows; measurement units; quantitative traffic comparison |
+| KPM monitoring | ✅ Normal subscription and reporting; one-second monitoring; **report styles, UL/DL and idle response, and abnormal subscription handling completed within the agreed Style 1/4 scope**; bounded xApp-disconnection cleanup; E2 build-configuration and FlexRIC compatibility audit | — |
+| KPM CSV recording | ✅ Node/PLMN, receive timestamps, numeric checks, row-count/missing-record checks, positive load response and subscription deletion; single-UE F1AP identity correlation; collection timestamps and nominal windows; measurement units; bounded quantitative UL/DL traffic comparison | — |
 | QoS monitoring | ✅ Existing policy and alert framework available for reuse | ☐ Throughput/latency/loss field mapping; high/low-load alerts; reconnection state recovery; advisory mode |
 | MAC / RLC / PDCP statistics | ✅ Service-model differences reviewed; DU RLC metrics integrated; independent collection clock and batch checks | ☐ Metric-source verification; duplicate/missing/reset detection; iperf comparison; xApp compatibility |
 | Traffic steering policy | ✅ Existing load-exchange and rule-evaluation methods available for reuse | ☐ Single-link load response; sequential OAI/OCUDU comparison; dual-node recommendations; common metrics and cooldown rules |

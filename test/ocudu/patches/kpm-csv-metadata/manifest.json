@@ -1,0 +1,40 @@
+{
+  "scope": "Three FlexRIC KPM CSV metadata patches only",
+  "patches": [
+    {
+      "path": "patch-flexric-swig-kpm-granularity.py",
+      "sha256": "42a9325daec6cc21b28b65bf29064ab4607ea58b111e897797c89c87fc07d649"
+    },
+    {
+      "path": "patch-flexric-kpm-v3-header-byte-order.py",
+      "sha256": "7104f5be7e0d192401a2568aeaf1c2376d71cfe728e894fa1f21af875c3c8eed"
+    },
+    {
+      "path": "patch-flexric-swig-kpm-granularity-vector.py",
+      "sha256": "4d882bbe412e959cf6f5c61c3724e359cccfe61552298f685b910f424ceca482"
+    }
+  ],
+  "files": [
+    {
+      "path": "src/xApp/swig/swig_wrapper.cpp",
+      "original_sha256": "351476e78239814f00d007cf82b86422d83d94efae649464d233c4d2a0a7445c",
+      "patched_sha256": "7a4387154a06a17c86b8a52d7addf5c71f2360dec4ad7bc22f91bb190b8851cc"
+    },
+    {
+      "path": "src/xApp/swig/swig_wrapper.i",
+      "original_sha256": "8cc164bba074a0b97287eb7eb0bdd87278899371b7034cd33ba9c67ff4dea5d0",
+      "patched_sha256": "b1a3153eef3192aa6b80a335ca8741d8802953fa5021ae5bda0bc9217e565cf2"
+    },
+    {
+      "path": "src/sm/kpm_sm/kpm_sm_v03.00/enc/enc_asn/enc_ric_ind_hdr_frm_1.c",
+      "original_sha256": "086ef512e9bc0f6f42a89775a6ddd76c2136b456e3436b9c437cb9c8224e7552",
+      "patched_sha256": "ffd948985197ca069c0a0110e10e3879c37216c9aec944126e27832f79ccf4f5"
+    },
+    {
+      "path": "src/sm/kpm_sm/kpm_sm_v03.00/dec/dec_asn/dec_ric_ind_hdr_frm_1.c",
+      "original_sha256": "001148236e5d26b69de142b61f403ad2f554be0db23dfcb5a66cac1455c6c45b",
+      "patched_sha256": "20dda9dd4c79bc5fafd38dd0a2cc804d4a5d46cd34152e0f02e96192a7b24e57"
+    }
+  ],
+  "limitations": "Replay validates source transformations only. Dockerfile also applies earlier interoperability patches; this archive is not their complete cumulative snapshot."
+}

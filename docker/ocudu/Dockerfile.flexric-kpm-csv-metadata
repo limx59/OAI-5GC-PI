@@ -1,0 +1,102 @@
+# Experimental FlexRIC build for OCUDU interoperability testing.
+# E2AP V3 / KPM V3.00; wire compatibility remains unvalidated.
+# Build context: repository root.
+
+FROM debian:bookworm-slim AS builder
+
+ARG BUILD_JOBS=2
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential cmake pkg-config git \
+    autoconf automake libtool bison libpcre2-dev \
+    libsctp-dev python3 python3-dev swig \
+    libconfig-dev libconfig++-dev default-libmysqlclient-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /src
+COPY flexric/ /src/flexric/
+COPY test/xapp/ /src/test/xapp/
+
+# Preserve scalar CU/DU identities in the Docker source copy.
+COPY test/ocudu/patches/patch-flexric-swig-node-id.py /tmp/patch-flexric-swig-node-id.py
+RUN python3 /tmp/patch-flexric-swig-node-id.py /src/flexric
+
+# Skip forwarding to disconnected xApps while retaining cleanup.
+COPY test/ocudu/patches/patch-flexric-ric-disconnect.py /tmp/patch-flexric-ric-disconnect.py
+RUN python3 /tmp/patch-flexric-ric-disconnect.py /src/flexric
+
+COPY test/ocudu/patches/patch-flexric-kpm-report-style.py /tmp/patch-flexric-kpm-report-style.py
+RUN python3 /tmp/patch-flexric-kpm-report-style.py /src/flexric
+
+COPY test/ocudu/patches/patch-flexric-subscription-outcomes.py /tmp/patch-flexric-subscription-outcomes.py
+COPY test/ocudu/patches/patch-flexric-xapp-subscription-failures.py /tmp/patch-flexric-xapp-subscription-failures.py
+COPY test/ocudu/patches/patch-flexric-ric-subscription-failures.py /tmp/patch-flexric-ric-subscription-failures.py
+
+RUN python3 /tmp/patch-flexric-subscription-outcomes.py /src/flexric \
+    && python3 /tmp/patch-flexric-xapp-subscription-failures.py /src/flexric \
+    && python3 /tmp/patch-flexric-ric-subscription-failures.py /src/flexric
+
+COPY test/ocudu/patches/patch-flexric-v3-subscription-failure-encoding.py /tmp/patch-flexric-v3-subscription-failure-encoding.py
+RUN python3 /tmp/patch-flexric-v3-subscription-failure-encoding.py /src/flexric
+
+COPY test/ocudu/patches/patch-flexric-v3-delete-failure-decoding.py /tmp/patch-flexric-v3-delete-failure-decoding.py
+RUN python3 /tmp/patch-flexric-v3-delete-failure-decoding.py /src/flexric
+
+COPY test/ocudu/patches/patch-flexric-v3-delete-failure-criticality.py /tmp/patch-flexric-v3-delete-failure-criticality.py
+RUN python3 /tmp/patch-flexric-v3-delete-failure-criticality.py /src/flexric
+
+COPY test/ocudu/patches/patch-flexric-swig-kpm-granularity.py /tmp/patch-flexric-swig-kpm-granularity.py
+RUN python3 /tmp/patch-flexric-swig-kpm-granularity.py /src/flexric
+
+COPY test/ocudu/patches/patch-flexric-kpm-v3-header-byte-order.py /tmp/patch-flexric-kpm-v3-header-byte-order.py
+RUN python3 /tmp/patch-flexric-kpm-v3-header-byte-order.py /src/flexric
+
+COPY test/ocudu/patches/patch-flexric-swig-kpm-granularity-vector.py /tmp/patch-flexric-swig-kpm-granularity-vector.py
+RUN python3 /tmp/patch-flexric-swig-kpm-granularity-vector.py /src/flexric
+
+RUN cmake -S /src/flexric -B /build/flexric \
+    -DCMAKE_BUILD_TYPE=Debug \
+    -DCMAKE_INSTALL_PREFIX=/usr/local \
+    -DCMAKE_INSTALL_LIBDIR=lib \
+    -DE2AP_VERSION=E2AP_V3 \
+    -DKPM_VERSION=KPM_V3_00 \
+    -DXAPP_DB=MYSQL_XAPP \
+    -DUNIT_TEST=OFF \
+    -DBUILD_OAI_PI_XAPP_DEMOS=ON \
+    && cmake --build /build/flexric --parallel "${BUILD_JOBS}" \
+    && DESTDIR=/stage cmake --install /build/flexric \
+    && install -D -m 755 \
+       /build/flexric/oai-pi-xapp/xapp_handover_control \
+       /stage/usr/local/bin/flexric/xApp/c/xapp_handover_control
+
+FROM debian:bookworm-slim AS runtime
+
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 libpython3.11 libsctp1 libconfig9 libconfig++9v5 libmariadb3 \
+    libstdc++6 libgcc-s1 \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /stage/usr/local/ /usr/local/
+RUN ldconfig
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONPATH=/usr/local/lib/python3/dist-packages \
+    FLEXRIC_SDK_PATH=/usr/local/lib/python3/dist-packages/xapp_sdk
+
+FROM runtime AS ric
+STOPSIGNAL SIGINT
+ENTRYPOINT ["stdbuf", "-oL", "-eL", "/usr/local/bin/flexric/ric/nearRT-RIC"]
+CMD ["-c", "/usr/local/etc/flexric/ric.conf"]
+
+FROM runtime AS emulator
+STOPSIGNAL SIGINT
+ENTRYPOINT ["stdbuf", "-oL", "-eL", "/usr/local/bin/flexric/e2agent/emu_agent_gnb"]
+CMD ["-c", "/usr/local/etc/flexric/e2agent.conf"]
+
+FROM runtime AS xapp
+COPY test/xapp/ /opt/oai-pi/test/xapp/
+WORKDIR /opt/oai-pi/test/xapp
+ENTRYPOINT ["python3"]
+CMD ["xapp_nodes.py", "-c", "/usr/local/etc/flexric/xapp.conf"]

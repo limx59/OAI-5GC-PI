@@ -1,0 +1,3 @@
+original/** -whitespace
+patched/** -whitespace
+changes.patch -whitespace
