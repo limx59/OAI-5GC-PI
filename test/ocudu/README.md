@@ -4,7 +4,7 @@
 
 Validated on a four-core Cortex-A76 ARM64 Raspberry Pi with approximately
 8 GiB RAM. Results below include the documented tests completed through
-2026-10-19, Pacific time.
+2026-10-21, Pacific time.
 
 The dedicated two-worker OCUDU image passed initial UE attachment and
 TUN-bound UPF pings. Three subsequent rounds independently recreated both
@@ -27,6 +27,11 @@ with continued reporting, successful retry and post-delete silence.
 Subscription rejection/recovery and delete rejection/retry each passed
 three rounds. The bounded xApp container-kill cleanup scenario also
 passed separate regressions.
+
+QoS monitoring validated five DU KPM fields and units, directional
+high/low-load alerts and recovery, and persistent supervisor state
+across managed SDK sessions. Both QoS integration cases passed three
+consecutive rounds. The host I/O readiness guard was checked separately.
 
 These results validate the documented software-radio scenarios.
 Maximum throughput, long-term stability, complete E2 interoperability,
@@ -332,21 +337,31 @@ both passed. Nominal protocol windows are not exact RLC sample boundaries.
 
 ## Test Case: QoS monitoring
 
-Map available OCUDU measurements into throughput, latency and packet-loss
-observations, then exercise load alerts and state recovery.
+Map available DU KPM measurements into throughput, RLC delay and SDU
+drop observations, then exercise advisory alerts and session recovery.
 
-### Reusable policy and alert framework
+### Fields, load alerts and managed-session recovery
 
-**Status: Existing OAI/FlexRIC baseline available for reuse.**
+**Status: Passed for the documented single-UE advisory scope.**
 
-The existing framework provides policy and alert logic. This does not
-establish that OCUDU supplies the required fields or passes the same tests.
+Validate five DU KPM fields and their units, preserve unavailable values,
+and check UL/DL high/low/high traffic alerts and recovery.
+Keep supervisor state alive across two managed SDK sessions; verify
+silence detection, session reset, rejection of replayed old-generation
+input and fresh consecutive-report counters.
+
+Both integration cases passed three consecutive rounds, six runs total.
+The regression entry point also includes a bounded host I/O readiness
+guard, validated separately with read-only and offline checks.
+
+RLC delay/drop are not end-to-end latency/loss. Low offered load and
+idle can trigger alerts. Recovery uses SDK process replacement, not
+same-process automatic reconnection or RIC/Agent restart.
+Live delay/drop fault injection is outside this validation scope.
+
+**Test guide:** [QoS fields, alerts, session recovery and regression](README.qos-monitor.md).
 
 **Baseline documentation:** [Existing FlexRIC test documentation](../flexric/README.md).
-
-**Remaining:** OCUDU field mapping, bounded high/low-load alerts,
-reconnection state recovery and advisory-mode validation.
-An OCUDU-specific execution guide is planned.
 
 ## Test Case: MAC / RLC / PDCP statistics
 
@@ -624,7 +639,7 @@ are recorded separately. Completed entries refer to the documented scope.
 | Node discovery | ✅ Recorded OCUDU source revision; Open5GS NG Setup; DU E2 Setup | ☐ DU/CU Agent identity distinction; RIC/Agent reconnection; exit cleanup |
 | KPM monitoring | ✅ Normal subscription and reporting; one-second monitoring; **report styles, UL/DL and idle response, and abnormal subscription handling completed within the agreed Style 1/4 scope**; bounded xApp-disconnection cleanup; E2 build-configuration and FlexRIC compatibility audit | — |
 | KPM CSV recording | ✅ Node/PLMN, receive timestamps, numeric checks, row-count/missing-record checks, positive load response and subscription deletion; single-UE F1AP identity correlation; collection timestamps and nominal windows; measurement units; bounded quantitative UL/DL traffic comparison | — |
-| QoS monitoring | ✅ Existing policy and alert framework available for reuse | ☐ Throughput/latency/loss field mapping; high/low-load alerts; reconnection state recovery; advisory mode |
+| QoS monitoring | ✅ Five DU KPM fields and units; UL/DL high/low-load alerts and recovery; advisory mode; persistent supervisor state across managed SDK sessions; three-round regression; separately checked host I/O readiness guard | — Completed within the documented single-UE advisory scope |
 | MAC / RLC / PDCP statistics | ✅ Service-model differences reviewed; DU RLC metrics integrated; independent collection clock and batch checks | ☐ Metric-source verification; duplicate/missing/reset detection; iperf comparison; xApp compatibility |
 | Traffic steering policy | ✅ Existing load-exchange and rule-evaluation methods available for reuse | ☐ Single-link load response; sequential OAI/OCUDU comparison; dual-node recommendations; common metrics and cooldown rules |
 | Traffic steering control | ✅ Existing OAI RFsim handover feedback-loop baseline passed | ☐ OCUDU RC capability audit; separate ACK and execution checks; exploratory cross-vendor handover |
