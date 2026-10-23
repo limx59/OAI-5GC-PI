@@ -1,0 +1,17 @@
+# Opt-in CU-UP/PDCP experiment.
+# Use after the existing OCUDU ZeroMQ, worker, E2 and collection-clock files.
+# Relative bind paths assume deploy/ocudu is the Compose project directory.
+services:
+  gnb:
+    image: limx59/oai-pi-ocudu-gnb:arm64-kpm-pdcp-metrics-clock-test@sha256:4ac145aa07c430d326a981947a63ec646dad913a21be5cf7441084764ceb8332
+    pull_policy: never
+    cpuset: "0-2"
+    environment:
+      OCUDU_KPM_WALL_CLOCK: "1"
+      OCUDU_PDCP_METRICS_WALL_CLOCK: "1"
+      OCUDU_PDCP_METRICS_TRACE: "1"
+      OAI_PI_TEST_REJECT_FIRST_DELETE: "0"
+    volumes:
+      - ../../test/ocudu/config/gnb-zmq-pdcp.yml:/etc/ocudu/gnb.yml:ro
+  nrue:
+    cpuset: "3"

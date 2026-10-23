@@ -4,7 +4,7 @@
 
 Validated on a four-core Cortex-A76 ARM64 Raspberry Pi with approximately
 8 GiB RAM. Results below include the documented tests completed through
-2026-10-21, Pacific time.
+2026-10-22, Pacific time.
 
 The dedicated two-worker OCUDU image passed initial UE attachment and
 TUN-bound UPF pings. Three subsequent rounds independently recreated both
@@ -32,6 +32,10 @@ QoS monitoring validated five DU KPM fields and units, directional
 high/low-load alerts and recovery, and persistent supervisor state
 across managed SDK sessions. Both QoS integration cases passed three
 consecutive rounds. The host I/O readiness guard was checked separately.
+
+The documented scheduler/RLC and CU-UP PDCP statistics cases each
+passed three rounds. Independent reporting/statistics clocks and
+PDCP batch progression were checked within the single-UE scope.
 
 These results validate the documented software-radio scenarios.
 Maximum throughput, long-term stability, complete E2 interoperability,
@@ -365,25 +369,38 @@ Live delay/drop fault injection is outside this validation scope.
 
 ## Test Case: MAC / RLC / PDCP statistics
 
-Establish the source and meaning of available measurements before using
-them for comparison or policy decisions.
+Establish the source and meaning of measurements before using them for
+comparison or policy decisions.
 
-### Service-model differences and DU RLC collection
+### DU scheduler/RLC fields and CU-UP PDCP statistics clocks
 
-**Status: Model differences reviewed; DU RLC collection path exercised.**
+**Status: Passed for the documented single-UE subset; broader scope remains open.**
 
-Distinguish standard KPM from existing private service models. The
-completed monitoring work exercised DU RLC metric delivery, independent
-collection timing and collection-batch checks.
+Validate ten DU scheduler PRB and RLC fields, units, exported CSV
+integrity and bounded UL/DL comparison with application receiver rates.
+Validate CU-UP node-level PDCP packet-success delivery, independent
+report/statistics clocks and matched, consecutive aggregator batches.
+
+Both integration cases passed three consecutive rounds, six runs total.
+Existing TX/RX metrics suites and four added C++ timer-isolation tests
+passed. The final PDCP gNB image was published and pull-verified.
+The optional Compose overlay passed merge checks; integration tests used
+their generated overrides and a temporary RIC.
+
+PRB arithmetic is not independent scheduler accuracy. PDCP success is
+not application packet loss. Batch progression does not establish
+one-to-one KPM/source correlation or counter-reset handling.
 
 **Test guides:**
 
+- [Statistics fields, clocks, regression and limitations](README.radio-stats.md)
 - [DU KPM measurements](README.zmq-kpm.md)
 - [Collection clock and one-second monitoring](README.kpm-one-second.md)
 
-**Remaining:** Complete source verification, duplicate/missing/reset
-detection, iperf comparison and xApp compatibility checks across the
-intended MAC/RLC/PDCP scope.
+**Remaining:** Source-batch freshness and duplicate/missing handling,
+source-counter reset validation, independent scheduler accuracy,
+PDCP reordering-delay delivery, multi-UE/bearer coverage and broader
+xApp compatibility.
 
 ## Test Case: Traffic steering policy
 
@@ -640,7 +657,7 @@ are recorded separately. Completed entries refer to the documented scope.
 | KPM monitoring | ✅ Normal subscription and reporting; one-second monitoring; **report styles, UL/DL and idle response, and abnormal subscription handling completed within the agreed Style 1/4 scope**; bounded xApp-disconnection cleanup; E2 build-configuration and FlexRIC compatibility audit | — |
 | KPM CSV recording | ✅ Node/PLMN, receive timestamps, numeric checks, row-count/missing-record checks, positive load response and subscription deletion; single-UE F1AP identity correlation; collection timestamps and nominal windows; measurement units; bounded quantitative UL/DL traffic comparison | — |
 | QoS monitoring | ✅ Five DU KPM fields and units; UL/DL high/low-load alerts and recovery; advisory mode; persistent supervisor state across managed SDK sessions; three-round regression; separately checked host I/O readiness guard | — Completed within the documented single-UE advisory scope |
-| MAC / RLC / PDCP statistics | ✅ Service-model differences reviewed; DU RLC metrics integrated; independent collection clock and batch checks | ☐ Metric-source verification; duplicate/missing/reset detection; iperf comparison; xApp compatibility |
+| MAC / RLC / PDCP statistics | ✅ DU scheduler PRB/RLC field semantics and units; CSV integrity; bounded UL/DL iperf comparison; CU-UP PDCP success delivery; independent report/statistics clocks and batch progression; C++ timer isolation; three rounds of both integration cases | ☐ Source-batch freshness and duplicate/missing handling; source-counter resets; independent scheduler accuracy; PDCP reordering delay; multi-UE/bearer and broader xApp coverage |
 | Traffic steering policy | ✅ Existing load-exchange and rule-evaluation methods available for reuse | ☐ Single-link load response; sequential OAI/OCUDU comparison; dual-node recommendations; common metrics and cooldown rules |
 | Traffic steering control | ✅ Existing OAI RFsim handover feedback-loop baseline passed | ☐ OCUDU RC capability audit; separate ACK and execution checks; exploratory cross-vendor handover |
 | Multi-Agent slicing control | ✅ Existing OAI NR DL scheduler PRB-cap simulation baseline passed | ☐ OCUDU slice configuration and interface audit; offline/startup experiments; actual grant/counter evidence |

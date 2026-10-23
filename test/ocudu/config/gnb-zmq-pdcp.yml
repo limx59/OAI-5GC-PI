@@ -1,0 +1,94 @@
+# SPDX-FileCopyrightText: Copyright (C) 2021-2026 Software Radio Systems Limited
+# SPDX-License-Identifier: BSD-3-Clause-Open-MPI
+# Refer to https://gitlab.com/ocudu/ocudu/-/raw/dev/LICENSE?ref_type=heads
+
+cu_cp:
+  # P6 diagnostic: allow more time for core registration.
+  request_pdu_session_timeout: 30
+  amf:
+    addrs: 172.22.0.10
+    port: 38412
+    bind_addrs: 172.22.0.160
+    supported_tracking_areas:
+      - tac: 1
+        plmn_list:
+          - plmn: "00101"
+            tai_slice_support_list:
+              - sst: 1
+
+ru_sdr:
+  device_driver: zmq
+  device_args: tx_port=tcp://0.0.0.0:4558,rx_port=tcp://172.22.0.161:4556
+  srate: 23.04
+  tx_gain: 0
+  rx_gain: 0
+  amplitude_control:
+    tx_gain_backoff: 22
+
+cell_cfg:
+  dl_arfcn: 632628
+  band: 78
+  channel_bandwidth_MHz: 20
+  common_scs: 30
+  plmn: "00101"
+  tac: 1
+  pci: 1
+  tdd_ul_dl_cfg:
+    dl_ul_tx_period: 5
+    nof_dl_slots: 3
+    nof_dl_symbols: 10
+    nof_ul_slots: 1
+    nof_ul_symbols: 2
+  csi:
+    csi_rs_enabled: false
+  pucch:
+    formats: f0_and_f2
+    nof_cell_csi_res: 0
+
+log:
+  filename: stdout
+  all_level: info
+  radio_level: info
+  phy_level: warning
+
+pcap:
+  mac_enable: false
+  mac_filename: /tmp/gnb_mac.pcap
+  ngap_enable: false
+  ngap_filename: /tmp/gnb_ngap.pcap
+
+# Dedicated laboratory identity and explicit N3 binding.
+gnb_id: 420
+ran_node_name: ocudu-pi-zmq
+
+cu_up:
+  ngu:
+    socket:
+      - bind_addr: 172.22.0.160
+
+# Diagnostic comparison: explicit two-worker main pool.
+expert_execution:
+  threads:
+    main_pool:
+      nof_threads: 2
+
+# CU-UP-only E2/KPM experiment for PDCP statistics.
+e2:
+  enable_cu_cp_e2: false
+  enable_cu_up_e2: true
+  enable_du_e2: false
+  addrs: [172.22.0.162]
+  port: 36421
+  bind_addrs: [172.22.0.160]
+  e2sm_kpm_enabled: true
+  e2sm_rc_enabled: false
+  e2sm_ccc_enabled: false
+
+# P6: produce RLC measurements for DU KPM throughput reports.
+metrics:
+  layers:
+    enable_rlc: true
+    enable_pdcp: true
+  periodicity:
+    du_report_period: 1000
+    cu_up_report_period: 1000

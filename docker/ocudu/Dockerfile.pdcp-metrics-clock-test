@@ -1,0 +1,40 @@
+FROM limx59/oai-pi-ocudu-kpm-tests:arm64-clock-selection@sha256:2f31c97bfc5a9cb6b4bbc0ef9020f6a9c6d780cc34bb086b5781764ee7dead48 AS test
+ARG BUILD_JOBS=1
+
+COPY test/ocudu/patches/patch-ocudu-kpm-wall-clock.py /tmp/patch-ocudu-kpm-wall-clock.py
+COPY test/ocudu/patches/patch-ocudu-cu-up-kpm-wall-clock.py /tmp/patch-ocudu-cu-up-kpm-wall-clock.py
+COPY test/ocudu/patches/patch-ocudu-pdcp-metrics-clock.py /tmp/patch-ocudu-pdcp-metrics-clock.py
+COPY test/ocudu/patches/pdcp-tx-metrics-clock-tests.inc /tmp/pdcp-tx-metrics-clock-tests.inc
+COPY test/ocudu/patches/pdcp-rx-metrics-clock-tests.inc /tmp/pdcp-rx-metrics-clock-tests.inc
+
+RUN python3 -B /tmp/patch-ocudu-kpm-wall-clock.py /src/ocudu \
+    && python3 -B /tmp/patch-ocudu-cu-up-kpm-wall-clock.py /src/ocudu \
+    && python3 -B /tmp/patch-ocudu-pdcp-metrics-clock.py /src/ocudu
+
+RUN python3 -B - <<'TESTS'
+from pathlib import Path
+
+root = Path("/src/ocudu/tests/unittests/pdcp")
+for direction in ("tx", "rx"):
+    path = root / f"pdcp_{direction}_metrics_test.cpp"
+    addition = Path(f"/tmp/pdcp-{direction}-metrics-clock-tests.inc").read_text()
+    with path.open("a") as stream:
+        stream.write("\n" + addition)
+TESTS
+
+RUN cmake --build /build/ocudu \
+    --target pdcp_tx_metrics_test pdcp_rx_metrics_test \
+    --parallel "${BUILD_JOBS}"
+
+RUN python3 -B - <<'RUNTESTS'
+from pathlib import Path
+import subprocess
+
+root = Path("/build/ocudu")
+for name in ("pdcp_tx_metrics_test", "pdcp_rx_metrics_test"):
+    matches = [p for p in root.rglob(name) if p.is_file()]
+    if len(matches) != 1:
+        raise SystemExit(f"STOP: expected one {name}, found {matches}")
+    subprocess.run([str(matches[0])], check=True)
+print("PASS: TX/RX metrics suites, including statistics-clock isolation.")
+RUNTESTS
