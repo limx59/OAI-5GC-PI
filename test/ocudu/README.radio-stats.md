@@ -214,6 +214,22 @@ Evidence under `~/Work/oai-test-evidence/`:
 as independent diagnostic stages. The latter requires the published intermediate
 report-clock image listed above.
 
+## PDCP batch-history follow-up
+
+The opt-in PDCP history and provenance stage passed nineteen C++ tests,
+nine reviewer checks and three additional integration rounds on
+2026-10-25, Pacific time. It adds per-UE/bearer history, receipt-age
+filtering and calculation provenance with temporal/value CSV association.
+
+See [PDCP batch history and provenance](README.pdcp-batch-history.md)
+for behavior, published images, independent build/test commands,
+evidence and limits. The standalone overlay has configuration-merge
+validation; runtime acceptance uses the integration validator.
+
+The remaining items below continue to describe the broader scope.
+Temporal association and constructed-input tests do not establish
+on-wire query identity or automatic lifecycle/reset recovery.
+
 ## Remaining work
 
 - Correlate KPM output with identified source batches and detect stale

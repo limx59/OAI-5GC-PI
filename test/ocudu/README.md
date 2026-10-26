@@ -4,7 +4,7 @@
 
 Validated on a four-core Cortex-A76 ARM64 Raspberry Pi with approximately
 8 GiB RAM. Results below include the documented tests completed through
-2026-10-22, Pacific time.
+2026-10-25, Pacific time.
 
 The dedicated two-worker OCUDU image passed initial UE attachment and
 TUN-bound UPF pings. Three subsequent rounds independently recreated both
@@ -394,12 +394,22 @@ one-to-one KPM/source correlation or counter-reset handling.
 **Test guides:**
 
 - [Statistics fields, clocks, regression and limitations](README.radio-stats.md)
+- [PDCP batch history and calculation provenance](README.pdcp-batch-history.md)
 - [DU KPM measurements](README.zmq-kpm.md)
 - [Collection clock and one-second monitoring](README.kpm-one-second.md)
 
-**Remaining:** Source-batch freshness and duplicate/missing handling,
-source-counter reset validation, independent scheduler accuracy,
-PDCP reordering-delay delivery, multi-UE/bearer coverage and broader
+PDCP follow-up validation passed nineteen C++ history/provider tests,
+nine retained-evidence reviewer checks and three integration rounds.
+The opt-in path filters by provider receipt age and traces the batches
+used for each calculation. CSV association uses unique timestamps and
+values; no provider query ID is carried in the KPM report.
+The three follow-up images were published and pull-verified.
+Build and test execution are separate.
+
+**Remaining:** Live source-fault injection and recovery, producer
+lifecycle/reset handling, stronger on-wire source/report identification,
+broader MAC/RLC freshness checks, independent scheduler accuracy,
+PDCP reordering-delay delivery, multi-UE/bearer integration and broader
 xApp compatibility.
 
 ## Test Case: Traffic steering policy
@@ -657,7 +667,7 @@ are recorded separately. Completed entries refer to the documented scope.
 | KPM monitoring | ✅ Normal subscription and reporting; one-second monitoring; **report styles, UL/DL and idle response, and abnormal subscription handling completed within the agreed Style 1/4 scope**; bounded xApp-disconnection cleanup; E2 build-configuration and FlexRIC compatibility audit | — |
 | KPM CSV recording | ✅ Node/PLMN, receive timestamps, numeric checks, row-count/missing-record checks, positive load response and subscription deletion; single-UE F1AP identity correlation; collection timestamps and nominal windows; measurement units; bounded quantitative UL/DL traffic comparison | — |
 | QoS monitoring | ✅ Five DU KPM fields and units; UL/DL high/low-load alerts and recovery; advisory mode; persistent supervisor state across managed SDK sessions; three-round regression; separately checked host I/O readiness guard | — Completed within the documented single-UE advisory scope |
-| MAC / RLC / PDCP statistics | ✅ DU scheduler PRB/RLC field semantics and units; CSV integrity; bounded UL/DL iperf comparison; CU-UP PDCP success delivery; independent report/statistics clocks and batch progression; C++ timer isolation; three rounds of both integration cases | ☐ Source-batch freshness and duplicate/missing handling; source-counter resets; independent scheduler accuracy; PDCP reordering delay; multi-UE/bearer and broader xApp coverage |
+| MAC / RLC / PDCP statistics | ✅ DU PRB/RLC fields, units, CSV integrity and bounded UL/DL comparison; CU-UP PDCP delivery and clocks; C++ timer isolation; PDCP per-source history and receipt-age filtering; calculation provenance and temporal/value CSV association; unit and three-round integration checks | ☐ Live source faults and lifecycle/reset recovery; stronger on-wire source/report identification; broader MAC/RLC freshness; independent scheduler accuracy; PDCP reordering delay; multi-UE/bearer integration and broader xApp compatibility |
 | Traffic steering policy | ✅ Existing load-exchange and rule-evaluation methods available for reuse | ☐ Single-link load response; sequential OAI/OCUDU comparison; dual-node recommendations; common metrics and cooldown rules |
 | Traffic steering control | ✅ Existing OAI RFsim handover feedback-loop baseline passed | ☐ OCUDU RC capability audit; separate ACK and execution checks; exploratory cross-vendor handover |
 | Multi-Agent slicing control | ✅ Existing OAI NR DL scheduler PRB-cap simulation baseline passed | ☐ OCUDU slice configuration and interface audit; offline/startup experiments; actual grant/counter evidence |

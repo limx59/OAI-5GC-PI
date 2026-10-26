@@ -1,0 +1,12 @@
+**
+!docker/
+!docker/ocudu/
+!test/
+!test/ocudu/
+!test/ocudu/patches/
+!test/ocudu/patches/pdcp-batch-history.h
+!test/ocudu/patches/pdcp-batch-history-tests.inc
+!test/ocudu/patches/pdcp-provider-batch-tests.inc
+!test/ocudu/patches/patch-ocudu-pdcp-batch-history.py
+!docker/ocudu/Dockerfile.pdcp-provider-batch-test
+!docker/ocudu/Dockerfile.pdcp-provider-batch-test.dockerignore

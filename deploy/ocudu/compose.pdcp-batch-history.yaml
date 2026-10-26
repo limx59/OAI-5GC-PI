@@ -1,0 +1,18 @@
+# Opt-in CU-UP/PDCP batch-history experiment.
+# Use after the existing OCUDU ZeroMQ, worker, E2 and collection-clock files.
+# Relative bind paths assume deploy/ocudu is the Compose project directory.
+services:
+  gnb:
+    image: limx59/oai-pi-ocudu-gnb:arm64-kpm-pdcp-batch-history-test@sha256:c4d6f51770b6adc9e5bcec42b9fdc6986717e4426d5595f3d63788bab76a7377
+    pull_policy: never
+    cpuset: "0-2"
+    environment:
+      OCUDU_KPM_WALL_CLOCK: "1"
+      OCUDU_PDCP_METRICS_WALL_CLOCK: "1"
+      OCUDU_PDCP_METRICS_TRACE: "1"
+      OCUDU_PDCP_BATCH_HISTORY: "1"
+      OAI_PI_TEST_REJECT_FIRST_DELETE: "0"
+    volumes:
+      - ../../test/ocudu/config/gnb-zmq-pdcp.yml:/etc/ocudu/gnb.yml:ro
+  nrue:
+    cpuset: "3"
