@@ -1,0 +1,23 @@
+# Controlled lifecycle/late-source test; use the lifecycle validator.
+# Replay requires the validator to arm it after KPM readiness.
+# Opt-in CU-UP/PDCP batch-history experiment.
+# Use after the existing OCUDU ZeroMQ, worker, E2 and collection-clock files.
+# Relative bind paths assume deploy/ocudu is the Compose project directory.
+services:
+  gnb:
+    image: limx59/oai-pi-ocudu-gnb:arm64-kpm-pdcp-late-source-test@sha256:2977f56f56be6d6e9c9a69bd588d2d8902bff4c6f99a533d0dccab99b48b0b8c
+    pull_policy: never
+    stdin_open: true
+    cpuset: "0-2"
+    environment:
+      OCUDU_PDCP_TEST_DELIVERY_FAULT: ""
+      OCUDU_PDCP_TEST_LATE_SOURCE: "1"
+      OCUDU_KPM_WALL_CLOCK: "1"
+      OCUDU_PDCP_METRICS_WALL_CLOCK: "1"
+      OCUDU_PDCP_METRICS_TRACE: "1"
+      OCUDU_PDCP_BATCH_HISTORY: "1"
+      OAI_PI_TEST_REJECT_FIRST_DELETE: "0"
+    volumes:
+      - ../../test/ocudu/config/gnb-zmq-pdcp.yml:/etc/ocudu/gnb.yml:ro
+  nrue:
+    cpuset: "3"

@@ -1,0 +1,21 @@
+# Controlled duplicate/drop statistics delivery; isolated tests only.
+# Opt-in CU-UP/PDCP batch-history experiment.
+# Use after the existing OCUDU ZeroMQ, worker, E2 and collection-clock files.
+# Relative bind paths assume deploy/ocudu is the Compose project directory.
+services:
+  gnb:
+    image: limx59/oai-pi-ocudu-gnb:arm64-kpm-pdcp-provenance-clock-test@sha256:99a169ba550db2995c41d5ba401b3ef1d2ca820b83f7a481caf96a2efdffd620
+    pull_policy: never
+    cpuset: "0-2"
+    environment:
+      OCUDU_PDCP_TEST_DELIVERY_FAULT: "${OCUDU_PDCP_TEST_DELIVERY_FAULT:?Set duplicate or drop}"
+      OCUDU_PDCP_TEST_LATE_SOURCE: "0"
+      OCUDU_KPM_WALL_CLOCK: "1"
+      OCUDU_PDCP_METRICS_WALL_CLOCK: "1"
+      OCUDU_PDCP_METRICS_TRACE: "1"
+      OCUDU_PDCP_BATCH_HISTORY: "1"
+      OAI_PI_TEST_REJECT_FIRST_DELETE: "0"
+    volumes:
+      - ../../test/ocudu/config/gnb-zmq-pdcp.yml:/etc/ocudu/gnb.yml:ro
+  nrue:
+    cpuset: "3"

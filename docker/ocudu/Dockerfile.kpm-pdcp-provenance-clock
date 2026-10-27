@@ -1,0 +1,121 @@
+FROM limx59/oai-pi-ocudu-kpm-tests:arm64-clock-selection@sha256:2f31c97bfc5a9cb6b4bbc0ef9020f6a9c6d780cc34bb086b5781764ee7dead48 AS build
+ARG BUILD_JOBS=2
+
+COPY test/ocudu/patches/patch-ocudu-kpm-wall-clock.py /tmp/kpm-wall-clock.py
+
+RUN python3 /tmp/kpm-wall-clock.py /src/ocudu
+
+COPY test/ocudu/patches/patch-ocudu-cu-up-kpm-wall-clock.py /tmp/cu-up-kpm-wall-clock.py
+RUN python3 /tmp/cu-up-kpm-wall-clock.py /src/ocudu
+
+COPY test/ocudu/patches/patch-ocudu-pdcp-metrics-clock.py /tmp/pdcp-metrics-clock.py
+RUN python3 /tmp/pdcp-metrics-clock.py /src/ocudu
+
+# Retain the explicit-worker behavior used by the runtime baseline.
+RUN python3 - <<'WORKERS'
+from pathlib import Path
+path = Path("/src/ocudu/apps/services/worker_manager/worker_manager.cpp")
+text = path.read_text()
+old = (
+    "  if (worker_cfg.nof_main_pool_threads.has_value()) {\n"
+    "    nof_workers = worker_cfg.nof_main_pool_threads.value();\n"
+    "  } else {"
+)
+new = (
+    "  if (worker_cfg.nof_main_pool_threads.has_value()) {\n"
+    "    return std::max(1U, std::min(worker_cfg.nof_main_pool_threads.value(), avail_cpus));\n"
+    "  } else {"
+)
+if text.count(old) != 1:
+    raise SystemExit("STOP: unexpected worker-count anchor")
+path.write_text(text.replace(old, new, 1))
+WORKERS
+
+COPY test/ocudu/patches/patch-ocudu-kpm-rlc-revisions.py /tmp/patch-ocudu-kpm-rlc-revisions.py
+COPY test/ocudu/patches/patch-ocudu-kpm-revision-interface.py /tmp/patch-ocudu-kpm-revision-interface.py
+COPY test/ocudu/patches/patch-ocudu-kpm-style4-freshness.py /tmp/patch-ocudu-kpm-style4-freshness.py
+
+RUN python3 /tmp/patch-ocudu-kpm-rlc-revisions.py /src/ocudu \
+    && python3 /tmp/patch-ocudu-kpm-revision-interface.py /src/ocudu \
+    && python3 /tmp/patch-ocudu-kpm-style4-freshness.py /src/ocudu
+
+COPY test/ocudu/patches/patch-ocudu-rlc-metrics-clock.py /tmp/patch-ocudu-rlc-metrics-clock.py
+COPY test/ocudu/patches/patch-ocudu-rlc-metrics-clock-wiring.py /tmp/patch-ocudu-rlc-metrics-clock-wiring.py
+
+RUN python3 /tmp/patch-ocudu-rlc-metrics-clock.py /src/ocudu \
+    && python3 /tmp/patch-ocudu-rlc-metrics-clock-wiring.py /src/ocudu
+
+COPY test/ocudu/patches/pdcp-batch-history.h /tmp/pdcp-batch-history.h
+COPY test/ocudu/patches/patch-ocudu-pdcp-batch-history.py /tmp/patch-ocudu-pdcp-batch-history.py
+RUN python3 -B /tmp/patch-ocudu-pdcp-batch-history.py /src/ocudu
+
+
+COPY test/ocudu/patches/patch-ocudu-pdcp-source-instance.py /tmp/patch-ocudu-pdcp-source-instance.py
+RUN python3 -B /tmp/patch-ocudu-pdcp-source-instance.py /src/ocudu
+
+# Record internal source identity without changing KPM wire encoding.
+RUN python3 -B - <<'SOURCE_TRACE'
+from pathlib import Path
+
+path = Path("/src/ocudu/lib/e2/e2sm/e2sm_kpm/e2sm_kpm_cu_meas_provider_impl.cpp")
+text = path.read_text()
+anchor = (
+    "void e2sm_kpm_cu_meas_provider_impl::report_metrics"
+    "(const pdcp_metrics_container& metrics)\n{\n"
+)
+addition = """  if (pdcp_batch_history_enabled) {
+    logger.info("PDCP_SOURCE_ID ue={} rb={} instance={} tx={} rx={}",
+                metrics.ue_index, metrics.rb_id, metrics.source_instance,
+                metrics.tx.counter, metrics.rx.counter);
+  }
+"""
+if text.count(anchor) != 1 or "PDCP_SOURCE_ID " in text:
+    raise SystemExit("STOP: unexpected source-identity trace anchor")
+path.write_text(text.replace(anchor, anchor + addition, 1))
+print("PATCHED: provider source-identity trace")
+SOURCE_TRACE
+
+RUN cmake --build /build/ocudu \
+    --target gnb_split_8 \
+    --parallel "${BUILD_JOBS}"
+
+
+# Reuse the completed normal build, then rebuild only affected targets.
+COPY test/ocudu/patches/patch-ocudu-pdcp-delivery-fault.py /tmp/patch-ocudu-pdcp-delivery-fault.py
+RUN python3 -B /tmp/patch-ocudu-pdcp-delivery-fault.py /src/ocudu
+RUN cmake --build /build/ocudu \
+    --target gnb_split_8 \
+    --parallel "${BUILD_JOBS}"
+
+
+COPY test/ocudu/patches/patch-ocudu-pdcp-provenance-clock.py /tmp/patch-ocudu-pdcp-provenance-clock.py
+RUN python3 -B /tmp/patch-ocudu-pdcp-provenance-clock.py /src/ocudu
+RUN cmake --build /build/ocudu \
+    --target gnb_split_8 \
+    --parallel "${BUILD_JOBS}"
+
+FROM ubuntu:24.04 AS gnb
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    tini libfftw3-single3 libmbedcrypto7t64 libsctp1 libyaml-cpp0.8 \
+    libzmq5 libssl3t64 libstdc++6 libgcc-s1 \
+    iproute2 iputils-ping procps \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=build /build/ocudu/apps/gnb_split_8/gnb /opt/ocudu/bin/gnb
+COPY --from=build /src/ocudu/LICENSE /opt/ocudu/licenses/LICENSE
+COPY --from=build /src/ocudu/COPYRIGHTS.txt /opt/ocudu/licenses/COPYRIGHTS.txt
+COPY --from=build /src/ocudu/LICENSES/ /opt/ocudu/licenses/LICENSES/
+
+WORKDIR /opt/ocudu/bin
+RUN set -eu; \
+    chmod 755 ./gnb; \
+    ldd ./gnb > /tmp/gnb-ldd.txt; \
+    cat /tmp/gnb-ldd.txt; \
+    if grep -q 'not found' /tmp/gnb-ldd.txt; then exit 1; fi; \
+    rm /tmp/gnb-ldd.txt
+
+STOPSIGNAL SIGINT
+ENTRYPOINT ["/usr/bin/tini", "-g", "--", "/opt/ocudu/bin/gnb"]
+CMD ["-c", "/etc/ocudu/gnb.yml"]

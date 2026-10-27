@@ -1,0 +1,28 @@
+**
+!test/
+!test/ocudu/
+!test/ocudu/patches/
+!test/ocudu/patches/patch-ocudu-kpm-wall-clock.py
+!test/ocudu/patches/patch-ocudu-kpm-rlc-revisions.py
+!test/ocudu/patches/patch-ocudu-kpm-revision-interface.py
+!test/ocudu/patches/patch-ocudu-kpm-style4-freshness.py
+!test/ocudu/patches/patch-ocudu-rlc-metrics-clock.py
+!test/ocudu/patches/patch-ocudu-rlc-metrics-clock-wiring.py
+
+# Include the additional CU-UP report-clock patch.
+!test/ocudu/patches/patch-ocudu-cu-up-kpm-wall-clock.py
+!docker/ocudu/Dockerfile.kpm-cu-up-report-clock
+!docker/ocudu/Dockerfile.kpm-cu-up-report-clock.dockerignore
+
+# Include the independent PDCP statistics-clock patch.
+!test/ocudu/patches/patch-ocudu-pdcp-metrics-clock.py
+!docker/ocudu/Dockerfile.kpm-pdcp-metrics-clock
+!docker/ocudu/Dockerfile.kpm-pdcp-metrics-clock.dockerignore
+
+# Include the opt-in PDCP provider batch-history implementation.
+!test/ocudu/patches/pdcp-batch-history.h
+!test/ocudu/patches/patch-ocudu-pdcp-batch-history.py
+!docker/ocudu/Dockerfile.kpm-pdcp-batch-history
+!docker/ocudu/Dockerfile.kpm-pdcp-batch-history.dockerignore
+
+!test/ocudu/patches/patch-ocudu-pdcp-source-instance.py

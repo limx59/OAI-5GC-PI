@@ -12,9 +12,10 @@ Validated on the ARM64 Raspberry Pi on 2026-10-25, Pacific time.
 
 This extends [the statistics validation](README.radio-stats.md).
 The complete MAC / RLC / PDCP statistics test case remains partially
-complete. This stage does not validate live source fault injection,
-automatic source-lifecycle detection, reset recovery, protocol query-ID
-transport, PDCP reordering delay or physical RF.
+complete. The initial stage did not validate live faults or reset recovery.
+The controlled extension now covers these for one UE/bearer.
+Protocol query-ID transport, PDCP reordering delay and physical RF
+remain outside the validated scope.
 
 ## Provider behavior
 
@@ -35,15 +36,17 @@ The implementation:
 - Excludes batches aged 2500 ms or more from a calculation.
 - Returns `no_value` when no eligible batch or no RX PDU denominator exists.
 - Exposes an explicit epoch operation for an independently established
-  lifecycle boundary; runtime lifecycle detection is not connected.
+  lifecycle boundary. The source-instance extension connects aggregator
+  replacement to an epoch transition.
 
 Receipt age uses `steady_clock` inside the provider. It does not measure
 time spent before provider ingress and is not an exact source collection
 boundary. The 2500 ms limit is an experimental choice, not a protocol SLA.
 
 A counter decrease alone cannot distinguish reset from delayed/old data.
-Unit tests exercise an explicit epoch transition; they do not prove
-automatic runtime reset detection or rejection of all late old-epoch input.
+Live tests cover source reconstruction and one controlled old-source
+replay. They do not establish recovery across provider/process restarts
+or rejection of every possible delayed-input pattern.
 
 Fresh batches may participate in adjacent calculations. This is a rolling
 history, not a consume-once or non-overlapping measurement window.
@@ -209,9 +212,8 @@ validation.
 
 ## Remaining acceptance work
 
-- Actual source fault injection and recovery rather than only constructed
-  C++ input and mutated-log rejection.
-- Independently established producer lifecycle epochs and reset recovery.
+- Broader fault patterns, concurrent sources and provider/process restarts
+  beyond the controlled single-UE source-replacement experiment.
 - Stronger on-wire report/source identification beyond temporal matching.
 - Broader MAC/RLC source freshness and independent scheduler accuracy.
 - PDCP reordering-delay delivery, multiple real UEs/bearers and broader
@@ -220,3 +222,109 @@ validation.
 Unit-level UE/bearer isolation does not establish multi-UE network
 integration. Existing successful scripts, images and configurations remain
 independent baselines.
+
+## PCI and RNTI selection for lifecycle tests
+
+PCI is read dynamically from the generated test gNB configuration.
+Adapt `test/ocudu/config/gnb-zmq-pdcp.yml` to the local cell configuration
+when necessary. No PCI or RNTI edits in the Python validators are required.
+
+RNTI is derived from successful MAC UE creation and removal records.
+Removed contexts are excluded. Discovery requires one configured PCI and
+exactly one active MAC UE context; ambiguity stops the test. Do not hardcode
+a previous RNTI or select the last observed value. Multiple-cell or multiple-UE
+environments require an explicitly validated target-selection extension.
+Fixed identifiers in synthetic fixtures are test data, not runtime targets.
+
+## Controlled source-lifecycle validation — 2026-10-27
+
+The `validate-pdcp-source-lifecycle-late-source.py` run passed:
+source instance 2 -> 5, counter 56 -> 0, epoch 1 -> 2.
+One real positive-RX old-source report was replayed during KPM recording
+and rejected with status 7. New-source continuity and 37 subsequent
+calculations were checked. All 80 pre/post KPM CSV associations passed.
+Post-reconstruction uplink/downlink traffic had zero reported packet loss.
+Component identities remained unchanged; cleanup reported no errors and
+the baseline RIC was retained.
+
+Evidence directory: `ocudu-pdcp-source-lifecycle-late-source-x2uyy2w4`
+under `~/Work/oai-test-evidence/`.
+
+Scope: single UE/bearer, controlled statistics-report injection and
+sequential pre/post subscriptions. CSV correlation uses timestamps and
+values; no protocol query ID is exported. This does not establish physical
+RF performance, multi-UE coverage or long-term stability.
+
+## Reproduce duplicate, missing and reset detection
+
+The controlled case passed within the single-UE/bearer statistics-delivery
+scope. Broader xApp compatibility remains pending.
+
+Run from the repository root after following the statistics prerequisites.
+Keep shared Open5GS and the baseline RIC running. Experimental gNB/UE must
+be stopped; run tests serially. Validators manage their own test containers
+and restore the original RAN configuration stopped. Core-network restarts
+are troubleshooting actions, not routine test setup.
+
+The final validators pin the published image digests. Pull the required
+images using the commands in the following section before running tests.
+Validators do not build or automatically pull images.
+
+Run each command separately and stop on failure:
+
+```bash
+python3 -B test/ocudu/validate-pdcp-source-instance-unit.py
+python3 -B test/ocudu/validate-pdcp-delivery-fault-clock.py --fault duplicate
+python3 -B test/ocudu/validate-pdcp-delivery-fault-clock.py --fault drop
+python3 -B test/ocudu/validate-pdcp-source-lifecycle-late-source.py
+```
+
+The lifecycle validator arms replay after three post-reset KPM reports.
+Review checks the real old payload, status 7 rejection, new-source
+counter/revision/epoch continuity and subsequent KPM calculations.
+Faults affect metrics delivery, not PDCP traffic packets.
+
+### Compose configuration
+
+Optional overlays:
+
+- `deploy/ocudu/compose.pdcp-delivery-fault.yaml`
+- `deploy/ocudu/compose.pdcp-source-lifecycle.yaml`
+
+Apply an overlay after the ZeroMQ, worker, E2 and collection-clock files.
+The delivery overlay requires `OCUDU_PDCP_TEST_DELIVERY_FAULT` to be
+`duplicate` or `drop`. With sudo, pass it using
+`sudo env OCUDU_PDCP_TEST_DELIVERY_FAULT=duplicate docker compose ...`.
+
+Duplicate, drop and lifecycle merged configurations passed configuration
+validation. Standalone overlays were not separately started. Automatic
+validators use generated overrides and a temporary RIC instead; these
+are distinct validation scopes. Use the lifecycle validator to coordinate
+release, reconstruction, KPM recording and replay arming.
+
+## Published images for duplicate, missing and reset detection
+
+These images were pushed and their remote digests and linux/arm64
+manifests verified. Earlier source-instance and delivery-fault runtime
+tags remain published stage versions.
+
+```bash
+sudo docker pull limx59/oai-pi-ocudu-kpm-tests:arm64-pdcp-source-instance-test@sha256:86fd51131dee1645c5e6a2671a8c51eccbbc4d7c2bc91aa59d138f5ce3caa46f
+sudo docker pull limx59/oai-pi-ocudu-gnb:arm64-kpm-pdcp-provenance-clock-test@sha256:99a169ba550db2995c41d5ba401b3ef1d2ca820b83f7a481caf96a2efdffd620
+sudo docker pull limx59/oai-pi-ocudu-gnb:arm64-kpm-pdcp-late-source-test@sha256:2977f56f56be6d6e9c9a69bd588d2d8902bff4c6f99a533d0dccab99b48b0b8c
+```
+
+### Retained acceptance evidence
+
+Directories are under `~/Work/oai-test-evidence/`.
+
+| Evidence | Verified result |
+| --- | --- |
+| `ocudu-pdcp-source-instance-unit-ac9pdohc` | 27 C++ tests passed |
+| `ocudu-pdcp-delivery-clock-duplicate-mcvpydjk` | 12 duplicate reports rejected; 40 calculation/CSV checks passed |
+| `ocudu-pdcp-delivery-clock-drop-4niujjml` | Six dropped reports and six detected gaps; 40 calculation/CSV checks passed |
+| `ocudu-pdcp-source-lifecycle-late-source-x2uyy2w4` | Source reconstruction; one stale-source rejection; 80 calculation/CSV checks passed |
+
+The passing lifecycle run checked 37 calculations after replay.
+Cleanup succeeded and the baseline RIC was retained. These bounded
+tests do not establish multi-UE coverage or long-term stability.

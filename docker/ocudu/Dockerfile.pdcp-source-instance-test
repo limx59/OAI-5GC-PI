@@ -1,0 +1,45 @@
+FROM limx59/oai-pi-ocudu-kpm-tests:arm64-pdcp-metrics-clock-test@sha256:38ab4dccf0ba395df08c85a2cec66628e26d301778796042d28a830597862612 AS test
+ARG BUILD_JOBS=2
+
+COPY test/ocudu/patches/pdcp-batch-history.h /src/ocudu/lib/e2/e2sm/e2sm_kpm/pdcp_batch_history.h
+COPY test/ocudu/patches/pdcp-batch-history-tests.inc /tmp/pdcp-batch-history-tests.inc
+COPY test/ocudu/patches/pdcp-batch-history.h /tmp/pdcp-batch-history.h
+COPY test/ocudu/patches/pdcp-provider-batch-tests.inc /tmp/pdcp-provider-batch-tests.inc
+COPY test/ocudu/patches/patch-ocudu-pdcp-batch-history.py /tmp/patch-ocudu-pdcp-batch-history.py
+
+RUN python3 -B /tmp/patch-ocudu-pdcp-batch-history.py /src/ocudu
+
+RUN python3 -B - <<'TESTS'
+from pathlib import Path
+
+path = Path("/src/ocudu/tests/unittests/e2/e2sm_kpm_meas_provider_metrics_test.cpp")
+text = path.read_text()
+if "pdcp_batch_history_test" in text:
+    raise SystemExit("STOP: batch history tests already present")
+addition = Path("/tmp/pdcp-batch-history-tests.inc").read_text()
+addition += "\n" + Path("/tmp/pdcp-provider-batch-tests.inc").read_text()
+path.write_text(text + "\n" + addition)
+TESTS
+
+
+COPY test/ocudu/patches/patch-ocudu-pdcp-source-instance.py /tmp/patch-ocudu-pdcp-source-instance.py
+COPY test/ocudu/patches/pdcp-source-instance-tests.inc /tmp/pdcp-source-instance-tests.inc
+
+RUN python3 -B /tmp/patch-ocudu-pdcp-source-instance.py /src/ocudu
+
+RUN python3 -B - <<'SOURCE_TESTS'
+from pathlib import Path
+test = Path("/src/ocudu/tests/unittests/e2/e2sm_kpm_meas_provider_metrics_test.cpp")
+text = test.read_text()
+if "class pdcp_source_instance_test" in text:
+    raise SystemExit("STOP: source-instance tests already present")
+test.write_text(text + "\n" + Path("/tmp/pdcp-source-instance-tests.inc").read_text())
+cmake = Path("/src/ocudu/tests/unittests/e2/CMakeLists.txt")
+cmake.write_text(cmake.read_text() + "\ntarget_link_libraries(e2sm_kpm_meas_provider_metrics_test ocudu_pdcp)\n")
+SOURCE_TESTS
+
+RUN cmake --build /build/ocudu \
+    --target e2sm_kpm_meas_provider_metrics_test \
+    --parallel "${BUILD_JOBS}"
+
+# Execute tests separately after building this image.
