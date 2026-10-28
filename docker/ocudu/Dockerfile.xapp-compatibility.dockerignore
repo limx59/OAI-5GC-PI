@@ -1,0 +1,7 @@
+**
+!test/
+!test/xapp/
+!test/xapp/xapp_kpm.py
+!test/xapp/xapp_kpm_recorder.py
+!test/ocudu/
+!test/ocudu/xapp-compatibility-probe.py

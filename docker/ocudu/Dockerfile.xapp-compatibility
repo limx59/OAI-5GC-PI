@@ -1,0 +1,17 @@
+FROM limx59/oai-pi-ocudu-flexric-xapp:arm64-kpm-csv-metadata-test@sha256:f41f85cfdffbcac099b1c98204bd75caee58c4a99821b9bde8e567959677330f
+
+WORKDIR /opt/ocudu-xapp-compatibility
+COPY test/xapp/xapp_kpm.py test/xapp/xapp_kpm_recorder.py ./
+COPY test/ocudu/xapp-compatibility-probe.py ./probe.py
+
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+RUN python3 -B - <<'CHECK'
+from pathlib import Path
+for name in ("xapp_kpm.py", "xapp_kpm_recorder.py", "probe.py"):
+    path = Path(name)
+    compile(path.read_text(), str(path), "exec")
+print("PASS: packaged Python syntax")
+CHECK
+
+ENTRYPOINT ["timeout", "--signal=INT", "--kill-after=5s", "90s", "python3", "-B", "-u", "/opt/ocudu-xapp-compatibility/probe.py"]
+CMD ["-c", "/usr/local/etc/flexric/xapp.conf"]
