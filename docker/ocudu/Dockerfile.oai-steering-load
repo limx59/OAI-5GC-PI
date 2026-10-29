@@ -1,0 +1,14 @@
+FROM limx59/flexric-xapp:arm64-subscription-cleanup@sha256:195b2136818b58d2684f7499e822d810fd1d6ad0712dfedee020e52b049e88fc
+
+WORKDIR /opt/oai-steering-load
+COPY test/ocudu/xapp-oai-steering-load.py ./collector.py
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 KPM_RECORD_SECONDS=110
+RUN python3 -B - <<'CHECK'
+from pathlib import Path
+path = Path("collector.py")
+compile(path.read_text(), str(path), "exec")
+print("PASS: OAI load collector syntax")
+CHECK
+
+ENTRYPOINT ["timeout", "--signal=INT", "--kill-after=5s", "160s", "python3", "-B", "-u", "/opt/oai-steering-load/collector.py"]
+CMD ["-c", "/usr/local/etc/flexric/xapp.conf"]

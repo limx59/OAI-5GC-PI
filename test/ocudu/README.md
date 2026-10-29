@@ -489,8 +489,25 @@ RIC was retained. No migration recommendation or E2 control was performed.
 
 **Test guide:** [Single-link load response](README.steering-load-response.md).
 
-**Remaining:** Sequential OAI/OCUDU comparison, resource-permitting
-dual-node recommendations, common metrics and cooldown rules.
+### Sequential OAI/OCUDU comparison
+
+**Status: Passed for the documented separate single-UE runs.**
+
+The independent wrapper ran OAI RFSim first, completed cleanup, then ran
+OCUDU ZeroMQ. Both sides passed six identical offered-load phases.
+The published OAI collector image and dedicated Compose service were
+exercised together. Both CSV files were independently reviewed and the
+baseline RIC identity remained unchanged across the sequential runs.
+
+KPM/iperf ratios were 1.038 to 1.148 for OAI and 1.028 to 1.047 for OCUDU.
+OAI uses receipt-time association; OCUDU uses nominal KPM windows.
+PRB values retain their respective implementation semantics. This case
+does not establish equivalent radio capacity or generate steering control.
+
+**Test guide:** [Sequential OAI/OCUDU comparison](README.steering-sequential-comparison.md).
+
+**Remaining:** Resource-permitting dual-node recommendations, common
+metrics and cooldown rules.
 
 ## Test Case: Traffic steering control
 
@@ -730,7 +747,7 @@ are recorded separately. Completed entries refer to the documented scope.
 | KPM CSV recording | ✅ Node/PLMN, receive timestamps, numeric checks, row-count/missing-record checks, positive load response and subscription deletion; single-UE F1AP identity correlation; collection timestamps and nominal windows; measurement units; bounded quantitative UL/DL traffic comparison | — |
 | QoS monitoring | ✅ Five DU KPM fields and units; UL/DL high/low-load alerts and recovery; advisory mode; persistent supervisor state across managed SDK sessions; three-round regression; separately checked host I/O readiness guard | — Completed within the documented single-UE advisory scope |
 | MAC / RLC / PDCP statistics | ✅ DU PRB/RLC fields, units, CSV integrity and bounded UL/DL comparison; CU-UP PDCP delivery and clocks; C++ timer isolation; PDCP per-source history and receipt-age filtering; calculation provenance and temporal/value CSV association; unit and three-round integration checks; controlled duplicate/missing/reset detection and late-old-source rejection (single UE/bearer); DU and CU-UP shared-recorder xApp compatibility through the published image and separate Compose joint tests; original shared KPM demo DU/CU-UP normal-flow validation; shared QoS xApp UL/DL forced-alert and no-alert compatibility; DU/CU-UP custom MAC/RLC/PDCP unsupported-capability boundary audits (no subscriptions or delivery validation); xApp compatibility completed within the documented KPM/unsupported-custom-SM boundary | - |
-| Traffic steering policy | ✅ Existing load-exchange and rule-evaluation methods available for reuse; OCUDU single-link UL/DL low-high-low load response through the published image and Compose joint test | ☐ Sequential OAI/OCUDU comparison; resource-permitting dual-node recommendations; common metrics and cooldown rules |
+| Traffic steering policy | ✅ Existing load-exchange and rule-evaluation methods available for reuse; OCUDU single-link UL/DL low-high-low load response through the published image and Compose joint test; sequential OAI/OCUDU comparison with separate six-phase runs, independent CSV review and baseline RIC continuity checks | ☐ Resource-permitting dual-node recommendations; common metrics and cooldown rules |
 | Traffic steering control | ✅ Existing OAI RFsim handover feedback-loop baseline passed | ☐ OCUDU RC capability audit; separate ACK and execution checks; exploratory cross-vendor handover |
 | Multi-Agent slicing control | ✅ Existing OAI NR DL scheduler PRB-cap simulation baseline passed | ☐ OCUDU slice configuration and interface audit; offline/startup experiments; actual grant/counter evidence |
 | Energy-saving control | ✅ Existing policy and state-feedback simulation available for reuse | ☐ OCUDU advisory mode and state simulation; **physical control and power measurement deferred pending hardware** |

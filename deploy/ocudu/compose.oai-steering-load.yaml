@@ -1,0 +1,34 @@
+# Standalone OAI collector; the validator manages the RFSim RAN.
+services:
+  oai-steering-load:
+    image: "${OAI_STEERING_XAPP_IMAGE:-limx59/flexric-xapp:arm64-oai-steering-load-test@sha256:6074e3c22854de75f39efe613ff09db761d056e85a7204435e474e341cb96389}"
+    pull_policy: never
+    build:
+      context: ../..
+      dockerfile: docker/ocudu/Dockerfile.oai-steering-load
+    environment:
+      KPM_RECORD_SECONDS: "110"
+      XAPP_OUTPUT: /evidence/kpm.csv
+      PROBE_OUTPUT: /evidence/probe.json
+    volumes:
+      - type: bind
+        source: "${OAI_STEERING_EVIDENCE:?Set existing evidence directory}"
+        target: /evidence
+      - type: bind
+        source: "${OAI_STEERING_EVIDENCE:?Set existing evidence directory}/xapp.conf"
+        target: /usr/local/etc/flexric/xapp.conf
+        read_only: true
+    networks:
+      - lab
+    ulimits:
+      core:
+        soft: 0
+        hard: 0
+    stop_signal: SIGINT
+    stop_grace_period: 20s
+    restart: "no"
+
+networks:
+  lab:
+    external: true
+    name: oai-pi-flexric-lab
