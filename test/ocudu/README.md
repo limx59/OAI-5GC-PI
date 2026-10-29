@@ -417,7 +417,7 @@ xApp compatibility.
 
 ### xApp compatibility
 
-**Status: Passed for the DU and CU-UP shared-recorder subsets; broader scope remains open.**
+**Status: Completed within the documented single-node compatibility scope; unsupported custom models explicitly recorded.**
 
 Reuse the unchanged shared KPM recorder with OCUDU DU Format 3 reports.
 The dedicated published xApp image and Compose service passed UL/DL
@@ -446,9 +446,12 @@ SDK discovery and RIC acceptance show KPM ID 2 only; custom IDs
 142/143/144 were not advertised. No subscriptions were attempted.
 This establishes an unsupported boundary, not custom-SM data delivery.
 
-CU-UP custom-model capability auditing remains pending. Original-demo
-failure paths, reconnect and real QoS degradation/recovery are outside
-the completed scope. Overall xApp compatibility remains open.
+CU-UP capability auditing also passed with KPM ID 2 only and no custom
+subscriptions. The defined compatibility scope is complete: supported
+KPM paths were exercised and unsupported custom models documented.
+This does not establish custom-SM delivery or full E2 conformance.
+Original-demo failure paths, reconnect and real QoS degradation/recovery
+remain outside the completed scope.
 
 **Test guides:**
 
@@ -713,7 +716,7 @@ are recorded separately. Completed entries refer to the documented scope.
 | KPM monitoring | ✅ Normal subscription and reporting; one-second monitoring; **report styles, UL/DL and idle response, and abnormal subscription handling completed within the agreed Style 1/4 scope**; bounded xApp-disconnection cleanup; E2 build-configuration and FlexRIC compatibility audit | — |
 | KPM CSV recording | ✅ Node/PLMN, receive timestamps, numeric checks, row-count/missing-record checks, positive load response and subscription deletion; single-UE F1AP identity correlation; collection timestamps and nominal windows; measurement units; bounded quantitative UL/DL traffic comparison | — |
 | QoS monitoring | ✅ Five DU KPM fields and units; UL/DL high/low-load alerts and recovery; advisory mode; persistent supervisor state across managed SDK sessions; three-round regression; separately checked host I/O readiness guard | — Completed within the documented single-UE advisory scope |
-| MAC / RLC / PDCP statistics | ✅ DU PRB/RLC fields, units, CSV integrity and bounded UL/DL comparison; CU-UP PDCP delivery and clocks; C++ timer isolation; PDCP per-source history and receipt-age filtering; calculation provenance and temporal/value CSV association; unit and three-round integration checks; controlled duplicate/missing/reset detection and late-old-source rejection (single UE/bearer); DU and CU-UP shared-recorder xApp compatibility through the published image and separate Compose joint tests; original shared KPM demo DU/CU-UP normal-flow validation; shared QoS xApp UL/DL forced-alert and no-alert compatibility; DU custom MAC/RLC/PDCP unsupported-capability boundary audit (no subscriptions or delivery validation) | ☐ xApp compatibility; stronger on-wire source/report identification; broader MAC/RLC freshness; independent scheduler accuracy; PDCP reordering delay; multi-UE/bearer integration |
+| MAC / RLC / PDCP statistics | ✅ DU PRB/RLC fields, units, CSV integrity and bounded UL/DL comparison; CU-UP PDCP delivery and clocks; C++ timer isolation; PDCP per-source history and receipt-age filtering; calculation provenance and temporal/value CSV association; unit and three-round integration checks; controlled duplicate/missing/reset detection and late-old-source rejection (single UE/bearer); DU and CU-UP shared-recorder xApp compatibility through the published image and separate Compose joint tests; original shared KPM demo DU/CU-UP normal-flow validation; shared QoS xApp UL/DL forced-alert and no-alert compatibility; DU/CU-UP custom MAC/RLC/PDCP unsupported-capability boundary audits (no subscriptions or delivery validation); xApp compatibility completed within the documented KPM/unsupported-custom-SM boundary | ☐ stronger on-wire source/report identification; broader MAC/RLC freshness; independent scheduler accuracy; PDCP reordering delay; multi-UE/bearer integration |
 | Traffic steering policy | ✅ Existing load-exchange and rule-evaluation methods available for reuse | ☐ Single-link load response; sequential OAI/OCUDU comparison; dual-node recommendations; common metrics and cooldown rules |
 | Traffic steering control | ✅ Existing OAI RFsim handover feedback-loop baseline passed | ☐ OCUDU RC capability audit; separate ACK and execution checks; exploratory cross-vendor handover |
 | Multi-Agent slicing control | ✅ Existing OAI NR DL scheduler PRB-cap simulation baseline passed | ☐ OCUDU slice configuration and interface audit; offline/startup experiments; actual grant/counter evidence |

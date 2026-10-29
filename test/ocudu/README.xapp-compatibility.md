@@ -6,10 +6,11 @@ Completed subset: the unchanged shared KPM recorder reads OCUDU DU
 Format 3 throughput reports in the dedicated xApp image, launched through
 the dedicated Compose service and checked under uplink/downlink traffic.
 
-The overall xApp compatibility item remains incomplete. The tested DU
-advertises KPM only; custom MAC/RLC/PDCP unsupported boundaries were
-audited without subscriptions. CU-UP capability auditing remains
-pending. Recorder, original demo and shared QoS results remain separate.
+The defined xApp compatibility scope is complete for the documented
+single-node laboratory scenarios. KPM recorder, original demo and QoS
+paths passed their separate tests. DU/CU-UP advertise KPM only;
+custom MAC/RLC/PDCP models are unsupported in these configurations,
+not validated for delivery. This is not full protocol conformance.
 
 The probe imports unchanged copies of `test/xapp/xapp_kpm.py` and
 `test/xapp/xapp_kpm_recorder.py`. It supplies its own subscription lifecycle
@@ -100,9 +101,10 @@ Offline checks covered integer/real/no-value handling and rejection of
 wrong node, role, format, metrics, NaN, negative values and malformed rows.
 Mock SDK checks do not replace the live SDK/Compose test.
 
-Remaining: CU-UP custom MAC/RLC/PDCP advertised-capability audit.
-No custom-SM delivery has been validated. Original-demo failure paths,
-reconnect and real QoS degradation/recovery remain outside scope.
+Outside the completed scope: custom-SM delivery, original-demo failure
+paths, reconnect, real QoS degradation/recovery, concurrent components
+and long-term stability. Unsupported custom models are an explicit
+compatibility result, not silently treated as working interfaces.
 
 ## CU-UP shared-recorder extension
 
@@ -157,3 +159,17 @@ compatibility. The dedicated image was published and digest/platform
 verified; cleanup succeeded and the baseline RIC was retained.
 
 See [Custom service-model capability boundary](README.xapp-custom-sm-capability.md).
+
+## Defined-scope completion
+
+CU-UP capability auditing also passed with KPM ID 2 only and no custom
+subscriptions. See the custom-service-model guide for both evidence sets.
+
+| Subset | Result |
+| --- | --- |
+| DU/CU-UP shared recorder | Passed in separate runs |
+| DU/CU-UP original KPM demo main | Normal flows passed separately |
+| Shared QoS xApp | UL/DL forced-alert and no-alert scenarios passed |
+| Custom MAC/RLC/PDCP models | Not advertised by tested DU/CU-UP; unsupported boundary verified |
+
+Completion refers to this matrix, not arbitrary xApps or all E2 behavior.

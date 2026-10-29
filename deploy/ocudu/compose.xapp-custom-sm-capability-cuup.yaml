@@ -1,0 +1,33 @@
+# Standalone discovery probe; the validator manages isolated RAN/RIC.
+services:
+  custom-sm-capability:
+    image: "${OCUDU_CAPABILITY_IMAGE:-limx59/oai-pi-ocudu-flexric-xapp:arm64-custom-sm-capability-test@sha256:2c3add43804b9494a9d84037980c8dc2d48285214559d277e1d38ec4a6ee2e03}"
+    pull_policy: never
+    build:
+      context: ../..
+      dockerfile: docker/ocudu/Dockerfile.xapp-custom-sm-capability
+    environment:
+      CAPABILITY_ROLE: "${OCUDU_CAPABILITY_ROLE:-ngran_gNB_CUUP}"
+      PROBE_OUTPUT: /evidence/capability.json
+    volumes:
+      - type: bind
+        source: "${OCUDU_CAPABILITY_EVIDENCE:?Set existing evidence directory}"
+        target: /evidence
+      - type: bind
+        source: "${OCUDU_CAPABILITY_EVIDENCE:?Set existing evidence directory}/xapp.conf"
+        target: /usr/local/etc/flexric/xapp.conf
+        read_only: true
+    networks:
+      - core
+    ulimits:
+      core:
+        soft: 0
+        hard: 0
+    stop_signal: SIGINT
+    stop_grace_period: 20s
+    restart: "no"
+
+networks:
+  core:
+    external: true
+    name: docker_open5gs_default

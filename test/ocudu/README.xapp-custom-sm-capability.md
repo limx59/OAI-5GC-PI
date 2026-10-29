@@ -7,8 +7,8 @@ only KPM RAN Function ID 2, revision 0; the isolated RIC accepted ID 2.
 Custom MAC/RLC/PDCP IDs were not advertised.
 
 This is a verified unsupported boundary, not successful custom-SM
-subscription or data delivery. Overall xApp compatibility remains open;
-the CU-UP capability boundary has not yet been tested.
+subscription or data delivery. CU-UP subsequently passed the separate
+capability audit below with the same unsupported result.
 
 | Model | FlexRIC custom ID | Advertised by tested DU |
 | --- | --- | --- |
@@ -90,11 +90,35 @@ runtime regression.
 
 ## Limitations
 
-This single DU result does not establish all OCUDU builds lack custom
-models. CU-UP, concurrent nodes, dynamic capability changes, process
+These separate DU/CU-UP results do not establish all OCUDU builds lack
+custom models. Concurrent nodes, dynamic capability changes, process
 restart and custom-SM delivery remain outside the tested scope.
 
 The probe reports a capability snapshot; it is not a transparent adapter
 for the original radio-stats xApp and does not translate KPM into custom
 MAC/RLC/PDCP reports. A future supported custom ID needs identity,
 subscription, payload and cleanup validation before claiming compatibility.
+
+## CU-UP capability audit
+
+Run the independent CU-UP validator from the repository root:
+
+```bash
+python3 -B test/ocudu/validate-xapp-custom-sm-capability-cuup.py
+```
+
+It uses `deploy/ocudu/compose.xapp-custom-sm-capability-cuup.yaml`
+and the already published, digest-pinned capability image. No rebuild
+or additional image publication was needed. The gNB image is also pinned.
+
+Evidence under `~/Work/oai-test-evidence/`:
+`ocudu-custom-sm-capability-cuup-z78is42m`.
+
+- Node 420, PLMN 001/01, role gNB-CU-UP, component ID 0.
+- SDK advertised ID 2, revision 0; RIC accepted ID 2.
+- MAC/RLC/PDCP IDs 142/143/144 were not advertised.
+- No subscriptions attempted; no custom delivery validated.
+- Cleanup succeeded and baseline RIC identity remained unchanged.
+
+DU and CU-UP were audited separately. The original radio-stats main
+was neither modified nor run against unsupported models.
