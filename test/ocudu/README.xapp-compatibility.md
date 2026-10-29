@@ -6,10 +6,10 @@ Completed subset: the unchanged shared KPM recorder reads OCUDU DU
 Format 3 throughput reports in the dedicated xApp image, launched through
 the dedicated Compose service and checked under uplink/downlink traffic.
 
-The overall xApp compatibility item remains incomplete. Shared KPM demo
-main, QoS behavior and the custom MAC/RLC/PDCP service-model xApp remain
-outside the completed scope. CU-UP Format 1 integration subsequently
-passed its separate joint test; see the linked guide below.
+The overall xApp compatibility item remains incomplete. CU-UP original
+demo main, QoS behavior and the custom MAC/RLC/PDCP service-model xApp
+remain outside the completed scope. CU-UP recorder integration and the
+DU original demo main passed separate joint tests; see the guides below.
 
 The probe imports unchanged copies of `test/xapp/xapp_kpm.py` and
 `test/xapp/xapp_kpm_recorder.py`. It supplies its own subscription lifecycle
@@ -100,8 +100,8 @@ Offline checks covered integer/real/no-value handling and rejection of
 wrong node, role, format, metrics, NaN, negative values and malformed rows.
 Mock SDK checks do not replace the live SDK/Compose test.
 
-Remaining: original shared demo entry behavior, QoS compatibility, and
-explicit handling/documentation of unsupported custom MAC/RLC/PDCP
+Remaining: CU-UP original shared demo entry behavior, QoS compatibility,
+and explicit handling/documentation of unsupported custom MAC/RLC/PDCP
 service models.
 
 ## CU-UP shared-recorder extension
@@ -112,3 +112,13 @@ rows and UL median success of 100 percent. Cleanup succeeded and the
 baseline RIC was retained. The DU evidence above remains a separate run.
 
 See [CU-UP compatibility and reproduction](README.xapp-compatibility-cuup.md).
+
+## Original shared KPM demo: DU normal flow
+
+The unchanged original main and callback passed a separate Compose joint
+test: ten reports, ten numeric samples per metric, normal deletion and
+successful cleanup. The packaged script matched repository source bytes.
+This does not extend the recorder evidence into original-demo throughput
+comparison or failure recovery.
+
+See [Original KPM demo main](README.xapp-demo-main.md).
