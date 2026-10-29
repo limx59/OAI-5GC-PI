@@ -6,10 +6,10 @@ Completed subset: the unchanged shared KPM recorder reads OCUDU DU
 Format 3 throughput reports in the dedicated xApp image, launched through
 the dedicated Compose service and checked under uplink/downlink traffic.
 
-The overall xApp compatibility item remains incomplete. CU-UP original
-demo main, QoS behavior and the custom MAC/RLC/PDCP service-model xApp
-remain outside the completed scope. CU-UP recorder integration and the
-DU original demo main passed separate joint tests; see the guides below.
+The overall xApp compatibility item remains incomplete. QoS behavior
+and the custom MAC/RLC/PDCP service-model xApp remain outside the
+completed scope. DU/CU-UP recorder integration and original demo main
+normal flows passed separate joint tests; see the guides below.
 
 The probe imports unchanged copies of `test/xapp/xapp_kpm.py` and
 `test/xapp/xapp_kpm_recorder.py`. It supplies its own subscription lifecycle
@@ -100,9 +100,9 @@ Offline checks covered integer/real/no-value handling and rejection of
 wrong node, role, format, metrics, NaN, negative values and malformed rows.
 Mock SDK checks do not replace the live SDK/Compose test.
 
-Remaining: CU-UP original shared demo entry behavior, QoS compatibility,
-and explicit handling/documentation of unsupported custom MAC/RLC/PDCP
-service models.
+Remaining: QoS compatibility and explicit handling/documentation of
+unsupported custom MAC/RLC/PDCP service models. Original-demo failure
+paths and reconnect behavior are not established by normal-flow tests.
 
 ## CU-UP shared-recorder extension
 
@@ -120,5 +120,14 @@ test: ten reports, ten numeric samples per metric, normal deletion and
 successful cleanup. The packaged script matched repository source bytes.
 This does not extend the recorder evidence into original-demo throughput
 comparison or failure recovery.
+
+See [Original KPM demo main](README.xapp-demo-main.md).
+
+## Original shared KPM demo: CU-UP normal flow
+
+A separate original-demo CU-UP run passed: nine node-level reports,
+eight numeric PDCP values, normal deletion and successful cleanup.
+Packaged original script bytes matched source. The same published image
+was reused; no new image publication was required.
 
 See [Original KPM demo main](README.xapp-demo-main.md).

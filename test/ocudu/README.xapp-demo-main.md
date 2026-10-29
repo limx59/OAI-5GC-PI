@@ -6,8 +6,9 @@ The original shared `test/xapp/xapp_kpm.py` passed the bounded OCUDU DU
 normal subscription/report/delete flow. The actual original main and
 callback ran directly, without monkey-patching or replacement.
 
-CU-UP original-demo execution remains pending. Overall xApp compatibility
-also remains incomplete; QoS and custom service models are outside this run.
+CU-UP original-demo execution subsequently passed its separate joint
+test below. Overall xApp compatibility remains incomplete; QoS and
+custom service models remain outside the completed scope.
 
 ## Reproduce
 
@@ -86,3 +87,42 @@ The original demo logs node ID and UE report index, not full component/UE
 identity or indication-format metadata. Report structure checks are not
 full protocol conformance. Prior DU/CU-UP recorder tests remain separate
 evidence and do not substitute for original-demo execution.
+
+## CU-UP original-demo extension
+
+The unchanged original main and callback also passed against CU-UP using
+Style 1 and node-level reports. The independent validator uses
+`deploy/ocudu/compose.xapp-demo-main-cuup.yaml` and the same published,
+digest-pinned xApp image. The gNB provenance-clock image is also pinned.
+No existing shared code, DU validator or image was modified.
+
+```bash
+python3 -B test/ocudu/validate-xapp-demo-main-cuup.py
+```
+
+A bounded ten-packet ping runs during the original demo to provide PDCP
+activity. This is not a throughput or application-loss comparison.
+
+Evidence under `~/Work/oai-test-evidence/`:
+`ocudu-xapp-demo-main-cuup-5zhv48aj`.
+
+| Check | Result |
+| --- | --- |
+| Reports | 9 |
+| PDCP numeric samples | 8 |
+| No-value reports | 1 |
+| UE report markers | 0, as expected for node-level reports |
+| Packaged original matches source | Yes |
+| Normal deletion, exit and cleanup | Passed |
+| Baseline RIC | Identity unchanged |
+
+The original-script SHA-256 matches the DU run. Numeric values were checked
+within 0..100, with at least three numeric samples and five reports.
+No median-success or application-loss equivalence claim is made here.
+Nine reports in the bounded ten-second demo do not establish source loss.
+
+A valid numeric/no-value log and ten rejection checks passed offline;
+Compose original entrypoint, Style 1 and pinned image checks passed before
+live execution. DU and CU-UP were tested in separate runs, not as concurrent
+subscriptions. Negative-handle, empty-discovery and reconnect behavior
+remain outside this normal-flow acceptance.
