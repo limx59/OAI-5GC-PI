@@ -1,0 +1,15 @@
+FROM limx59/oai-pi-ocudu-flexric-xapp:arm64-steering-load-response-test@sha256:bbd96295b93df54c58ca38d438e5aa84dcbfa9859f9c4fc093f5dbc2a10bae5a
+
+WORKDIR /opt/steering-policy
+COPY test/xapp/xapp_traffic_steering.py ./test/xapp/
+COPY test/ocudu/check-steering-policy-rules.py test/ocudu/steering_common_metrics.py test/ocudu/validate-steering-common-metrics.py ./test/ocudu/
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+RUN python3 -B - <<'CHECK'
+from pathlib import Path
+for path in Path("test").rglob("*.py"):
+    compile(path.read_text(), str(path), "exec")
+print("PASS: packaged common-metric and policy syntax")
+CHECK
+
+ENTRYPOINT ["python3", "-B", "/opt/steering-policy/test/ocudu/validate-steering-common-metrics.py"]
+CMD ["--oai-csv", "/inputs/oai.csv", "--ocudu-csv", "/inputs/ocudu.csv", "--output", "/evidence/result"]

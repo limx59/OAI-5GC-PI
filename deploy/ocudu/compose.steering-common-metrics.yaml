@@ -1,0 +1,26 @@
+# Retained-evidence validation; no RAN or RIC startup.
+services:
+  steering-common-metrics:
+    image: "${STEERING_COMMON_IMAGE:-limx59/oai-pi-ocudu-flexric-xapp:arm64-steering-common-metrics-test@sha256:03896a15ca9448c1613f66a9196e4bd265c0ec4965817b1096dcb9bc7b36c40b}"
+    pull_policy: never
+    build:
+      context: ../..
+      dockerfile: docker/ocudu/Dockerfile.steering-common-metrics
+    network_mode: none
+    volumes:
+      - type: bind
+        source: "${STEERING_OAI_CSV:?Set existing OAI CSV}"
+        target: /inputs/oai.csv
+        read_only: true
+      - type: bind
+        source: "${STEERING_OCUDU_CSV:?Set existing OCUDU CSV}"
+        target: /inputs/ocudu.csv
+        read_only: true
+      - type: bind
+        source: "${STEERING_COMMON_EVIDENCE:?Set existing output parent directory}"
+        target: /evidence
+    ulimits:
+      core:
+        soft: 0
+        hard: 0
+    restart: "no"

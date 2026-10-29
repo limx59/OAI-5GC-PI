@@ -1,0 +1,8 @@
+**
+!test/
+!test/xapp/
+!test/xapp/xapp_traffic_steering.py
+!test/ocudu/
+!test/ocudu/check-steering-policy-rules.py
+!test/ocudu/steering_common_metrics.py
+!test/ocudu/validate-steering-common-metrics.py
