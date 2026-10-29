@@ -1,0 +1,47 @@
+# Standalone probe project; the validator manages isolated RAN/RIC setup.
+# Evidence directory must already contain the generated xapp.conf.
+services:
+  xapp-compatibility:
+    image: "${OCUDU_COMPAT_XAPP_IMAGE:-limx59/oai-pi-ocudu-flexric-xapp:arm64-xapp-qos-compatibility-test@sha256:d7292a9ec58460120ad22b82d98f533161e7ad48a689e240b431352385d644d0}"
+    pull_policy: never
+    entrypoint:
+      - timeout
+      - --signal=INT
+      - --kill-after=5s
+      - 45s
+      - python3
+      - -B
+      - -u
+      - /opt/ocudu-xapp-compatibility/xapp_qos_watch.py
+    command: ["-c", "/usr/local/etc/flexric/xapp.conf"]
+    build:
+      context: ../..
+      dockerfile: docker/ocudu/Dockerfile.xapp-qos-compatibility
+    environment:
+      XAPP_QOS_THRESHOLD: "${OCUDU_QOS_THRESHOLD:?Set explicit QoS threshold}"
+      XAPP_QOS_LOW_REPORTS: "2"
+      COMPATIBILITY_ROLE: "${OCUDU_COMPAT_ROLE:-ngran_gNB_DU}"
+      COMPATIBILITY_NODE_ID: "${OCUDU_COMPAT_NODE_ID:-420}"
+      OAI_PI_KPM_REPORT_STYLE: "${OCUDU_COMPAT_STYLE:-4}"
+    volumes:
+      - type: bind
+        source: "${OCUDU_COMPAT_EVIDENCE:?Set existing evidence directory}"
+        target: /evidence
+      - type: bind
+        source: "${OCUDU_COMPAT_EVIDENCE:?Set existing evidence directory}/xapp.conf"
+        target: /usr/local/etc/flexric/xapp.conf
+        read_only: true
+    networks:
+      - core
+    ulimits:
+      core:
+        soft: 0
+        hard: 0
+    stop_signal: SIGINT
+    stop_grace_period: 20s
+    restart: "no"
+
+networks:
+  core:
+    external: true
+    name: docker_open5gs_default

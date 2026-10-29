@@ -1,0 +1,4 @@
+**
+!test/
+!test/xapp/
+!test/xapp/xapp_qos_watch.py

@@ -6,10 +6,10 @@ Completed subset: the unchanged shared KPM recorder reads OCUDU DU
 Format 3 throughput reports in the dedicated xApp image, launched through
 the dedicated Compose service and checked under uplink/downlink traffic.
 
-The overall xApp compatibility item remains incomplete. QoS behavior
-and the custom MAC/RLC/PDCP service-model xApp remain outside the
-completed scope. DU/CU-UP recorder integration and original demo main
-normal flows passed separate joint tests; see the guides below.
+The overall xApp compatibility item remains incomplete. Custom
+MAC/RLC/PDCP service-model compatibility remains pending. DU/CU-UP
+recorder integration, original demo normal flows and shared QoS
+forced-threshold compatibility passed separate joint tests.
 
 The probe imports unchanged copies of `test/xapp/xapp_kpm.py` and
 `test/xapp/xapp_kpm_recorder.py`. It supplies its own subscription lifecycle
@@ -100,9 +100,9 @@ Offline checks covered integer/real/no-value handling and rejection of
 wrong node, role, format, metrics, NaN, negative values and malformed rows.
 Mock SDK checks do not replace the live SDK/Compose test.
 
-Remaining: QoS compatibility and explicit handling/documentation of
-unsupported custom MAC/RLC/PDCP service models. Original-demo failure
-paths and reconnect behavior are not established by normal-flow tests.
+Remaining: explicit handling/documentation of unsupported custom
+MAC/RLC/PDCP service models. Original-demo failure paths, reconnect
+and real QoS degradation/recovery are outside the completed scope.
 
 ## CU-UP shared-recorder extension
 
@@ -131,3 +131,17 @@ Packaged original script bytes matched source. The same published image
 was reused; no new image publication was required.
 
 See [Original KPM demo main](README.xapp-demo-main.md).
+
+## Original shared QoS xApp compatibility
+
+The unchanged shared QoS xApp passed four dedicated image/Compose joint
+scenarios: uplink/downlink with forced alerts and no-alert controls.
+Alerts occurred once per metric after two consecutive low observations;
+zero-threshold controls produced no alerts. All runs had active traffic,
+successful cleanup and unchanged baseline RIC.
+
+The dedicated QoS image was published and its remote ARM64 digest verified.
+This validates forced-threshold compatibility, not real QoS degradation
+or recovery injection.
+
+See [Shared QoS xApp compatibility](README.xapp-qos-compatibility.md).
