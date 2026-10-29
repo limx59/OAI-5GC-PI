@@ -7,8 +7,9 @@ Format 3 throughput reports in the dedicated xApp image, launched through
 the dedicated Compose service and checked under uplink/downlink traffic.
 
 The overall xApp compatibility item remains incomplete. Shared KPM demo
-main, CU-UP Format 1 integration, QoS behavior and the custom MAC/RLC/PDCP
-service-model xApp are not covered by this acceptance run.
+main, QoS behavior and the custom MAC/RLC/PDCP service-model xApp remain
+outside the completed scope. CU-UP Format 1 integration subsequently
+passed its separate joint test; see the linked guide below.
 
 The probe imports unchanged copies of `test/xapp/xapp_kpm.py` and
 `test/xapp/xapp_kpm_recorder.py`. It supplies its own subscription lifecycle
@@ -99,6 +100,15 @@ Offline checks covered integer/real/no-value handling and rejection of
 wrong node, role, format, metrics, NaN, negative values and malformed rows.
 Mock SDK checks do not replace the live SDK/Compose test.
 
-Remaining: CU-UP shared-recorder integration, original shared demo entry
-behavior, QoS compatibility, and explicit handling/documentation of
-unsupported custom MAC/RLC/PDCP service models.
+Remaining: original shared demo entry behavior, QoS compatibility, and
+explicit handling/documentation of unsupported custom MAC/RLC/PDCP
+service models.
+
+## CU-UP shared-recorder extension
+
+Style 1 / Format 1 passed with the same published image and a dedicated
+Compose configuration: 40 reports, 19 complete numeric rows, 21 no-value
+rows and UL median success of 100 percent. Cleanup succeeded and the
+baseline RIC was retained. The DU evidence above remains a separate run.
+
+See [CU-UP compatibility and reproduction](README.xapp-compatibility-cuup.md).

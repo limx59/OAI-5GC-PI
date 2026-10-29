@@ -417,18 +417,25 @@ xApp compatibility.
 
 ### xApp compatibility
 
-**Status: Passed for the DU shared-recorder subset; broader scope remains open.**
+**Status: Passed for the DU and CU-UP shared-recorder subsets; broader scope remains open.**
 
 Reuse the unchanged shared KPM recorder with OCUDU DU Format 3 reports.
 The dedicated published xApp image and Compose service passed UL/DL
 traffic checks: 40 reports, 80 CSV rows, no callback or cleanup errors.
 Probe and CSV report counts agree; the baseline RIC was retained.
 
-This run uses a dedicated subscription harness. It does not exercise
-the original shared demo main, CU-UP integration, QoS behavior or
-custom MAC/RLC/PDCP service models. Overall xApp compatibility remains open.
+A separate CU-UP Style 1 / Format 1 joint test passed with the same
+published image: 40 reports, 19 complete numeric rows and 21 no-value
+rows; UL median success was 100 percent. Cleanup succeeded.
 
-**Test guide:** [xApp compatibility](README.xapp-compatibility.md).
+Both tests use a dedicated subscription harness. They do not exercise
+the original shared demo main, QoS behavior or custom MAC/RLC/PDCP
+service models. Overall xApp compatibility remains open.
+
+**Test guides:**
+
+- [xApp compatibility](README.xapp-compatibility.md)
+- [CU-UP shared-recorder compatibility](README.xapp-compatibility-cuup.md)
 
 ## Test Case: Traffic steering policy
 
@@ -685,7 +692,7 @@ are recorded separately. Completed entries refer to the documented scope.
 | KPM monitoring | ✅ Normal subscription and reporting; one-second monitoring; **report styles, UL/DL and idle response, and abnormal subscription handling completed within the agreed Style 1/4 scope**; bounded xApp-disconnection cleanup; E2 build-configuration and FlexRIC compatibility audit | — |
 | KPM CSV recording | ✅ Node/PLMN, receive timestamps, numeric checks, row-count/missing-record checks, positive load response and subscription deletion; single-UE F1AP identity correlation; collection timestamps and nominal windows; measurement units; bounded quantitative UL/DL traffic comparison | — |
 | QoS monitoring | ✅ Five DU KPM fields and units; UL/DL high/low-load alerts and recovery; advisory mode; persistent supervisor state across managed SDK sessions; three-round regression; separately checked host I/O readiness guard | — Completed within the documented single-UE advisory scope |
-| MAC / RLC / PDCP statistics | ✅ DU PRB/RLC fields, units, CSV integrity and bounded UL/DL comparison; CU-UP PDCP delivery and clocks; C++ timer isolation; PDCP per-source history and receipt-age filtering; calculation provenance and temporal/value CSV association; unit and three-round integration checks; controlled duplicate/missing/reset detection and late-old-source rejection (single UE/bearer); DU shared-recorder xApp compatibility through the published image and Compose joint test | ☐ xApp compatibility; stronger on-wire source/report identification; broader MAC/RLC freshness; independent scheduler accuracy; PDCP reordering delay; multi-UE/bearer integration |
+| MAC / RLC / PDCP statistics | ✅ DU PRB/RLC fields, units, CSV integrity and bounded UL/DL comparison; CU-UP PDCP delivery and clocks; C++ timer isolation; PDCP per-source history and receipt-age filtering; calculation provenance and temporal/value CSV association; unit and three-round integration checks; controlled duplicate/missing/reset detection and late-old-source rejection (single UE/bearer); DU and CU-UP shared-recorder xApp compatibility through the published image and separate Compose joint tests | ☐ xApp compatibility; stronger on-wire source/report identification; broader MAC/RLC freshness; independent scheduler accuracy; PDCP reordering delay; multi-UE/bearer integration |
 | Traffic steering policy | ✅ Existing load-exchange and rule-evaluation methods available for reuse | ☐ Single-link load response; sequential OAI/OCUDU comparison; dual-node recommendations; common metrics and cooldown rules |
 | Traffic steering control | ✅ Existing OAI RFsim handover feedback-loop baseline passed | ☐ OCUDU RC capability audit; separate ACK and execution checks; exploratory cross-vendor handover |
 | Multi-Agent slicing control | ✅ Existing OAI NR DL scheduler PRB-cap simulation baseline passed | ☐ OCUDU slice configuration and interface audit; offline/startup experiments; actual grant/counter evidence |
