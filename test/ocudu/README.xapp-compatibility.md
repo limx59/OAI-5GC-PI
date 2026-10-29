@@ -6,10 +6,10 @@ Completed subset: the unchanged shared KPM recorder reads OCUDU DU
 Format 3 throughput reports in the dedicated xApp image, launched through
 the dedicated Compose service and checked under uplink/downlink traffic.
 
-The overall xApp compatibility item remains incomplete. Custom
-MAC/RLC/PDCP service-model compatibility remains pending. DU/CU-UP
-recorder integration, original demo normal flows and shared QoS
-forced-threshold compatibility passed separate joint tests.
+The overall xApp compatibility item remains incomplete. The tested DU
+advertises KPM only; custom MAC/RLC/PDCP unsupported boundaries were
+audited without subscriptions. CU-UP capability auditing remains
+pending. Recorder, original demo and shared QoS results remain separate.
 
 The probe imports unchanged copies of `test/xapp/xapp_kpm.py` and
 `test/xapp/xapp_kpm_recorder.py`. It supplies its own subscription lifecycle
@@ -100,9 +100,9 @@ Offline checks covered integer/real/no-value handling and rejection of
 wrong node, role, format, metrics, NaN, negative values and malformed rows.
 Mock SDK checks do not replace the live SDK/Compose test.
 
-Remaining: explicit handling/documentation of unsupported custom
-MAC/RLC/PDCP service models. Original-demo failure paths, reconnect
-and real QoS degradation/recovery are outside the completed scope.
+Remaining: CU-UP custom MAC/RLC/PDCP advertised-capability audit.
+No custom-SM delivery has been validated. Original-demo failure paths,
+reconnect and real QoS degradation/recovery remain outside scope.
 
 ## CU-UP shared-recorder extension
 
@@ -145,3 +145,15 @@ This validates forced-threshold compatibility, not real QoS degradation
 or recovery injection.
 
 See [Shared QoS xApp compatibility](README.xapp-qos-compatibility.md).
+
+## Custom MAC/RLC/PDCP capability boundary: DU
+
+The independent SDK discovery probe and RIC acceptance logs agree that
+the tested DU advertises only KPM ID 2. Custom IDs 142/143/144 are absent.
+No subscriptions were sent and the original radio-stats main was not run.
+
+This is a passed unsupported-boundary audit, not custom-model delivery
+compatibility. The dedicated image was published and digest/platform
+verified; cleanup succeeded and the baseline RIC was retained.
+
+See [Custom service-model capability boundary](README.xapp-custom-sm-capability.md).

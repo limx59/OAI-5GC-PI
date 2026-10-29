@@ -1,0 +1,14 @@
+FROM limx59/oai-pi-ocudu-flexric-xapp:arm64-xapp-compatibility-test@sha256:bc6c6f46d8338bfab83d2ccbf7bd578028680d0c114cc99cd72b31646156d587
+
+WORKDIR /opt/ocudu-custom-sm-capability
+COPY test/ocudu/xapp-custom-sm-capability.py ./probe.py
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+RUN python3 -B - <<'CHECK'
+from pathlib import Path
+path = Path("probe.py")
+compile(path.read_text(), str(path), "exec")
+print("PASS: capability probe syntax")
+CHECK
+
+ENTRYPOINT ["timeout", "--signal=INT", "--kill-after=5s", "40s", "python3", "-B", "-u", "/opt/ocudu-custom-sm-capability/probe.py"]
+CMD ["-c", "/usr/local/etc/flexric/xapp.conf"]
