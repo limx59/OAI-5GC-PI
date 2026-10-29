@@ -1,0 +1,36 @@
+# Standalone probe project; the validator manages isolated RAN/RIC setup.
+# Evidence directory must already contain the generated xapp.conf.
+services:
+  steering-load-response:
+    image: "${OCUDU_STEERING_XAPP_IMAGE:-limx59/oai-pi-ocudu-flexric-xapp:arm64-steering-load-response-test@sha256:bbd96295b93df54c58ca38d438e5aa84dcbfa9859f9c4fc093f5dbc2a10bae5a}"
+    pull_policy: never
+    build:
+      context: ../..
+      dockerfile: docker/ocudu/Dockerfile.steering-load-response
+    environment:
+      OAI_PI_KPM_REPORT_STYLE: "${OCUDU_STEERING_STYLE:-4}"
+      KPM_RECORD_SECONDS: "110"
+      XAPP_OUTPUT: /evidence/kpm.csv
+      PROBE_OUTPUT: /evidence/probe.json
+    volumes:
+      - type: bind
+        source: "${OCUDU_STEERING_EVIDENCE:?Set existing evidence directory}"
+        target: /evidence
+      - type: bind
+        source: "${OCUDU_STEERING_EVIDENCE:?Set existing evidence directory}/xapp.conf"
+        target: /usr/local/etc/flexric/xapp.conf
+        read_only: true
+    networks:
+      - core
+    ulimits:
+      core:
+        soft: 0
+        hard: 0
+    stop_signal: SIGINT
+    stop_grace_period: 20s
+    restart: "no"
+
+networks:
+  core:
+    external: true
+    name: docker_open5gs_default
