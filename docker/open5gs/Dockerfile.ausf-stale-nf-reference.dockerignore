@@ -1,0 +1,5 @@
+**
+!test/
+!test/open5gs/
+!test/open5gs/patches/
+!test/open5gs/patches/patch-ausf-stale-nf-reference.py

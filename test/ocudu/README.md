@@ -582,6 +582,15 @@ hardware. An OCUDU-specific execution guide is planned.
 
 ## Test Case: Integrated regression
 
+### Open5GS AUSF routing and real UE acceptance
+
+The AUSF-local stale NF reference patch passed isolated original/patched
+routing regression and real single-UE session/TUN-bound UPF checks.
+Cleanup and baseline core continuity passed. Actual NRF heartbeat-loss
+recovery remains unvalidated.
+
+**Test guide:** [AUSF routing and real UE validation](../open5gs/README.ausf-stale-nf-reference.md).
+
 Verify repeatable operation of the documented software-radio workflow,
 retain failed and successful evidence, and distinguish bounded checks
 from sustained-session validation.
@@ -767,7 +776,7 @@ are recorded separately. Completed entries refer to the documented scope.
 | Traffic steering control | ✅ Existing OAI RFsim handover feedback-loop baseline passed | ☐ OCUDU RC capability audit; separate ACK and execution checks; exploratory cross-vendor handover |
 | Multi-Agent slicing control | ✅ Existing OAI NR DL scheduler PRB-cap simulation baseline passed | ☐ OCUDU slice configuration and interface audit; offline/startup experiments; actual grant/counter evidence |
 | Energy-saving control | ✅ Existing policy and state-feedback simulation available for reuse | ☐ OCUDU advisory mode and state simulation; **physical control and power measurement deferred pending hardware** |
-| Integrated regression | ✅ ARM64 builds and published images; bounded connectivity, UDP, KPM/CSV, timing and selected failure-recovery regressions; patch snapshots and documentation | ☐ Testmode verification; sustained-session and long-term stability; single-worker root cause; complete workflow regression; **physical RF deferred pending hardware** |
+| Integrated regression | ✅ ARM64 builds and published images; bounded connectivity, UDP, KPM/CSV, timing and selected failure-recovery regressions; Open5GS AUSF stale-reference routing regression and patched real-UE session/UPF acceptance; patch snapshots and documentation | ☐ Testmode verification; sustained-session and long-term stability; single-worker root cause; complete workflow regression; **physical RF deferred pending hardware** |
 
 Execution follows the research plan: bounded traffic validation (P5) and
 the documented DU KPM/CSV subset of P6 passed their respective tests.

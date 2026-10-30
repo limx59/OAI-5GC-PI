@@ -1,0 +1,134 @@
+{
+  "name": "ausf-real-ue",
+  "networks": {
+    "core": {
+      "name": "docker_open5gs_default",
+      "ipam": {},
+      "external": true
+    }
+  },
+  "services": {
+    "gnb": {
+      "restart": "no",
+      "cap_add": [
+        "SYS_NICE",
+        "IPC_LOCK"
+      ],
+      "cpuset": "1-2",
+      "command": null,
+      "entrypoint": null,
+      "image": "limx59/oai-pi-ocudu-gnb:arm64-zmq-worker-test@sha256:1733f139f5e1001ca0c146f8b51e017d9fe71b0c07616beff233b468be8cc608",
+      "networks": {
+        "core": {
+          "ipv4_address": "172.22.0.160"
+        }
+      },
+      "stop_grace_period": "15s",
+      "stop_signal": "SIGINT",
+      "ulimits": {
+        "core": 0,
+        "memlock": {
+          "soft": -1,
+          "hard": -1
+        },
+        "rtprio": {
+          "soft": 99,
+          "hard": 99
+        }
+      },
+      "volumes": [
+        {
+          "type": "bind",
+          "source": "config/gnb-ausf-validation.yml",
+          "target": "/etc/ocudu/gnb.yml",
+          "read_only": true,
+          "bind": {}
+        }
+      ],
+      "pull_policy": "never"
+    },
+    "nrue": {
+      "profiles": [
+        "ue"
+      ],
+      "restart": "no",
+      "cap_add": [
+        "NET_ADMIN",
+        "NET_RAW",
+        "SYS_NICE",
+        "IPC_LOCK"
+      ],
+      "cpuset": "3",
+      "command": [
+        "-O",
+        "/etc/oai/ue.conf",
+        "-r",
+        "51",
+        "--numerology",
+        "1",
+        "--band",
+        "78",
+        "-C",
+        "3489420000",
+        "--ue-scan-carrier",
+        "--log_config.phy_log_level",
+        "info",
+        "-E",
+        "--uecap_file",
+        "/etc/oai/uecap.xml",
+        "--device.name",
+        "oai_zmqdevif"
+      ],
+      "devices": [
+        {
+          "source": "/dev/net/tun",
+          "target": "/dev/net/tun",
+          "permissions": "rwm"
+        }
+      ],
+      "entrypoint": null,
+      "image": "limx59/oai-pi-oai-nr-ue:arm64-zmq-test@sha256:73fa22bcb85f2c040a398d0c3159a7a9083e7dee7db23a7c6fe7e3c26d2110e8",
+      "networks": {
+        "core": {
+          "ipv4_address": "172.22.0.161"
+        }
+      },
+      "stop_grace_period": "15s",
+      "stop_signal": "SIGINT",
+      "ulimits": {
+        "core": 0,
+        "memlock": {
+          "soft": -1,
+          "hard": -1
+        },
+        "rtprio": {
+          "soft": 99,
+          "hard": 99
+        }
+      },
+      "volumes": [
+        {
+          "type": "bind",
+          "source": "../ocudu/.local/ue-zmq.conf",
+          "target": "/etc/oai/ue.conf",
+          "read_only": true,
+          "bind": {}
+        },
+        {
+          "type": "bind",
+          "source": "../../oai/targets/PROJECTS/GENERIC-NR-5GC/CONF/uecap_ports1.xml",
+          "target": "/etc/oai/uecap.xml",
+          "read_only": true,
+          "bind": {}
+        }
+      ],
+      "depends_on": {
+        "gnb": {
+          "condition": "service_started",
+          "required": true
+        }
+      },
+      "pull_policy": "never"
+    }
+  }
+}

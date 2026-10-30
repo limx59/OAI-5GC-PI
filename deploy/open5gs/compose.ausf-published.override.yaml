@@ -1,0 +1,5 @@
+# Image-only override; combine with reviewed base files and runtime mounts.
+services:
+  ausf:
+    image: limx59/open5gs-ausf:arm64-stale-nf-reference-test@sha256:7ba6049f69cde00ba19eb19319020ea7d3d078b040bd0ecf122398f8fa96f3c4
+    pull_policy: never

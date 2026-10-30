@@ -1,0 +1,7 @@
+**
+!test/
+!test/open5gs/
+!test/open5gs/fixtures/
+!test/open5gs/fixtures/ausf-stale-nf-reference/
+!test/open5gs/fixtures/ausf-stale-nf-reference/sbi_fixture.py
+!test/open5gs/fixtures/ausf-stale-nf-reference/check_routing.py

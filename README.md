@@ -152,6 +152,8 @@ docker-compose -f docker-compose.open5gs.yaml up -d
 
 ## Testing and Verification
 
+Open5GS core validation: [AUSF stale NF reference and real UE tests](test/open5gs/README.md).
+
 - Check logs of key Open5GS components:
 ```bash
 docker logs open5gs-amf

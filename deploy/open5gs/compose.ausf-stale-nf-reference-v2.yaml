@@ -1,0 +1,73 @@
+# Isolated synthetic SBI regression; no external networks or host ports.
+x-ausf: &ausf
+  command:
+    - /open5gs/install/bin/open5gs-ausfd
+    - -c
+    - /fixtures/ausf.yaml
+  volumes:
+    - ../../test/open5gs/fixtures/ausf-stale-nf-reference/ausf.yaml:/fixtures/ausf.yaml:ro
+  depends_on:
+    fixture:
+      condition: service_healthy
+  cap_drop:
+    - ALL
+  ulimits:
+    core:
+      soft: 0
+      hard: 0
+  stop_signal: SIGINT
+  stop_grace_period: 5s
+  restart: "no"
+
+services:
+  fixture:
+    image: limx59/open5gs-ausf-tests:arm64-stale-nf-reference-test@sha256:937d3daf3a33dba7a9d6a3cfabe52288cc7d3eb0c1c257a9999beca901ca4eb1
+    pull_policy: never
+    build:
+      context: ../..
+      dockerfile: docker/open5gs/Dockerfile.ausf-routing-tests
+    healthcheck:
+      test:
+        - CMD
+        - python3
+        - -B
+        - -c
+        - "from sbi_fixture import request; assert request('127.0.0.1', 'GET', '/fixture/health')[0] == 200"
+      interval: 2s
+      timeout: 3s
+      retries: 15
+    cap_drop:
+      - ALL
+    restart: "no"
+
+  ausf-control:
+    <<: *ausf
+    image: "${AUSF_CONTROL_IMAGE:-docker_open5gs:local-arm64}"
+    pull_policy: never
+
+  ausf-patched:
+    <<: *ausf
+    image: "${AUSF_PATCHED_IMAGE:-limx59/open5gs-ausf:arm64-stale-nf-reference-test@sha256:7ba6049f69cde00ba19eb19319020ea7d3d078b040bd0ecf122398f8fa96f3c4}"
+    pull_policy: never
+
+  check:
+    image: limx59/open5gs-ausf-tests:arm64-stale-nf-reference-test@sha256:937d3daf3a33dba7a9d6a3cfabe52288cc7d3eb0c1c257a9999beca901ca4eb1
+    pull_policy: never
+    command: ["check_routing.py"]
+    user: "${AUSF_ROUTING_UID:?Set host UID}:${AUSF_ROUTING_GID:?Set host GID}"
+    depends_on:
+      fixture:
+        condition: service_healthy
+      ausf-control:
+        condition: service_started
+      ausf-patched:
+        condition: service_started
+    volumes:
+      - "${AUSF_ROUTING_EVIDENCE:?Set evidence directory}:/evidence"
+    cap_drop:
+      - ALL
+    restart: "no"
+
+networks:
+  default:
+    internal: true

@@ -1,0 +1,21 @@
+# Synthetic routing regression only; no real subscriber credentials.
+logger:
+  level: info
+
+global:
+  sbi:
+    server:
+      no_tls: true
+    client:
+      no_tls: true
+
+ausf:
+  sbi:
+    server:
+      - address: 0.0.0.0
+        port: 7777
+    client:
+      scp:
+        - uri: http://fixture:7777
+  discovery:
+    delegated: "yes"
