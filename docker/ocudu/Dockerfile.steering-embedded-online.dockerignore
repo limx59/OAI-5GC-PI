@@ -1,0 +1,8 @@
+**
+!test/
+!test/ocudu/
+!test/ocudu/config/
+!test/ocudu/xapp-steering-embedded-online.py
+!test/ocudu/steering_online_advisor.py
+!test/ocudu/steering_embedded_policy_async.py
+!test/ocudu/config/steering-dual-node-embedded-async.json

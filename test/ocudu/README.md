@@ -523,7 +523,17 @@ or E2 control is established by this acceptance.
 
 **Test guide:** [Common metrics and cooldown rules](README.steering-common-metrics.md).
 
-**Remaining:** Resource-permitting dual-node recommendations.
+### Dual-node asynchronous recommendations
+
+**Status: Passed for the documented same-host embedded advisory scope.**
+
+Local and digest-pinned published runtime images passed online recommendations
+in both directions. Source-batch deduplication, receipt-age checks, two
+consecutive independent pairs and cooldown were verified. No control was
+executed; synchronized collection-window alignment remains unvalidated.
+
+**Test guide:** [Embedded dual-node online advisory](README.steering-embedded-online.md).
+
 
 ## Test Case: Traffic steering control
 
@@ -772,7 +782,7 @@ are recorded separately. Completed entries refer to the documented scope.
 | KPM CSV recording | ✅ Node/PLMN, receive timestamps, numeric checks, row-count/missing-record checks, positive load response and subscription deletion; single-UE F1AP identity correlation; collection timestamps and nominal windows; measurement units; bounded quantitative UL/DL traffic comparison | — |
 | QoS monitoring | ✅ Five DU KPM fields and units; UL/DL high/low-load alerts and recovery; advisory mode; persistent supervisor state across managed SDK sessions; three-round regression; separately checked host I/O readiness guard | — Completed within the documented single-UE advisory scope |
 | MAC / RLC / PDCP statistics | ✅ DU PRB/RLC fields, units, CSV integrity and bounded UL/DL comparison; CU-UP PDCP delivery and clocks; C++ timer isolation; PDCP per-source history and receipt-age filtering; calculation provenance and temporal/value CSV association; unit and three-round integration checks; controlled duplicate/missing/reset detection and late-old-source rejection (single UE/bearer); DU and CU-UP shared-recorder xApp compatibility through the published image and separate Compose joint tests; original shared KPM demo DU/CU-UP normal-flow validation; shared QoS xApp UL/DL forced-alert and no-alert compatibility; DU/CU-UP custom MAC/RLC/PDCP unsupported-capability boundary audits (no subscriptions or delivery validation); xApp compatibility completed within the documented KPM/unsupported-custom-SM boundary | - |
-| Traffic steering policy | ✅ Existing load-exchange and rule-evaluation methods available for reuse; OCUDU single-link UL/DL low-high-low load response through the published image and Compose joint test; sequential OAI/OCUDU comparison with separate six-phase runs, independent CSV review and baseline RIC continuity checks; common throughput mapping and unchanged-policy cooldown rules through packaged retained-evidence/controlled-fixture acceptance | ☐ Resource-permitting dual-node recommendations |
+| Traffic steering policy | ✅ Existing load-exchange and rule-evaluation methods available for reuse; OCUDU single-link UL/DL low-high-low load response through the published image and Compose joint test; sequential OAI/OCUDU comparison with separate six-phase runs, independent CSV review and baseline RIC continuity checks; common throughput mapping and unchanged-policy cooldown rules through packaged retained-evidence/controlled-fixture acceptance; same-host embedded dual-node asynchronous online recommendations in both directions using digest-pinned published images | — Completed within the documented embedded advisory scope |
 | Traffic steering control | ✅ Existing OAI RFsim handover feedback-loop baseline passed | ☐ OCUDU RC capability audit; separate ACK and execution checks; exploratory cross-vendor handover |
 | Multi-Agent slicing control | ✅ Existing OAI NR DL scheduler PRB-cap simulation baseline passed | ☐ OCUDU slice configuration and interface audit; offline/startup experiments; actual grant/counter evidence |
 | Energy-saving control | ✅ Existing policy and state-feedback simulation available for reuse | ☐ OCUDU advisory mode and state simulation; **physical control and power measurement deferred pending hardware** |

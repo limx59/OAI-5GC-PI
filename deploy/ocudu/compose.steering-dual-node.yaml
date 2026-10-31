@@ -1,0 +1,84 @@
+# Isolated dual-OCUDU experiment; managed by its validator.
+services:
+  ric:
+    image: limx59/oai-pi-ocudu-flexric-ric:arm64-kpm-csv-metadata-test@sha256:c2b3a3b9d26281c5cb113622a0fc3c1cf496b01274f60d854362c96d9856f8ba
+    pull_policy: never
+    networks:
+      core:
+        ipv4_address: 172.22.0.163
+    volumes:
+      - "${OCUDU_DUAL_CONFIG:?Set generated configuration directory}/ric.conf:/usr/local/etc/flexric/ric.conf:ro"
+    ulimits:
+      core:
+        soft: 0
+        hard: 0
+    stop_signal: SIGINT
+    stop_grace_period: 10s
+    restart: "no"
+
+  gnb:
+    extends:
+      file: compose.zmq.yaml
+      service: gnb
+    image: limx59/oai-pi-ocudu-gnb:arm64-kpm-collection-clock@sha256:bff13777799f436cb3abdfa9e5433fd7f306c8d8898c69b26b9e664b4160b844
+    pull_policy: never
+    cpuset: "0-2"
+    environment:
+      OCUDU_KPM_WALL_CLOCK: "1"
+      OAI_PI_TEST_REJECT_FIRST_DELETE: "0"
+    networks:
+      core:
+        ipv4_address: 172.22.0.160
+    volumes:
+      - "${OCUDU_DUAL_CONFIG:?Set generated configuration directory}/gnb-1.yml:/etc/ocudu/gnb.yml:ro"
+
+  nrue:
+    extends:
+      file: compose.zmq.yaml
+      service: nrue
+    image: limx59/oai-pi-oai-nr-ue:arm64-zmq-test@sha256:73fa22bcb85f2c040a398d0c3159a7a9083e7dee7db23a7c6fe7e3c26d2110e8
+    pull_policy: never
+    cpuset: "3"
+    depends_on:
+      - gnb
+    networks:
+      core:
+        ipv4_address: 172.22.0.161
+    volumes:
+      - "${OCUDU_DUAL_CONFIG:?Set generated configuration directory}/ue-1.conf:/etc/oai/ue.conf:ro"
+
+  gnb-2:
+    extends:
+      file: compose.zmq.yaml
+      service: gnb
+    image: limx59/oai-pi-ocudu-gnb:arm64-kpm-collection-clock@sha256:bff13777799f436cb3abdfa9e5433fd7f306c8d8898c69b26b9e664b4160b844
+    pull_policy: never
+    cpuset: "0-2"
+    environment:
+      OCUDU_KPM_WALL_CLOCK: "1"
+      OAI_PI_TEST_REJECT_FIRST_DELETE: "0"
+    networks:
+      core:
+        ipv4_address: 172.22.0.164
+    volumes:
+      - "${OCUDU_DUAL_CONFIG:?Set generated configuration directory}/gnb-2.yml:/etc/ocudu/gnb.yml:ro"
+
+  nrue-2:
+    extends:
+      file: compose.zmq.yaml
+      service: nrue
+    image: limx59/oai-pi-oai-nr-ue:arm64-zmq-test@sha256:73fa22bcb85f2c040a398d0c3159a7a9083e7dee7db23a7c6fe7e3c26d2110e8
+    pull_policy: never
+    cpuset: "3"
+    depends_on:
+      - gnb-2
+    networks:
+      core:
+        ipv4_address: 172.22.0.165
+    volumes:
+      - "${OCUDU_DUAL_CONFIG:?Set generated configuration directory}/ue-2.conf:/etc/oai/ue.conf:ro"
+
+networks:
+  core:
+    external: true
+    name: docker_open5gs_default

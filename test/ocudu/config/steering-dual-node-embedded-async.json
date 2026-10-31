@@ -1,0 +1,42 @@
+{
+  "scope": "Embedded OCUDU/OAI/FlexRIC/Open5GS advisory integration experiment",
+  "production_policy_validated": false,
+  "control_execution_enabled": false,
+  "calibration_evidence": "ocudu-prb-source-trace-full-xorjd93b",
+  "independent_validation_required": true,
+  "policy": {
+    "source_load_min": 0.3,
+    "target_load_max": 0.1,
+    "load_difference_min": 0.2,
+    "consecutive_independent_pairs": 2,
+    "cooldown_seconds": 30
+  },
+  "input_checks": {
+    "deduplicate_source_batches": true,
+    "max_receipt_age_seconds": 7,
+    "max_query_skew_seconds": 1,
+    "max_source_receipt_skew_seconds": null,
+    "require_source_receipt_alignment": false
+  },
+  "limitations": [
+    "Receipt timestamps do not establish source collection-window alignment.",
+    "Thresholds are laboratory calibration parameters, not capacity limits.",
+    "This configuration alone does not change existing policy code.",
+    "Asynchronous laboratory observations: source receipt alignment is not required; each source must satisfy the age budget at decision time.",
+    "This mode does not validate synchronized collection windows."
+  ],
+  "timing_calibration": {
+    "evidence": "ocudu-prb-source-trace-full-xorjd93b",
+    "source_interval_p95_seconds": {
+      "420": 5.325,
+      "421": 5.153
+    },
+    "source_interval_max_seconds": {
+      "420": 6.284,
+      "421": 6.143
+    },
+    "rule": "ceil(max node p95 interval) + 1-second query period",
+    "independent_validation_required": true
+  },
+  "observation_mode": "asynchronous_latest_unused_sources"
+}

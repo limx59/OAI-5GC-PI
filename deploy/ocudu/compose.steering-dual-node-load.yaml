@@ -1,0 +1,23 @@
+services:
+  dual-node-collector:
+    environment:
+      KPM_RECORD_SECONDS: "180"
+
+  traffic-server:
+    image: limx59/oai-pi-oai-nr-ue:arm64-zmq-test@sha256:73fa22bcb85f2c040a398d0c3159a7a9083e7dee7db23a7c6fe7e3c26d2110e8
+    pull_policy: never
+    entrypoint: ["/bin/sh", "-ec"]
+    command:
+      - |
+        ip route replace 192.168.100.0/24 via 172.22.0.8
+        timeout --signal=INT --kill-after=5s 240s iperf3 -s -B 172.22.0.151 -p 5201 &
+        exec timeout --signal=INT --kill-after=5s 240s iperf3 -s -B 172.22.0.151 -p 5202
+    cap_add:
+      - NET_ADMIN
+    networks:
+      core:
+        ipv4_address: 172.22.0.151
+    ulimits:
+      core: 0
+    stop_grace_period: 10s
+    restart: "no"

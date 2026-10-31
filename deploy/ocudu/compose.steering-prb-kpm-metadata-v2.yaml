@@ -1,0 +1,16 @@
+services:
+  gnb:
+    image: oai-pi-ocudu-gnb:arm64-steering-prb-kpm-metadata-v2-test
+    pull_policy: never
+    environment:
+      OCUDU_PRB_SOURCE_TRACE: "1"
+
+  gnb-2:
+    image: oai-pi-ocudu-gnb:arm64-steering-prb-kpm-metadata-v2-test
+    pull_policy: never
+    environment:
+      OCUDU_PRB_SOURCE_TRACE: "1"
+
+  dual-node-collector:
+    image: oai-pi-ocudu-flexric-xapp:arm64-steering-prb-metadata-v2-test
+    pull_policy: never

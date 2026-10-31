@@ -1,0 +1,3 @@
+FROM limx59/oai-pi-ocudu-flexric-xapp:arm64-steering-load-response-test@sha256:bbd96295b93df54c58ca38d438e5aa84dcbfa9859f9c4fc093f5dbc2a10bae5a
+COPY test/ocudu/xapp-steering-dual-node.py /opt/ocudu-steering-load-response/collector.py
+RUN python3 -B -c "import ast; ast.parse(open('/opt/ocudu-steering-load-response/collector.py').read())"

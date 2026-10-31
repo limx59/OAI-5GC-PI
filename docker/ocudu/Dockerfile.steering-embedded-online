@@ -1,0 +1,21 @@
+ARG XAPP_BASE_IMAGE=oai-pi-ocudu-flexric-xapp:arm64-steering-dual-node-test
+FROM ${XAPP_BASE_IMAGE}
+COPY test/ocudu/xapp-steering-embedded-online.py /opt/ocudu-steering-load-response/collector.py
+COPY test/ocudu/steering_online_advisor.py /opt/ocudu-steering-load-response/steering_online_advisor.py
+COPY test/ocudu/steering_embedded_policy_async.py /opt/ocudu-steering-load-response/steering_embedded_policy_async.py
+COPY test/ocudu/config/steering-dual-node-embedded-async.json /opt/ocudu-steering-load-response/steering-dual-node-embedded-async.json
+RUN python3 -B - <<'CHECK'
+import ast
+import json
+from pathlib import Path
+import sys
+directory = Path("/opt/ocudu-steering-load-response")
+for name in ("collector.py", "steering_online_advisor.py",
+             "steering_embedded_policy_async.py"):
+    ast.parse((directory / name).read_text())
+sys.path.insert(0, str(directory))
+from steering_embedded_policy_async import EmbeddedSteeringPolicy
+EmbeddedSteeringPolicy(json.loads(
+    (directory / "steering-dual-node-embedded-async.json").read_text()))
+print("PASS: Python syntax, module import and policy configuration")
+CHECK

@@ -1,0 +1,13 @@
+services:
+  gnb:
+    image: limx59/oai-pi-ocudu-gnb:arm64-steering-prb-kpm-metadata-v2-test@sha256:8bceed7d42bccddd286a7c6d29e662f0daf788e4c5dc73b8a2ba9b4fb279724b
+    pull_policy: never
+  gnb-2:
+    image: limx59/oai-pi-ocudu-gnb:arm64-steering-prb-kpm-metadata-v2-test@sha256:8bceed7d42bccddd286a7c6d29e662f0daf788e4c5dc73b8a2ba9b4fb279724b
+    pull_policy: never
+  dual-node-collector:
+    image: limx59/oai-pi-ocudu-flexric-xapp:arm64-steering-embedded-online-test@sha256:502b970b4c20285e1ad8cd17ac6536cfc99d482d4cf834ae40b2427a9e5c7561
+    pull_policy: never
+    environment:
+      ADVISORY_OUTPUT: /evidence/advisory.jsonl
+      STEERING_POLICY_CONFIG: /opt/ocudu-steering-load-response/steering-dual-node-embedded-async.json

@@ -1,0 +1,12 @@
+services:
+  dual-node-collector:
+    entrypoint:
+      - timeout
+      - --signal=INT
+      - --kill-after=5s
+      - 230s
+      - python3
+      - -B
+      - -u
+      - /opt/ocudu-steering-load-response/collector.py
+    command: ["-c", "/usr/local/etc/flexric/xapp.conf"]
