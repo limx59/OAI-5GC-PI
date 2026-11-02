@@ -1,0 +1,5 @@
+# Configuration-selection UE regression; managed by its validator.
+services:
+  nrue:
+    image: oai-pi-oai-nr-ue:arm64-zmq-dci10-config-selection-test
+    pull_policy: never

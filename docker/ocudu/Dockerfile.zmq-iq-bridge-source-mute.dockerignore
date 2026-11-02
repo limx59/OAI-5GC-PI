@@ -1,0 +1,11 @@
+**
+!test/
+!test/ocudu/
+!test/ocudu/zmq_iq_bridge_core.py
+!test/ocudu/validate-zmq-iq-bridge-core.py
+!test/ocudu/zmq_iq_bridge.py
+!test/ocudu/validate-zmq-iq-bridge-transport.py
+!test/
+!test/ocudu/
+!test/ocudu/zmq_iq_bridge_source_mute.py
+!test/ocudu/validate-zmq-iq-bridge-source-mute.py

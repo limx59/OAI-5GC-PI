@@ -1,0 +1,52 @@
+# Two-cell connectivity experiment; managed by its validator.
+services:
+  ric:
+    extends:
+      file: compose.rc-capability-ran.yaml
+      service: ric
+
+  gnb:
+    extends:
+      file: compose.rc-capability-ran.yaml
+      service: gnb
+
+  nrue:
+    extends:
+      file: compose.rc-capability-ran.yaml
+      service: nrue
+
+  iq-bridge:
+    image: oai-pi-ocudu-zmq-iq-bridge:arm64-source-mute-test
+    pull_policy: never
+    command:
+      - "--cell-dl"
+      - "tcp://172.22.0.160:4558"
+      - "tcp://172.22.0.160:4559"
+      - "--cell-ul"
+      - "tcp://0.0.0.0:4560"
+      - "tcp://0.0.0.0:4561"
+      - "--ue-dl"
+      - "tcp://0.0.0.0:4562"
+      - "--ue-ul"
+      - "tcp://172.22.0.161:4556"
+      - "--dl-gains"
+      - "0.55"
+      - "0.45"
+      - "--seconds"
+      - "180"
+      - "--stall-seconds"
+      - "30"
+    networks:
+      - core
+    ulimits:
+      core:
+        soft: 0
+        hard: 0
+    stop_signal: SIGINT
+    stop_grace_period: 5s
+    restart: "no"
+
+networks:
+  core:
+    external: true
+    name: docker_open5gs_default

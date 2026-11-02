@@ -1,0 +1,33 @@
+# One laboratory handover request; managed by its validator.
+services:
+  ric:
+    image: oai-pi-ocudu-flexric-ric:arm64-rc-control-results-v2-test
+    pull_policy: never
+
+  handover-control:
+    image: oai-pi-ocudu-flexric-xapp:arm64-rc-handover-control-test
+    pull_policy: never
+    environment:
+      XAPP_RAN_UE_ID: "${RC_RAN_UE_ID:-}"
+      XAPP_AMF_UE_ID: "${RC_AMF_UE_ID:-}"
+      XAPP_CU_F1AP_ID: "${RC_CU_F1AP_ID:-}"
+      XAPP_AMF_REGION: "${RC_AMF_REGION:-}"
+      XAPP_AMF_SET: "${RC_AMF_SET:-}"
+      XAPP_AMF_POINTER: "${RC_AMF_POINTER:-}"
+      XAPP_SOURCE_NR_CGI: "107520"
+      XAPP_TARGET_NR_CGI: "107521"
+      XAPP_TARGET_CGI_HEX: "0000f11000001a4010"
+    volumes:
+      - type: bind
+        source: "${OCUDU_DUAL_CONFIG:?Set generated configuration directory}/xapp.conf"
+        target: /usr/local/etc/flexric/xapp.conf
+        read_only: true
+    networks:
+      - core
+    ulimits:
+      core:
+        soft: 0
+        hard: 0
+    stop_signal: SIGINT
+    stop_grace_period: 20s
+    restart: "no"

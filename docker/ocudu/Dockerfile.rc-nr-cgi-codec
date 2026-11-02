@@ -1,0 +1,17 @@
+FROM limx59/oai-pi-ocudu-kpm-tests:arm64-clock-selection@sha256:2f31c97bfc5a9cb6b4bbc0ef9020f6a9c6d780cc34bb086b5781764ee7dead48
+ARG BUILD_JOBS=2
+COPY test/ocudu/rc-nr-cgi-codec.cpp /src/rc-nr-cgi-codec.cpp
+RUN python3 - <<'CMAKE'
+from pathlib import Path
+path = Path("/src/ocudu/CMakeLists.txt")
+addition = """
+add_executable(rc_nr_cgi_codec /src/rc-nr-cgi-codec.cpp)
+target_link_libraries(rc_nr_cgi_codec PRIVATE e2ap_asn1)
+"""
+with path.open("a") as stream:
+    stream.write(addition)
+CMAKE
+RUN cmake -S /src/ocudu -B /build/ocudu \
+    && cmake --build /build/ocudu --target rc_nr_cgi_codec --parallel "${BUILD_JOBS}"
+RUN --network=none /build/ocudu/rc_nr_cgi_codec
+ENTRYPOINT ["/build/ocudu/rc_nr_cgi_codec"]

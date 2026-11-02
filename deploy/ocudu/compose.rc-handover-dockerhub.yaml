@@ -1,0 +1,14 @@
+# Published handover images; managed by the validator.
+services:
+  nrue:
+    image: limx59/oai-pi-oai-nr-ue:arm64-zmq-dci10-config-selection-test@sha256:bbdceed41714844717eaf9a06e09284f5404e27daff870d1f1ec08c782182047
+    pull_policy: never
+  iq-bridge:
+    image: limx59/oai-pi-ocudu-zmq-iq-bridge:arm64-source-mute-test@sha256:e81707f75606c8a64105ef9c4c27c8fefda67db8f676a304cb59cfd69bc130e2
+    pull_policy: never
+  ric:
+    image: limx59/oai-pi-ocudu-flexric-ric:arm64-rc-control-results-v2-test@sha256:18358f2f935e9d3937a1469985b2c10427e170b6f0fa09a7dabfad1fdbb71977
+    pull_policy: never
+  handover-control:
+    image: limx59/oai-pi-ocudu-flexric-xapp:arm64-rc-handover-control-test@sha256:a9c7e2add4458b7fbb0b8b15ef371f7fc8a28c46ffe893d7f7078f82a9647a86
+    pull_policy: never

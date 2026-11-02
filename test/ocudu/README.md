@@ -545,13 +545,32 @@ acknowledgement from evidence of actual execution.
 **Status: Passed as an OAI baseline only.**
 
 The existing OAI feedback-loop result provides a comparison point.
-OCUDU control capability and execution have not yet been established.
 
 **Baseline documentation:** [Existing FlexRIC test documentation](../flexric/README.md).
 
-**Remaining:** OCUDU RC capability audit and separate ACK/execution
-validation. Cross-vendor handover remains exploratory.
-An OCUDU-specific execution guide is planned.
+### OCUDU RC handover and post-handover connectivity
+
+**Status: Passed for the documented single-UE, source-muted handover scope.**
+
+Three fresh-container rounds passed with the final local images.
+A separate joint regression passed with the digest-pinned Docker Hub
+images and Compose configuration. Each run verified one correlated
+control ACK, UE synchronization and random access on PCI 2, gNB receipt
+of target RRC completion and successful target handover execution.
+All five post-handover UPF pings passed in each run.
+
+Test process checks and cleanup passed. The existing core and baseline
+RIC identities remained unchanged. The final UE image includes the
+DCI 1_0 configuration-selection fix; the observed UE crash did not
+recur in these runs.
+
+The validator separately mutes the source downlink after receipt of
+the handover command. This validates PCI 1 to PCI 2 execution under
+the documented laboratory conditions. Continuous mixed-cell reception,
+reverse handover, multi-UE operation, long-term stability and cross-vendor
+RAN handover remain outside the completed scope.
+
+**Test guide:** [OCUDU RC handover, published images and regression](README.rc-handover-control.md).
 
 ## Test Case: Multi-Agent slicing control
 
@@ -783,7 +802,7 @@ are recorded separately. Completed entries refer to the documented scope.
 | QoS monitoring | ✅ Five DU KPM fields and units; UL/DL high/low-load alerts and recovery; advisory mode; persistent supervisor state across managed SDK sessions; three-round regression; separately checked host I/O readiness guard | — Completed within the documented single-UE advisory scope |
 | MAC / RLC / PDCP statistics | ✅ DU PRB/RLC fields, units, CSV integrity and bounded UL/DL comparison; CU-UP PDCP delivery and clocks; C++ timer isolation; PDCP per-source history and receipt-age filtering; calculation provenance and temporal/value CSV association; unit and three-round integration checks; controlled duplicate/missing/reset detection and late-old-source rejection (single UE/bearer); DU and CU-UP shared-recorder xApp compatibility through the published image and separate Compose joint tests; original shared KPM demo DU/CU-UP normal-flow validation; shared QoS xApp UL/DL forced-alert and no-alert compatibility; DU/CU-UP custom MAC/RLC/PDCP unsupported-capability boundary audits (no subscriptions or delivery validation); xApp compatibility completed within the documented KPM/unsupported-custom-SM boundary | - |
 | Traffic steering policy | ✅ Existing load-exchange and rule-evaluation methods available for reuse; OCUDU single-link UL/DL low-high-low load response through the published image and Compose joint test; sequential OAI/OCUDU comparison with separate six-phase runs, independent CSV review and baseline RIC continuity checks; common throughput mapping and unchanged-policy cooldown rules through packaged retained-evidence/controlled-fixture acceptance; same-host embedded dual-node asynchronous online recommendations in both directions using digest-pinned published images | — Completed within the documented embedded advisory scope |
-| Traffic steering control | ✅ Existing OAI RFsim handover feedback-loop baseline passed | ☐ OCUDU RC capability audit; separate ACK and execution checks; exploratory cross-vendor handover |
+| Traffic steering control | ✅ Existing OAI RFsim handover feedback-loop baseline; OCUDU CU-CP RC handover with separate correlated ACK and execution checks; single-UE PCI 1 to PCI 2 synchronization, random access and target RRC completion; three local regression rounds and one digest-pinned Docker Hub image/Compose joint regression; five post-handover UPF pings per run, process checks and cleanup | — Completed within the documented single-UE, source-muted handover scope |
 | Multi-Agent slicing control | ✅ Existing OAI NR DL scheduler PRB-cap simulation baseline passed | ☐ OCUDU slice configuration and interface audit; offline/startup experiments; actual grant/counter evidence |
 | Energy-saving control | ✅ Existing policy and state-feedback simulation available for reuse | ☐ OCUDU advisory mode and state simulation; **physical control and power measurement deferred pending hardware** |
 | Integrated regression | ✅ ARM64 builds and published images; bounded connectivity, UDP, KPM/CSV, timing and selected failure-recovery regressions; Open5GS AUSF stale-reference routing regression and patched real-UE session/UPF acceptance; patch snapshots and documentation | ☐ Testmode verification; sustained-session and long-term stability; single-worker root cause; complete workflow regression; **physical RF deferred pending hardware** |

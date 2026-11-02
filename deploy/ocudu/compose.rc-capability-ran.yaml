@@ -1,0 +1,25 @@
+# Dedicated single-node CU-CP RC discovery; managed by its validator.
+services:
+  ric:
+    extends:
+      file: compose.steering-dual-node.yaml
+      service: ric
+
+  gnb:
+    extends:
+      file: compose.steering-dual-node.yaml
+      service: gnb
+    image: limx59/oai-pi-ocudu-gnb:arm64-steering-prb-kpm-metadata-v2-test@sha256:8bceed7d42bccddd286a7c6d29e662f0daf788e4c5dc73b8a2ba9b4fb279724b
+    pull_policy: never
+    environment:
+      OCUDU_PRB_SOURCE_TRACE: "0"
+
+  nrue:
+    extends:
+      file: compose.steering-dual-node.yaml
+      service: nrue
+
+networks:
+  core:
+    external: true
+    name: docker_open5gs_default
