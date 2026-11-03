@@ -1,0 +1,13 @@
+# Laboratory configuration checker; not a production gNB image.
+FROM limx59/oai-pi-ocudu-scheduler-tests:arm64-slicing-test@sha256:a6432f1ea245d94dc8f14b8325034feef36bef66ab142413d6489525f6b0b4cb
+
+ARG BUILD_JOBS=1
+
+COPY test/ocudu/patches/patch-ocudu-validated-dryrun.py /tmp/patch-ocudu-validated-dryrun.py
+RUN python3 -B /tmp/patch-ocudu-validated-dryrun.py /src/ocudu \
+    && cmake --build /build/ocudu --target gnb_split_8 \
+       --parallel "${BUILD_JOBS}" \
+    && test -x /build/ocudu/apps/gnb_split_8/gnb
+
+ENTRYPOINT ["/build/ocudu/apps/gnb_split_8/gnb"]
+CMD ["--help"]

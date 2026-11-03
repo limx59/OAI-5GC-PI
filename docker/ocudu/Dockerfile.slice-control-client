@@ -1,0 +1,9 @@
+# Isolated client for the laboratory gNB loopback control endpoint.
+FROM ubuntu:24.04
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends python3 python3-websocket \
+    && rm -rf /var/lib/apt/lists/*
+COPY test/ocudu/slice-control-client.py /opt/slice-control-client.py
+RUN python3 -B /opt/slice-control-client.py --help
+ENTRYPOINT ["python3", "-B", "/opt/slice-control-client.py"]

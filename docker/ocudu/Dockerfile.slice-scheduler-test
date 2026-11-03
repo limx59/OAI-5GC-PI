@@ -1,0 +1,33 @@
+# Offline OCUDU slice scheduler tests; repository-root context.
+# Host third-party source remains unchanged.
+FROM ubuntu:24.04 AS test
+ARG BUILD_JOBS=1
+ARG MCPU=cortex-a76+crypto
+ENV DEBIAN_FRONTEND=noninteractive
+ENV GTEST_DISCOVERY_TIMEOUT=120
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential cmake ninja-build pkg-config git ca-certificates \
+    python3 libfftw3-dev libmbedtls-dev libsctp-dev libyaml-cpp-dev \
+    libzmq3-dev libssl-dev libgtest-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY ocudu/ /src/ocudu/
+
+RUN cmake -S /src/ocudu -B /build/ocudu -G Ninja \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DMCPU="${MCPU}" -DMARCH=armv8.2-a \
+    -DBUILD_TESTING=ON \
+    -DENABLE_ZEROMQ=ON -DENABLE_EXPORT=ON -DENABLE_FFTW=ON \
+    -DENABLE_UHD=OFF -DENABLE_SIDEKIQ=OFF -DENABLE_DIFI=OFF \
+    -DENABLE_DPDK=OFF -DENABLE_CUDA=OFF -DENABLE_MKL=OFF \
+    -DENABLE_FFTZ=OFF -DENABLE_ARMPL=OFF -DENABLE_BACKWARD=OFF \
+    -DENABLE_PLUGINS=OFF \
+    && cmake --build /build/ocudu \
+       --target scheduler_test slice_scheduler_test \
+       --parallel "${BUILD_JOBS}"
+
+RUN test -x /build/ocudu/tests/unittests/scheduler/scheduler_test \
+    && test -x /build/ocudu/tests/unittests/scheduler/slicing/slice_scheduler_test
+
+CMD ["/build/ocudu/tests/unittests/scheduler/slicing/slice_scheduler_test"]

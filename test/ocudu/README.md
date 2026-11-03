@@ -581,15 +581,44 @@ then collect scheduler evidence for any supported experiment.
 
 **Status: Passed as a standalone OAI simulation baseline only.**
 
-The simulation validates the existing PRB-cap experiment, without
-establishing OCUDU runtime slicing support.
+The simulation validates the existing OAI PRB-cap experiment.
 
 **Baseline documentation:** [Existing FlexRIC test documentation](../flexric/README.md).
 
-**Remaining:** OCUDU configuration/interface audit, offline or startup
-configuration experiments, and actual grant/counter evidence. Verify
-support before reusing private SLICE commands.
-An OCUDU-specific execution guide is planned.
+### OCUDU slice configuration, scheduler evidence and online DL control
+
+**Status: Passed within the documented offline and single-UE online DL scope.
+Multi-Agent coordination remains unvalidated.**
+
+The configuration/interface audit distinguishes startup slice policies,
+cell-level WebSocket updates and the separate E2 DU UE grant-limit path.
+
+The published ARM64 scheduler image passed 29 slice scheduler/repository
+tests and 8 selected multi-UE slice budget/reconfiguration tests.
+The laboratory configuration checker accepted baseline and two-slice
+configurations and rejected an invalid 80% minimum / 40% maximum ratio.
+Its Docker-only patch runs semantic validation before the dry-run exit.
+
+Offline evidence includes aggregate-counter recalculation and per-slot
+DL grant review around slice reconfiguration.
+
+The online test uses one cell and one UE, with E2 disabled.
+It reduces the maximum slice ratio from 100% to 20%, then restores 100%
+through the WebSocket remote-control interface. For the 51-PRB cell,
+the limited phase reached but did not exceed 10 PRBs per active DL slot;
+the restored phase included allocations above that former cap.
+
+Three fresh-container rounds passed through the final unified runner
+using published, digest-pinned image references. Each round validated
+both control replies, scheduler update events, five UPF pings per
+controlled phase, actual DL grants and four incorrect-evidence checks.
+Process identity checks and cleanup passed.
+
+**Test guide:** [OCUDU slice configuration, scheduler tests and online control](README.slice-control.md).
+
+**Remaining:** Online UL cap effectiveness and Multi-Agent coordination.
+Online multi-UE/multi-slice competition, E2 RC slice-control execution,
+sustained-load performance and physical RF remain outside the validated scope.
 
 ## Test Case: Energy-saving control
 
@@ -803,7 +832,7 @@ are recorded separately. Completed entries refer to the documented scope.
 | MAC / RLC / PDCP statistics | ✅ DU PRB/RLC fields, units, CSV integrity and bounded UL/DL comparison; CU-UP PDCP delivery and clocks; C++ timer isolation; PDCP per-source history and receipt-age filtering; calculation provenance and temporal/value CSV association; unit and three-round integration checks; controlled duplicate/missing/reset detection and late-old-source rejection (single UE/bearer); DU and CU-UP shared-recorder xApp compatibility through the published image and separate Compose joint tests; original shared KPM demo DU/CU-UP normal-flow validation; shared QoS xApp UL/DL forced-alert and no-alert compatibility; DU/CU-UP custom MAC/RLC/PDCP unsupported-capability boundary audits (no subscriptions or delivery validation); xApp compatibility completed within the documented KPM/unsupported-custom-SM boundary | - |
 | Traffic steering policy | ✅ Existing load-exchange and rule-evaluation methods available for reuse; OCUDU single-link UL/DL low-high-low load response through the published image and Compose joint test; sequential OAI/OCUDU comparison with separate six-phase runs, independent CSV review and baseline RIC continuity checks; common throughput mapping and unchanged-policy cooldown rules through packaged retained-evidence/controlled-fixture acceptance; same-host embedded dual-node asynchronous online recommendations in both directions using digest-pinned published images | — Completed within the documented embedded advisory scope |
 | Traffic steering control | ✅ Existing OAI RFsim handover feedback-loop baseline; OCUDU CU-CP RC handover with separate correlated ACK and execution checks; single-UE PCI 1 to PCI 2 synchronization, random access and target RRC completion; three local regression rounds and one digest-pinned Docker Hub image/Compose joint regression; five post-handover UPF pings per run, process checks and cleanup | — Completed within the documented single-UE, source-muted handover scope |
-| Multi-Agent slicing control | ✅ Existing OAI NR DL scheduler PRB-cap simulation baseline passed | ☐ OCUDU slice configuration and interface audit; offline/startup experiments; actual grant/counter evidence |
+| Multi-Agent slicing control | ✅ Existing OAI NR DL scheduler PRB-cap simulation baseline; OCUDU configuration/interface audit; 29 slice and 8 multi-slice scheduler tests; startup configuration positive/negative checks; offline counter and raw-grant review; single-UE online DL cap reduction/restoration with actual per-slot grants; three-round published-image regression with control replies, scheduler events, UPF pings, four negative checks per round, process checks and cleanup; scripts and dedicated README | ☐ Online UL cap effectiveness; Multi-Agent coordination |
 | Energy-saving control | ✅ Existing policy and state-feedback simulation available for reuse | ☐ OCUDU advisory mode and state simulation; **physical control and power measurement deferred pending hardware** |
 | Integrated regression | ✅ ARM64 builds and published images; bounded connectivity, UDP, KPM/CSV, timing and selected failure-recovery regressions; Open5GS AUSF stale-reference routing regression and patched real-UE session/UPF acceptance; patch snapshots and documentation | ☐ Testmode verification; sustained-session and long-term stability; single-worker root cause; complete workflow regression; **physical RF deferred pending hardware** |
 

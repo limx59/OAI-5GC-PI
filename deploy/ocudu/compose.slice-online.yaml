@@ -1,0 +1,12 @@
+# Use with compose.zmq.yaml and an independent project name.
+# The validator must check laboratory IP availability before startup.
+services:
+  gnb:
+    image: limx59/oai-pi-ocudu-gnb:arm64-steering-prb-kpm-metadata-v2-test@sha256:8bceed7d42bccddd286a7c6d29e662f0daf788e4c5dc73b8a2ba9b4fb279724b
+    pull_policy: never
+    volumes:
+      - ${OCUDU_SLICE_CONFIG:?Set the generated gnb.yml path}:/etc/ocudu/gnb.yml:ro
+
+  nrue:
+    image: limx59/oai-pi-oai-nr-ue:arm64-zmq-dci10-config-selection-test@sha256:bbdceed41714844717eaf9a06e09284f5404e27daff870d1f1ec08c782182047
+    pull_policy: never
