@@ -3,7 +3,7 @@
 ## Status and scope
 
 **Passed within the offline scheduler/configuration and single-UE online
-downlink slice-control scopes described below.**
+DL/UL slice-control scopes described below.**
 
 The parent test-case name remains **Multi-Agent slicing control**.
 These results establish prerequisites and a working cell-level control path.
@@ -23,9 +23,10 @@ Validated components:
   runner using published, digest-pinned image references.
 - Four incorrect-evidence checks in each final regression round.
 
-Online UL cap effectiveness, online competition between slices or UEs,
-multi-Agent arbitration, E2 RC slice-control execution, sustained-load
-performance and physical RF remain unvalidated.
+Online UL cap effectiveness passed for the bounded TCP/UDP experiments
+below. Online competition between slices or UEs, multi-Agent arbitration,
+E2 RC slice-control execution, sustained-load performance and physical RF
+remain unvalidated.
 
 ## Interface audit
 
@@ -108,6 +109,123 @@ Negative checks must reject the intended condition with the expected reason:
 - Unexpected DL logical channel.
 
 Mutations affect only in-memory copies of the post-control logs.
+
+## Online UL cap effectiveness
+
+This is a separate validation item under the existing parent test case.
+It does not establish multi-Agent coordination.
+
+The experiment retains one cell, one UE, SST 1 without SD and E2 disabled.
+It uses the same WebSocket ratio changes: 100% to 20%, then back to 100%.
+For the 51-PRB cell, the limited maximum is 10 PRBs.
+
+The load setup adds `compose.slice-ul-load.yaml` for TCP experiments.
+The final timed UDP setup instead adds `compose.slice-ul-drain.yaml`
+after `compose.zmq.yaml` and `compose.slice-online.yaml`.
+A dedicated traffic container uses `172.22.0.151`, with a container-local
+route through the existing UPF. Address guards cover the traffic endpoint
+as well as the gNB and UE. No host ports are published.
+
+TCP uses a 10 Mbit/s target and a six-second sending duration.
+UDP uses a 10 Mbit/s offered rate, 1200-byte datagrams and the original
+six-second sending duration. Receiver completion may take much longer
+because queued traffic continues through the constrained radio path.
+These are bounded functional experiments, not sustained-load benchmarks.
+
+### UDP completion and accounting corrections
+
+The original iperf3 3.16 timed UDP experiment failed with a closed control
+connection and a server `Bad file descriptor` error. Source inspection
+identified a server protection timer of duration plus 40 seconds.
+A byte-count comparison completed with matching send/receive totals;
+the limited receiver needed about 76 seconds for approximately 7.5 MB.
+
+A laboratory traffic image builds source package `iperf3=3.16-1build2`.
+Its Docker-only patches provide:
+
+- `LAB_IPERF_SERVER_GRACE_SECONDS=180`, extending the completion grace
+  while retaining a bounded server timer.
+- `LAB_IPERF_UDP_DRAIN=1`, allowing UDP accounting during `TEST_END`
+  and waiting for 500 ms of stable receive counts, with at most 500
+  ten-millisecond polling waits before final statistics.
+
+The unmodified grace default remains 40 seconds and drain is opt-in.
+The validator checks activation markers, requires the quiet interval,
+and retains strict equality of sender, server receiver and echoed receiver
+byte counts, with zero reported UDP packet loss.
+Quiet detection alone does not prove complete delivery.
+The tested image is a laboratory correction for this workload; no general
+iperf3 concurrency, timeout or loss-accounting fix is claimed.
+
+Docker stdout and stderr histories are retained and checked separately.
+Concatenating complete stdout and stderr snapshots previously caused a
+false history-change failure when subsequent JSON output was added.
+
+### UL scheduling evidence and regressions
+
+The reviewers match PUSCH header counts to parsed grants, check UE/RNTI,
+RB intervals and new transmissions, and sum widths per logged UL slot.
+The limited phase must reach 10 PRBs without exceeding it.
+Baseline and restored phases must contain allocations above 10 PRBs.
+
+| UDP round | Limited active UL slots | Slots at 10 PRBs | Slots above 10 PRBs | Restored maximum |
+|---|---:|---:|---:|---:|
+| 1 | 6638 | 3695 | 0 | 51 |
+| 2 | 6638 | 3693 | 0 | 51 |
+| 3 | 6637 | 3699 | 0 | 51 |
+
+Three independent TCP rounds also passed online execution and UL grant
+review. Three final local-reference UDP rounds and a separate published
+Docker Hub reference/Compose run passed. Each UDP round checked three
+load phases, two control replies and scheduler updates, five UPF pings
+per controlled phase, unchanged process identities and test-only cleanup.
+
+Five in-memory negative checks per reviewed UDP run reject an exceeded
+cap, missing restoration, inconsistent receiver bytes, missing grace
+marker and a drain that did not reach a quiet interval.
+
+| Validation | Evidence directory or report |
+|---|---|
+| TCP round 1 | `ocudu-slice-online-ul-tcp-4l_fszgn` |
+| TCP round 2 | `ocudu-slice-online-ul-tcp-3x7z6hqz` |
+| TCP round 3 | `ocudu-slice-online-ul-tcp-xrsszkig` |
+| UDP round 1 | `ocudu-slice-online-ul-drain-8qonktn2` |
+| UDP round 2 | `ocudu-slice-online-ul-drain-u0x62md6` |
+| UDP round 3 | `ocudu-slice-online-ul-drain-ad6inqrn` |
+| UDP three-round review | `ocudu-slice-udp-regression-7ryg60_l/summary.json` |
+| Published-reference UDP run | `ocudu-slice-online-ul-drain-xadw8l91` |
+| Published-reference combined review | `ocudu-slice-udp-regression-sp2o0gli/summary.json` |
+
+Run the final timed UDP online test, then review its printed evidence path:
+
+```bash
+python3 -B test/ocudu/validate-slice-online-ul-drain.py
+python3 -B test/ocudu/validate-slice-online-udp-regression.py \
+  --evidence /absolute/path/to/retained-udp-run
+```
+
+The regression reviewer reads retained evidence and performs negative checks;
+it does not launch online rounds. Standalone
+`review-slice-online-udp-grants.py` writes `online-udp-grant-review.json`
+exclusively. The regression reviewer can repeat reviews without overwriting
+that file.
+
+TCP entry points are `validate-slice-online-ul-tcp.py` and
+`review-slice-online-ul-grants.py`. Original UDP, byte-count and grace-only
+scripts remain diagnostic history, not the final UDP acceptance path.
+Live summaries retain false grant-review flags; use the separate combined
+review report for UL cap acceptance.
+
+The final traffic image reference is:
+
+```text
+limx59/oai-pi-ocudu-slice-udp-traffic:arm64-iperf316-server-drain-test@sha256:6146f02626b1a5157552ed9be9afdfc92a2746fb5c33b38051c8aa80172a9904
+```
+
+Build definitions are `Dockerfile.slice-udp-traffic-drain` and its required
+patches `patch-iperf3-server-grace.py` and `patch-iperf3-server-drain.py`.
+The grace-only image is retained as an intermediate diagnostic version.
+Host third-party source and the existing UE runtime image remain unchanged.
 
 ## Configuration checker
 
@@ -235,7 +353,9 @@ Build definitions are under `docker/ocudu`:
 
 ## Remaining scope
 
-Online UL cap effectiveness and multi-Agent coordination remain open.
+Multi-Agent coordination remains open as the next separate validation item.
+Online UL cap effectiveness is complete within the bounded single-UE
+TCP/UDP scope documented above.
 The online experiment uses one UE and one configured data slice through
 WebSocket control; it does not validate E2 RC control, multiple competing
 online slices, Agent policy conflict resolution, or physical RF.

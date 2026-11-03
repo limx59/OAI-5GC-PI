@@ -1,0 +1,6 @@
+**
+!test/
+!test/ocudu/
+!test/ocudu/patches/
+!test/ocudu/patches/patch-iperf3-server-grace.py
+!test/ocudu/patches/patch-iperf3-server-drain.py

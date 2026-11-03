@@ -1,0 +1,31 @@
+# Add after compose.zmq.yaml and compose.slice-online.yaml.
+# The validator must check 172.22.0.151 availability before startup.
+services:
+  traffic:
+    environment:
+      LAB_IPERF_SERVER_GRACE_SECONDS: "180"
+      LAB_IPERF_UDP_DRAIN: "1"
+    image: limx59/oai-pi-ocudu-slice-udp-traffic:arm64-iperf316-server-drain-test@sha256:6146f02626b1a5157552ed9be9afdfc92a2746fb5c33b38051c8aa80172a9904
+    pull_policy: never
+    cpuset: "0"
+    networks:
+      core:
+        ipv4_address: 172.22.0.151
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_ADMIN
+    entrypoint:
+      - /bin/sh
+      - -ec
+    command:
+      - |
+        ip route replace 192.168.100.0/24 via 172.22.0.8
+        exec /opt/iperf3-lab/bin/iperf3 -s -p 5201 -J
+    ulimits:
+      core:
+        soft: 0
+        hard: 0
+    stop_signal: SIGTERM
+    stop_grace_period: 5s
+    restart: "no"

@@ -1,0 +1,27 @@
+# Laboratory traffic endpoint with configurable iperf3 completion grace.
+FROM ubuntu:24.04 AS build
+ARG BUILD_JOBS=2
+ENV DEBIAN_FRONTEND=noninteractive
+RUN sed -i 's/^Types: deb$/Types: deb deb-src/' \
+      /etc/apt/sources.list.d/ubuntu.sources \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends \
+       build-essential dpkg-dev ca-certificates python3 \
+    && rm -rf /var/lib/apt/lists/*
+WORKDIR /build
+RUN apt-get update \
+    && apt-get source iperf3=3.16-1build2 \
+    && rm -rf /var/lib/apt/lists/*
+COPY test/ocudu/patches/patch-iperf3-server-grace.py /tmp/patch-iperf3-server-grace.py
+RUN python3 -B /tmp/patch-iperf3-server-grace.py /build/iperf3-3.16 \
+    && cd /build/iperf3-3.16 \
+    && ./configure --prefix=/opt/iperf3-lab --disable-shared \
+       --without-openssl --without-sctp \
+    && make -j"${BUILD_JOBS}" \
+    && make install \
+    && /opt/iperf3-lab/bin/iperf3 --version
+
+FROM limx59/oai-pi-oai-nr-ue:arm64-zmq-dci10-config-selection-test@sha256:bbdceed41714844717eaf9a06e09284f5404e27daff870d1f1ec08c782182047
+COPY --from=build /opt/iperf3-lab/ /opt/iperf3-lab/
+ENTRYPOINT ["/opt/iperf3-lab/bin/iperf3"]
+CMD ["--help"]

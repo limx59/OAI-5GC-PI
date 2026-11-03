@@ -614,9 +614,24 @@ both control replies, scheduler update events, five UPF pings per
 controlled phase, actual DL grants and four incorrect-evidence checks.
 Process identity checks and cleanup passed.
 
+### Online UL cap effectiveness
+
+**Status: Passed within the documented single-UE TCP/UDP scope.**
+
+Three TCP rounds and three corrected timed UDP rounds passed online
+execution and per-slot PUSCH review. UDP retained the 10 Mbit/s,
+1200-byte, six-second workload. A Docker-only iperf3 completion-grace
+and receive-drain correction enabled matching final byte counts.
+All limited UL slots stayed within 10 PRBs, with the cap reached;
+restored allocations reached 51 PRBs. Five negative evidence checks
+passed per UDP round. A separate digest-pinned Docker Hub image/Compose
+joint run and its combined evidence review also passed.
+
+Multi-Agent coordination remains a separate, unvalidated item.
+
 **Test guide:** [OCUDU slice configuration, scheduler tests and online control](README.slice-control.md).
 
-**Remaining:** Online UL cap effectiveness and Multi-Agent coordination.
+**Remaining:** Multi-Agent coordination.
 Online multi-UE/multi-slice competition, E2 RC slice-control execution,
 sustained-load performance and physical RF remain outside the validated scope.
 
@@ -832,7 +847,7 @@ are recorded separately. Completed entries refer to the documented scope.
 | MAC / RLC / PDCP statistics | ✅ DU PRB/RLC fields, units, CSV integrity and bounded UL/DL comparison; CU-UP PDCP delivery and clocks; C++ timer isolation; PDCP per-source history and receipt-age filtering; calculation provenance and temporal/value CSV association; unit and three-round integration checks; controlled duplicate/missing/reset detection and late-old-source rejection (single UE/bearer); DU and CU-UP shared-recorder xApp compatibility through the published image and separate Compose joint tests; original shared KPM demo DU/CU-UP normal-flow validation; shared QoS xApp UL/DL forced-alert and no-alert compatibility; DU/CU-UP custom MAC/RLC/PDCP unsupported-capability boundary audits (no subscriptions or delivery validation); xApp compatibility completed within the documented KPM/unsupported-custom-SM boundary | - |
 | Traffic steering policy | ✅ Existing load-exchange and rule-evaluation methods available for reuse; OCUDU single-link UL/DL low-high-low load response through the published image and Compose joint test; sequential OAI/OCUDU comparison with separate six-phase runs, independent CSV review and baseline RIC continuity checks; common throughput mapping and unchanged-policy cooldown rules through packaged retained-evidence/controlled-fixture acceptance; same-host embedded dual-node asynchronous online recommendations in both directions using digest-pinned published images | — Completed within the documented embedded advisory scope |
 | Traffic steering control | ✅ Existing OAI RFsim handover feedback-loop baseline; OCUDU CU-CP RC handover with separate correlated ACK and execution checks; single-UE PCI 1 to PCI 2 synchronization, random access and target RRC completion; three local regression rounds and one digest-pinned Docker Hub image/Compose joint regression; five post-handover UPF pings per run, process checks and cleanup | — Completed within the documented single-UE, source-muted handover scope |
-| Multi-Agent slicing control | ✅ Existing OAI NR DL scheduler PRB-cap simulation baseline; OCUDU configuration/interface audit; 29 slice and 8 multi-slice scheduler tests; startup configuration positive/negative checks; offline counter and raw-grant review; single-UE online DL cap reduction/restoration with actual per-slot grants; three-round published-image regression with control replies, scheduler events, UPF pings, four negative checks per round, process checks and cleanup; scripts and dedicated README | ☐ Online UL cap effectiveness; Multi-Agent coordination |
+| Multi-Agent slicing control | ✅ Existing OAI NR DL scheduler PRB-cap simulation baseline; OCUDU configuration/interface audit; 29 slice and 8 multi-slice scheduler tests; startup configuration positive/negative checks; offline counter and raw-grant review; single-UE online DL cap reduction/restoration with actual per-slot grants; three-round published-image regression with control replies, scheduler events, UPF pings, four negative checks per round, process checks and cleanup; single-UE online UL cap/restoration with three TCP and three corrected timed UDP rounds, per-slot PUSCH review, five negative checks per UDP round and published-image/Compose joint regression; scripts and dedicated README | ☐ Multi-Agent coordination |
 | Energy-saving control | ✅ Existing policy and state-feedback simulation available for reuse | ☐ OCUDU advisory mode and state simulation; **physical control and power measurement deferred pending hardware** |
 | Integrated regression | ✅ ARM64 builds and published images; bounded connectivity, UDP, KPM/CSV, timing and selected failure-recovery regressions; Open5GS AUSF stale-reference routing regression and patched real-UE session/UPF acceptance; patch snapshots and documentation | ☐ Testmode verification; sustained-session and long-term stability; single-worker root cause; complete workflow regression; **physical RF deferred pending hardware** |
 

@@ -1,0 +1,28 @@
+# Add after compose.zmq.yaml and compose.slice-online.yaml.
+# The validator must check 172.22.0.151 availability before startup.
+services:
+  traffic:
+    image: limx59/oai-pi-oai-nr-ue:arm64-zmq-dci10-config-selection-test@sha256:bbdceed41714844717eaf9a06e09284f5404e27daff870d1f1ec08c782182047
+    pull_policy: never
+    cpuset: "0"
+    networks:
+      core:
+        ipv4_address: 172.22.0.151
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_ADMIN
+    entrypoint:
+      - /bin/sh
+      - -ec
+    command:
+      - |
+        ip route replace 192.168.100.0/24 via 172.22.0.8
+        exec iperf3 -s -p 5201 -J
+    ulimits:
+      core:
+        soft: 0
+        hard: 0
+    stop_signal: SIGTERM
+    stop_grace_period: 5s
+    restart: "no"
