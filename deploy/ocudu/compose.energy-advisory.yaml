@@ -1,0 +1,29 @@
+services:
+  energy-advisor:
+    image: limx59/oai-pi-ocudu-energy-advisor:arm64-state-simulation-test
+    build:
+      context: ../..
+      dockerfile: docker/ocudu/Dockerfile.energy-advisor
+    pull_policy: never
+    user: "${ENERGY_UID:?Set host UID}:${ENERGY_GID:?Set host GID}"
+    network_mode: none
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    command:
+      - --input
+      - /config/energy_samples.json
+      - --output-dir
+      - /evidence
+    volumes:
+      - type: bind
+        source: "${ENERGY_INPUT:?Set fixture JSON file}"
+        target: /config/energy_samples.json
+        read_only: true
+      - type: bind
+        source: "${ENERGY_EVIDENCE:?Set private evidence directory}"
+        target: /evidence
+    ulimits:
+      core: 0
+    restart: "no"
+    stop_grace_period: 5s

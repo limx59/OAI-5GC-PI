@@ -649,16 +649,24 @@ before any physical-device experiment.
 
 ### Reusable policy and state-feedback simulation
 
-**Status: Existing simulation framework available for reuse.**
+**Status: Passed within the explicit synthetic-input advisory and
+state-feedback simulation scope.**
 
-Use the existing policy/state model as a baseline for future OCUDU
-advisory-mode and simulated-state checks.
+The reusable policy and simulator run in an ARM64 Docker Compose service.
+Validation checks the low-demand confirmation interval, simulated entry and
+restoration, input provenance, per-record state continuity, baseline process
+continuity and cleanup. Seven policy checks and six negative evidence checks
+passed. The image is published and its Docker Hub tag was pulled successfully.
+
+This experiment does not consume live OCUDU metrics, measure neighbor coverage,
+control a physical cell or establish measured power savings.
+
+**Test guide:** [Energy advisory and state simulation](README.energy-advisory.md).
 
 **Baseline documentation:** [Existing FlexRIC test documentation](../flexric/README.md).
 
-**Remaining:** OCUDU advisory-mode and state-simulation validation.
-Physical-device control and power measurement are deferred pending
-hardware. An OCUDU-specific execution guide is planned.
+**Remaining:** Physical-device control and power measurement are deferred
+pending hardware.
 
 ## Test Case: Integrated regression
 
@@ -855,7 +863,7 @@ are recorded separately. Completed entries refer to the documented scope.
 | Traffic steering policy | ✅ Existing load-exchange and rule-evaluation methods available for reuse; OCUDU single-link UL/DL low-high-low load response through the published image and Compose joint test; sequential OAI/OCUDU comparison with separate six-phase runs, independent CSV review and baseline RIC continuity checks; common throughput mapping and unchanged-policy cooldown rules through packaged retained-evidence/controlled-fixture acceptance; same-host embedded dual-node asynchronous online recommendations in both directions using digest-pinned published images | — Completed within the documented embedded advisory scope |
 | Traffic steering control | ✅ Existing OAI RFsim handover feedback-loop baseline; OCUDU CU-CP RC handover with separate correlated ACK and execution checks; single-UE PCI 1 to PCI 2 synchronization, random access and target RRC completion; three local regression rounds and one digest-pinned Docker Hub image/Compose joint regression; five post-handover UPF pings per run, process checks and cleanup | — Completed within the documented single-UE, source-muted handover scope |
 | Multi-Agent slicing control | ✅ Existing OAI NR DL scheduler PRB-cap simulation baseline; OCUDU configuration/interface audit; 29 slice and 8 multi-slice scheduler tests; startup configuration positive/negative checks; offline counter and raw-grant review; single-UE online DL cap reduction/restoration with actual per-slot grants; three-round published-image regression with control replies, scheduler events, UPF pings, four negative checks per round, process checks and cleanup; single-UE online UL cap/restoration with three TCP and three corrected timed UDP rounds, per-slot PUSCH review, five negative checks per UDP round and published-image/Compose joint regression; scripts and dedicated README; Compose-managed dual-node Agents and coordinator, actual queue-triggered DL cap/restoration in both directions, container-side state commits, repeated-state suppression, raw-grant review, six negative checks per Compose run and published-tag joint regression | — Completed within the documented dual-node WebSocket coordination scope |
-| Energy-saving control | ✅ Existing policy and state-feedback simulation available for reuse | ☐ OCUDU advisory mode and state simulation; **physical control and power measurement deferred pending hardware** |
+| Energy-saving control | ✅ Reused policy and state-feedback simulation; Compose-based synthetic-input advisory/state simulation; seven policy checks, retained-evidence review and six negative checks; baseline continuity and cleanup; published ARM64 image and dedicated README | ☐ **Physical control and power measurement deferred pending hardware** |
 | Integrated regression | ✅ ARM64 builds and published images; bounded connectivity, UDP, KPM/CSV, timing and selected failure-recovery regressions; Open5GS AUSF stale-reference routing regression and patched real-UE session/UPF acceptance; patch snapshots and documentation | ☐ Testmode verification; sustained-session and long-term stability; single-worker root cause; complete workflow regression; **physical RF deferred pending hardware** |
 
 Execution follows the research plan: bounded traffic validation (P5) and

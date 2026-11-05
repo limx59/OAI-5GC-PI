@@ -1,0 +1,13 @@
+# Fixture-based energy recommendations and state simulation.
+FROM limx59/oai-pi-ocudu-slice-coordinator:arm64-queue-control-test
+USER root
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+WORKDIR /opt/energy-lab
+COPY test/xapp/xapp_energy_policy.py ./test/xapp/xapp_energy_policy.py
+COPY test/xapp/xapp_energy_simulator.py ./test/xapp/xapp_energy_simulator.py
+COPY test/xapp/energy_samples.json ./test/xapp/energy_samples.json
+COPY test/ocudu/energy-advisory-runner.py ./test/ocudu/energy-advisory-runner.py
+COPY test/ocudu/validate-energy-policy.py ./test/ocudu/validate-energy-policy.py
+ENTRYPOINT ["python3", "-B", "/opt/energy-lab/test/ocudu/energy-advisory-runner.py"]
+CMD ["--help"]

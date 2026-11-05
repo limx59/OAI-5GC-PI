@@ -1,0 +1,9 @@
+**
+!test/
+!test/xapp/
+!test/ocudu/
+!test/xapp/xapp_energy_policy.py
+!test/xapp/xapp_energy_simulator.py
+!test/xapp/energy_samples.json
+!test/ocudu/energy-advisory-runner.py
+!test/ocudu/validate-energy-policy.py
