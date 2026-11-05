@@ -1,0 +1,31 @@
+# Laboratory node Agent and coordinator runtime.
+FROM limx59/oai-pi-oai-nr-ue:arm64-zmq-dci10-config-selection-test@sha256:bbdceed41714844717eaf9a06e09284f5404e27daff870d1f1ec08c782182047 AS runtime
+USER root
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends python3 docker.io sudo \
+    && rm -rf /var/lib/apt/lists/*
+WORKDIR /opt/slice-coordination
+COPY test/ocudu/slice-node-agent.py ./slice-node-agent.py
+COPY test/ocudu/slice_node_observation.py ./slice_node_observation.py
+COPY test/ocudu/slice_queue_policy.py ./slice_queue_policy.py
+COPY test/ocudu/slice_queue_control_state.py ./slice_queue_control_state.py
+COPY test/ocudu/slice_coordination_executor.py ./slice_coordination_executor.py
+COPY test/ocudu/validate-slice-node-observation.py ./validate-slice-node-observation.py
+COPY test/ocudu/validate-slice-queue-policy.py ./validate-slice-queue-policy.py
+COPY test/ocudu/validate-slice-queue-control-state.py ./validate-slice-queue-control-state.py
+COPY test/ocudu/validate-slice-coordination-executor.py ./validate-slice-coordination-executor.py
+COPY test/ocudu/slice_coordination_policy.py ./slice_coordination_policy.py
+
+COPY test/ocudu/slice-file-service.py ./slice-file-service.py
+
+FROM runtime AS node-agent
+ENTRYPOINT ["python3", "-B", "/opt/slice-coordination/slice-node-agent.py"]
+CMD ["--help"]
+
+FROM runtime AS coordinator
+COPY test/ocudu/slice-coordinator.py ./slice-coordinator.py
+ENTRYPOINT ["python3", "-B", "/opt/slice-coordination/slice-coordinator.py"]
+CMD ["--help"]

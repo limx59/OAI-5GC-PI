@@ -1,0 +1,115 @@
+# Add after the dual-node, CPU and traffic Compose files.
+# The validator creates private exchange directories and supplies gNB IDs.
+services:
+  agent-420:
+    image: "${SLICE_AGENT_IMAGE:?Set validated Agent image with digest}"
+    pull_policy: never
+    profiles: ["coordination"]
+    user: "${SLICE_UID:?Set UID}:${SLICE_GID:?Set GID}"
+    group_add:
+      - "${SLICE_DOCKER_GID:?Set Docker socket GID}"
+    environment:
+      SLICE_AGENT_DOCKER_DIRECT: "1"
+    network_mode: none
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    entrypoint:
+      - python3
+      - -B
+      - /opt/slice-coordination/slice-file-service.py
+    command:
+      - --directory
+      - /exchange/agent-420
+      - --
+      - python3
+      - -B
+      - /opt/slice-coordination/slice-node-agent.py
+      - --node
+      - "420"
+      - --container
+      - "${SLICE_GNB_420_ID:?Set actual test gNB ID}"
+      - --reports
+      - "5"
+      - --sample-seconds
+      - "4"
+      - --step-input
+    volumes:
+      - type: bind
+        source: /var/run/docker.sock
+        target: /var/run/docker.sock
+        read_only: true
+      - type: bind
+        source: "${SLICE_EXCHANGE:?Set private exchange directory}/agent-420"
+        target: /exchange/agent-420
+    restart: "no"
+    stop_grace_period: 5s
+  agent-421:
+    image: "${SLICE_AGENT_IMAGE:?Set validated Agent image with digest}"
+    pull_policy: never
+    profiles: ["coordination"]
+    user: "${SLICE_UID:?Set UID}:${SLICE_GID:?Set GID}"
+    group_add:
+      - "${SLICE_DOCKER_GID:?Set Docker socket GID}"
+    environment:
+      SLICE_AGENT_DOCKER_DIRECT: "1"
+    network_mode: none
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    entrypoint:
+      - python3
+      - -B
+      - /opt/slice-coordination/slice-file-service.py
+    command:
+      - --directory
+      - /exchange/agent-421
+      - --
+      - python3
+      - -B
+      - /opt/slice-coordination/slice-node-agent.py
+      - --node
+      - "421"
+      - --container
+      - "${SLICE_GNB_421_ID:?Set actual test gNB ID}"
+      - --reports
+      - "5"
+      - --sample-seconds
+      - "4"
+      - --step-input
+    volumes:
+      - type: bind
+        source: /var/run/docker.sock
+        target: /var/run/docker.sock
+        read_only: true
+      - type: bind
+        source: "${SLICE_EXCHANGE:?Set private exchange directory}/agent-421"
+        target: /exchange/agent-421
+    restart: "no"
+    stop_grace_period: 5s
+  coordinator:
+    image: "${SLICE_COORDINATOR_IMAGE:?Set validated coordinator image with digest}"
+    pull_policy: never
+    profiles: ["coordination"]
+    user: "${SLICE_UID:?Set UID}:${SLICE_GID:?Set GID}"
+    network_mode: none
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    entrypoint:
+      - python3
+      - -B
+      - /opt/slice-coordination/slice-file-service.py
+    command:
+      - --directory
+      - /exchange/coordinator
+      - --
+      - python3
+      - -B
+      - /opt/slice-coordination/slice-coordinator.py
+    volumes:
+      - type: bind
+        source: "${SLICE_EXCHANGE:?Set private exchange directory}/coordinator"
+        target: /exchange/coordinator
+    restart: "no"
+    stop_grace_period: 5s

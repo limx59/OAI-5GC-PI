@@ -1,0 +1,15 @@
+**
+!test/
+!test/ocudu/
+!test/ocudu/slice-node-agent.py
+!test/ocudu/slice_node_observation.py
+!test/ocudu/slice_queue_policy.py
+!test/ocudu/slice_queue_control_state.py
+!test/ocudu/slice_coordination_executor.py
+!test/ocudu/validate-slice-node-observation.py
+!test/ocudu/validate-slice-queue-policy.py
+!test/ocudu/validate-slice-queue-control-state.py
+!test/ocudu/validate-slice-coordination-executor.py
+!test/ocudu/slice_coordination_policy.py
+!test/ocudu/slice-coordinator.py
+!test/ocudu/slice-file-service.py

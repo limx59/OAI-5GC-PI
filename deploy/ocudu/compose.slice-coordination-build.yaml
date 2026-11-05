@@ -1,0 +1,13 @@
+services:
+  node-agent:
+    image: limx59/oai-pi-ocudu-slice-node-agent:arm64-queue-observation-test
+    build:
+      context: ../..
+      dockerfile: docker/ocudu/Dockerfile.slice-coordination
+      target: node-agent
+  coordinator:
+    image: limx59/oai-pi-ocudu-slice-coordinator:arm64-queue-control-test
+    build:
+      context: ../..
+      dockerfile: docker/ocudu/Dockerfile.slice-coordination
+      target: coordinator

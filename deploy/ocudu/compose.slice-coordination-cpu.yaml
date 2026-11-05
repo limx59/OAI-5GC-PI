@@ -1,0 +1,6 @@
+# Diagnostic comparison: expand only the UE CPU affinity.
+services:
+  nrue:
+    cpuset: "2-3"
+  nrue-2:
+    cpuset: "2-3"

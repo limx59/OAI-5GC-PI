@@ -1,0 +1,33 @@
+# Standalone dual-node WebSocket slice coordination laboratory.
+# Set OCUDU_DUAL_CONFIG to the generated private configuration directory.
+# Use an independent project name and validate addresses before startup.
+services:
+  gnb:
+    extends:
+      file: compose.steering-dual-node.yaml
+      service: gnb
+    image: limx59/oai-pi-ocudu-gnb:arm64-steering-prb-kpm-metadata-v2-test@sha256:8bceed7d42bccddd286a7c6d29e662f0daf788e4c5dc73b8a2ba9b4fb279724b
+    pull_policy: never
+  nrue:
+    extends:
+      file: compose.steering-dual-node.yaml
+      service: nrue
+    image: limx59/oai-pi-oai-nr-ue:arm64-zmq-dci10-config-selection-test@sha256:bbdceed41714844717eaf9a06e09284f5404e27daff870d1f1ec08c782182047
+    pull_policy: never
+  gnb-2:
+    extends:
+      file: compose.steering-dual-node.yaml
+      service: gnb-2
+    image: limx59/oai-pi-ocudu-gnb:arm64-steering-prb-kpm-metadata-v2-test@sha256:8bceed7d42bccddd286a7c6d29e662f0daf788e4c5dc73b8a2ba9b4fb279724b
+    pull_policy: never
+  nrue-2:
+    extends:
+      file: compose.steering-dual-node.yaml
+      service: nrue-2
+    image: limx59/oai-pi-oai-nr-ue:arm64-zmq-dci10-config-selection-test@sha256:bbdceed41714844717eaf9a06e09284f5404e27daff870d1f1ec08c782182047
+    pull_policy: never
+
+networks:
+  core:
+    external: true
+    name: docker_open5gs_default

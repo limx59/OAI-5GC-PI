@@ -1,0 +1,7 @@
+# Use after compose.slice-coordination.yaml and its CPU overlay.
+# The validator must check 172.22.0.151 before starting this service.
+services:
+  traffic:
+    extends:
+      file: compose.slice-ul-load.yaml
+      service: traffic

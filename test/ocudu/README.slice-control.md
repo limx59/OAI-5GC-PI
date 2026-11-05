@@ -2,12 +2,13 @@
 
 ## Status and scope
 
-**Passed within the offline scheduler/configuration and single-UE online
-DL/UL slice-control scopes described below.**
+**Passed within the offline scheduler/configuration, single-UE online
+DL/UL and bounded dual-node WebSocket coordination scopes.**
 
 The parent test-case name remains **Multi-Agent slicing control**.
-These results establish prerequisites and a working cell-level control path.
-They do not establish multi-Agent coordination.
+The offline and single-UE results establish prerequisites and a working
+cell-level control path. The separate [Compose coordination experiment](README.slice-coordination.md) validates two live node Agents, a central
+coordinator and actual DL cap/restoration within its documented scope.
 
 Validated components:
 
@@ -353,7 +354,8 @@ Build definitions are under `docker/ocudu`:
 
 ## Remaining scope
 
-Multi-Agent coordination remains open as the next separate validation item.
+Multi-Agent coordination passed within the bounded two-node WebSocket
+experiment described in [the coordination guide](README.slice-coordination.md).
 Online UL cap effectiveness is complete within the bounded single-UE
 TCP/UDP scope documented above.
 The online experiment uses one UE and one configured data slice through
