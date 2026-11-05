@@ -1,0 +1,11 @@
+**
+!test/
+!test/ocudu/
+!test/ocudu/prepare-session-stability.py
+!test/ocudu/validate-session-stability.py
+!deploy/
+!deploy/ocudu/
+!deploy/ocudu/config/
+!deploy/ocudu/config/gnb-zmq.yml
+!deploy/ocudu/compose.zmq.yaml
+!deploy/ocudu/compose.session-stability.yaml

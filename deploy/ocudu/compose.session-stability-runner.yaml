@@ -1,0 +1,39 @@
+services:
+  session-test:
+    image: limx59/oai-pi-ocudu-session-test:arm64-session-stability-test
+    build:
+      context: ../..
+      dockerfile: docker/ocudu/Dockerfile.session-stability
+      args:
+        SESSION_ROOT: "${OCUDU_SESSION_ROOT:?Set repository absolute path}"
+    network_mode: none
+    read_only: true
+    tmpfs:
+      - /tmp
+    environment:
+      DOCKER_HOST: unix:///var/run/docker.sock
+    volumes:
+      - type: bind
+        source: /var/run/docker.sock
+        target: /var/run/docker.sock
+        bind:
+          create_host_path: false
+      - type: bind
+        source: "${OCUDU_SESSION_ROOT}/test/ocudu/.local"
+        target: "${OCUDU_SESSION_ROOT}/test/ocudu/.local"
+        bind:
+          create_host_path: false
+      - type: bind
+        source: "${OCUDU_SESSION_ROOT}/deploy/ocudu/.local/ue-zmq.conf"
+        target: "${OCUDU_SESSION_ROOT}/deploy/ocudu/.local/ue-zmq.conf"
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: "${OCUDU_SESSION_ROOT}/oai/targets/PROJECTS/GENERIC-NR-5GC/CONF/uecap_ports1.xml"
+        target: "${OCUDU_SESSION_ROOT}/oai/targets/PROJECTS/GENERIC-NR-5GC/CONF/uecap_ports1.xml"
+        read_only: true
+        bind:
+          create_host_path: false
+    command: ["--duration-seconds", "60", "--interval-seconds", "15"]
+    restart: "no"

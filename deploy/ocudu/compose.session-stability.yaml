@@ -1,0 +1,15 @@
+# Use with compose.zmq.yaml and an independent project name.
+# The validator checks address availability and prepares a private configuration.
+services:
+  gnb:
+    image: limx59/oai-pi-ocudu-gnb:arm64-steering-prb-kpm-metadata-v2-test
+    pull_policy: never
+    volumes:
+      - type: bind
+        source: "${OCUDU_SESSION_CONFIG:?Set private gNB configuration}"
+        target: /etc/ocudu/gnb.yml
+        read_only: true
+
+  nrue:
+    image: limx59/oai-pi-oai-nr-ue:arm64-zmq-dci10-config-selection-test
+    pull_policy: never

@@ -734,6 +734,17 @@ with post-delete silence.
 - [Subscription rejection and recovery](README.kpm-subscription-rejection.md)
 - [Delete rejection and retry](README.kpm-delete-rejection.md)
 
+### Bounded single-UE session stability
+
+**Status: Passed within the documented single-UE ZMQ scope.**
+
+The packaged Docker Compose runner passed separate 60-second and
+300-second checks: 25/25 and 55/55 UPF ping replies, sampled process/address
+checks, baseline continuity, input integrity and automatic cleanup.
+Continuous traffic and long-term stability remain unvalidated.
+
+**Test guide:** [Bounded session stability](README.session-stability.md).
+
 ### Patch replay and reproducibility records
 
 **Status: Patch scripts, source snapshots, diffs and manifests retained.**
@@ -759,9 +770,9 @@ baseline continuity and six negative evidence checks passed.
 
 **Test guide:** [Testmode state verification](README.testmode-state.md).
 
-**Remaining:** Sustained-session and long-term stability, single-worker root
-cause and complete integrated-workflow regression. Physical RF validation
-is deferred pending SDR hardware.
+**Remaining:** Continuous-traffic sustained-session and long-term stability,
+single-worker root cause and complete integrated-workflow regression.
+Physical RF validation is deferred pending SDR hardware.
 
 ## Run validation
 
@@ -873,7 +884,7 @@ are recorded separately. Completed entries refer to the documented scope.
 | Traffic steering control | ✅ Existing OAI RFsim handover feedback-loop baseline; OCUDU CU-CP RC handover with separate correlated ACK and execution checks; single-UE PCI 1 to PCI 2 synchronization, random access and target RRC completion; three local regression rounds and one digest-pinned Docker Hub image/Compose joint regression; five post-handover UPF pings per run, process checks and cleanup | — Completed within the documented single-UE, source-muted handover scope |
 | Multi-Agent slicing control | ✅ Existing OAI NR DL scheduler PRB-cap simulation baseline; OCUDU configuration/interface audit; 29 slice and 8 multi-slice scheduler tests; startup configuration positive/negative checks; offline counter and raw-grant review; single-UE online DL cap reduction/restoration with actual per-slot grants; three-round published-image regression with control replies, scheduler events, UPF pings, four negative checks per round, process checks and cleanup; single-UE online UL cap/restoration with three TCP and three corrected timed UDP rounds, per-slot PUSCH review, five negative checks per UDP round and published-image/Compose joint regression; scripts and dedicated README; Compose-managed dual-node Agents and coordinator, actual queue-triggered DL cap/restoration in both directions, container-side state commits, repeated-state suppression, raw-grant review, six negative checks per Compose run and published-tag joint regression | — Completed within the documented dual-node WebSocket coordination scope |
 | Energy-saving control | ✅ Reused policy and state-feedback simulation; Compose-based synthetic-input advisory/state simulation; seven policy checks, retained-evidence review and six negative checks; baseline continuity and cleanup; published ARM64 image and dedicated README | ☐ **Physical control and power measurement deferred pending hardware** |
-| Integrated regression | ✅ ARM64 builds and published images; bounded connectivity, UDP, KPM/CSV, timing and selected failure-recovery regressions; Open5GS AUSF stale-reference routing regression and patched real-UE session/UPF acceptance; patch snapshots and documentation; seven-case Compose testmode parsed-state verification, retained normal-UE configuration linkage, raw-evidence review and six negative checks; published checker image and dedicated guide | ☐ sustained-session and long-term stability; single-worker root cause; complete workflow regression; **physical RF deferred pending hardware** |
+| Integrated regression | ✅ ARM64 builds and published images; bounded connectivity, UDP, KPM/CSV, timing and selected failure-recovery regressions; Open5GS AUSF stale-reference routing regression and patched real-UE session/UPF acceptance; patch snapshots and documentation; seven-case Compose testmode parsed-state verification, retained normal-UE configuration linkage, raw-evidence review and six negative checks; published checker image and dedicated guide; Docker Compose runner 60-second and 300-second single-UE session retention and periodic UPF connectivity, process/address checks and cleanup | ☐ continuous-traffic sustained-session and long-term stability; single-worker root cause; complete workflow regression; **physical RF deferred pending hardware** |
 
 Execution follows the research plan: bounded traffic validation (P5) and
 the documented DU KPM/CSV subset of P6 passed their respective tests.

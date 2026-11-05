@@ -1,0 +1,9 @@
+FROM docker:27-cli
+RUN apk add --no-cache python3
+ARG SESSION_ROOT
+WORKDIR ${SESSION_ROOT}
+COPY test/ocudu/prepare-session-stability.py test/ocudu/validate-session-stability.py ./test/ocudu/
+COPY deploy/ocudu/config/gnb-zmq.yml ./deploy/ocudu/config/gnb-zmq.yml
+COPY deploy/ocudu/compose.zmq.yaml deploy/ocudu/compose.session-stability.yaml ./deploy/ocudu/
+ENV OCUDU_CONTAINER_RUNNER=1 PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+ENTRYPOINT ["python3", "-B", "test/ocudu/validate-session-stability.py"]
