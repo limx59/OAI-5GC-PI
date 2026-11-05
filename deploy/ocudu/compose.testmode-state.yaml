@@ -1,0 +1,31 @@
+# Parsed configuration-state inspection; not a running radio experiment.
+services:
+  testmode-state:
+    image: limx59/oai-pi-ocudu-testmode-state:arm64-config-state-test
+    pull_policy: never
+    user: "${TESTMODE_UID:?Set host UID}:${TESTMODE_GID:?Set host GID}"
+    network_mode: none
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    entrypoint:
+      - /usr/bin/timeout
+      - --signal=TERM
+      - --kill-after=3s
+      - 20s
+    command:
+      - /build/ocudu/apps/gnb_split_8/gnb
+      - -c
+      - /config/gnb.yml
+      - --dryrun
+    volumes:
+      - type: bind
+        source: "${TESTMODE_CONFIG:?Set private test configuration file}"
+        target: /config/gnb.yml
+        read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    ulimits:
+      core: 0
+    restart: "no"
+    stop_grace_period: 5s

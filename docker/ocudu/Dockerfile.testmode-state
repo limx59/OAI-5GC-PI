@@ -1,0 +1,10 @@
+# Parsed-state inspection only; exits before gNB initialization.
+FROM limx59/oai-pi-ocudu-config-check:arm64-slicing-test
+ARG BUILD_JOBS=1
+COPY test/ocudu/patches/patch-ocudu-testmode-state.py /tmp/patch-ocudu-testmode-state.py
+RUN python3 -B /tmp/patch-ocudu-testmode-state.py /src/ocudu \
+    && cmake --build /build/ocudu --target gnb_split_8 \
+       --parallel "${BUILD_JOBS}" \
+    && test -x /build/ocudu/apps/gnb_split_8/gnb
+ENTRYPOINT ["/build/ocudu/apps/gnb_split_8/gnb"]
+CMD ["--help"]

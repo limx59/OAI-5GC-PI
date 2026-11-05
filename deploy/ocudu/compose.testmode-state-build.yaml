@@ -1,0 +1,8 @@
+services:
+  testmode-state:
+    image: limx59/oai-pi-ocudu-testmode-state:arm64-config-state-test
+    build:
+      context: ../..
+      dockerfile: docker/ocudu/Dockerfile.testmode-state
+      args:
+        BUILD_JOBS: "1"
