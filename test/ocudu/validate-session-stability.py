@@ -203,11 +203,12 @@ def main():
                         "UE tunnel address changed")
                 number = len(report["samples"]) + 1
                 sent = time.monotonic()
-                ping = invoke([
+                ping_command = [
                     "exec", containers["nrue"], "ping", "-n",
                     "-I", "oaitun_ue1", "-c", "5", "-W", "2",
                     "192.168.100.1",
-                ], timeout=20, check=False)
+                ]
+                ping = invoke(ping_command, timeout=20, check=False)
                 text = ping.stdout + ping.stderr
                 (dest / f"ping.{number:06d}.log").write_text(text)
                 received = time.monotonic()
@@ -225,6 +226,17 @@ def main():
                 stream.write(json.dumps(sample) + "\n")
                 stream.flush()
                 report["samples"].append(sample)
+                if not good:
+                    retry_log = dest / f"ping.{number:06d}.retry.log"
+                    try:
+                        retry = invoke(ping_command, timeout=20, check=False)
+                        retry_log.write_text(
+                            f"Return code: {retry.returncode}\n"
+                            + retry.stdout + retry.stderr
+                        )
+                    except (OSError, subprocess.TimeoutExpired) as error:
+                        retry_log.write_text(f"Diagnostic retry failed: {error}\n")
+                    print(f"Diagnostic retry: {retry_log.name}", flush=True)
                 require(good, "Expected five UPF ping replies")
                 check()
                 print(f"PASS: probe {number}, elapsed={received - started:.1f}s",
@@ -250,7 +262,7 @@ def main():
             try:
                 with (dest / f"{name}.final.log").open("x") as stream:
                     result = subprocess.run(
-                        DOCKER + ["logs", "--timestamps", cid],
+                        DOCKER + ["logs", "--timestamps", "--tail", "2000", cid],
                         stdout=stream, stderr=subprocess.STDOUT,
                         stdin=subprocess.DEVNULL, timeout=60,
                     )

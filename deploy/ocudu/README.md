@@ -11,4 +11,5 @@ It manages the RAN through `compose.zmq.yaml` and
 `compose.session-stability.yaml`, with its own image selection and
 generated two-worker configuration.
 
+The published ARM64 v2 runner passed the 24-hour single-UE ZMQ validation.
 See [session stability: build, run, results and limitations](../../test/ocudu/README.session-stability.md).

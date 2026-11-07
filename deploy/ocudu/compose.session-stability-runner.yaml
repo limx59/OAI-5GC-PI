@@ -1,6 +1,6 @@
 services:
   session-test:
-    image: limx59/oai-pi-ocudu-session-test:arm64-session-stability-test
+    image: limx59/oai-pi-ocudu-session-test:arm64-session-stability-v2-test
     build:
       context: ../..
       dockerfile: docker/ocudu/Dockerfile.session-stability
