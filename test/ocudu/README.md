@@ -735,6 +735,17 @@ with post-delete silence.
 - [Subscription rejection and recovery](README.kpm-subscription-rejection.md)
 - [Delete rejection and retry](README.kpm-delete-rejection.md)
 
+### KPM full chain
+
+**Status** ✅ Passed in the single-UE DU KPM configuration. The xApp received
+40 KPM reports through FlexRIC and recorded 80 CSV rows. The CSV UE identity
+matched independent F1 context logs. The bounded UL/DL comparison passed
+with zero UDP packet loss in both directions. Subscription deletion and
+cleanup passed, and the baseline RIC retained its process identity.
+
+**Test guide:** [KPM CSV metadata and UE identity](README.kpm-csv-metadata.md).
+Evidence directory: `ocudu-kpm-csv-ue-identity-h8touvw_`.
+
 ### Single-worker root cause
 
 **Status** ✅ The single-worker fix and dual-worker regression passed in

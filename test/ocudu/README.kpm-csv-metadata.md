@@ -122,14 +122,17 @@ Nominal windows are not exact RLC sample boundaries.
 
 ## Validated results
 
-Validated on Raspberry Pi ARM64 across 2026-10-19 and 2026-10-20,
-Pacific time, using the same four recorded image digests.
+The first three runs were validated on Raspberry Pi ARM64 on
+2026-10-19 and 2026-10-20 Pacific time using the same four recorded
+image digests. The integrated KPM chain was rerun on 2026-11-07
+Pacific time.
 
 | Run | Reports / CSV rows | UL ratio | DL ratio | Result |
 | --- | --- | --- | --- | --- |
 | Initial baseline `ok8l819p` | 40 / 80 | 1.0302 | 1.0307 | Passed |
 | Baseline retest `9v3hq1n6` | 39 / 78 | 1.0365 | 1.0309 | Passed |
 | Identity test `mgy85ort` | 40 / 80 | 1.0394 | 1.0296 | Passed |
+| Integrated KPM chain `h8touvw_` | 40 / 80 | 1.0406 | 1.0316 | Passed |
 
 The latest baseline received approximately 0.994 Mbit/s UL and
 1.000 Mbit/s DL. The identity test received approximately 0.994 Mbit/s
@@ -149,6 +152,7 @@ Evidence is retained outside Git under:
 ~/Work/oai-test-evidence/ocudu-kpm-csv-metadata-ok8l819p
 ~/Work/oai-test-evidence/ocudu-kpm-csv-metadata-9v3hq1n6
 ~/Work/oai-test-evidence/ocudu-kpm-csv-ue-identity-mgy85ort
+~/Work/oai-test-evidence/ocudu-kpm-csv-ue-identity-h8touvw_
 ```
 
 Inspect the summary, `kpm.csv`, probe output, traffic results and
