@@ -1,0 +1,3 @@
+services:
+  gnb:
+    image: limx59/oai-pi-ocudu-gnb:arm64-mac-cell-executor-fix

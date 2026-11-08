@@ -735,6 +735,14 @@ with post-delete silence.
 - [Subscription rejection and recovery](README.kpm-subscription-rejection.md)
 - [Delete rejection and retry](README.kpm-delete-rejection.md)
 
+### Single-worker root cause
+
+**Status** ✅ The single-worker fix and dual-worker regression passed in
+the single-UE ZMQ setup. Both runs established the UE tunnel, passed
+two UPF probes, and completed cleanup without errors.
+
+See the [MAC cell executor regression](README.mac-cell-executor-fix.md) for the Python test command and validation results.
+
 ### Bounded single-UE session stability
 
 **Status: 24-hour validation passed within the single-UE ZMQ scope.**
