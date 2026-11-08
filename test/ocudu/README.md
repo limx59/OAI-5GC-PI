@@ -792,9 +792,17 @@ baseline continuity and six negative evidence checks passed.
 
 **Test guide:** [Testmode state verification](README.testmode-state.md).
 
-**Remaining:** Sustained-session validation under continuous application
-traffic, single-worker root cause and complete integrated-workflow regression.
-Physical RF validation is deferred pending SDR hardware.
+### Complete integrated-workflow regression
+
+**Status** ✅ All six stages passed on Raspberry Pi ARM64 in the
+single-UE ZMQ setup. Baseline container continuity checks passed after
+each stage.
+
+See the [integrated workflow regression](README.integrated-workflow.md)
+for the Python command and validation results.
+
+**Remaining** Sustained-session validation under continuous application
+traffic. Physical RF validation is deferred pending SDR hardware.
 
 ## Run validation
 
