@@ -155,7 +155,13 @@ def main():
         "--lifecycle", action="store_true",
         help="Also verify RIC restart, gNB exit cleanup and Agent reconnection.",
     )
+    parser.add_argument(
+        "--include-cu-cp", action="store_true",
+        help="Verify DU, CU-UP and CU-CP identities in one RIC snapshot.",
+    )
     args = parser.parse_args()
+    if args.include_cu_cp and args.lifecycle:
+        parser.error("--include-cu-cp and --lifecycle must run separately")
     network = json.loads(docker("network", "inspect", NETWORK))[0]
     for endpoint in (network.get("Containers") or {}).values():
         address = endpoint.get("IPv4Address", "").split("/")[0]
@@ -166,15 +172,34 @@ def main():
 
     evidence_root = Path.home() / "Work/oai-test-evidence"
     evidence_root.mkdir(parents=True, exist_ok=True)
-    dest = Path(tempfile.mkdtemp(prefix="ocudu-du-cuup-identity-", dir=evidence_root))
+    prefix = (
+        "ocudu-three-agent-identity-" if args.include_cu_cp
+        else "ocudu-du-cuup-identity-"
+    )
+    dest = Path(tempfile.mkdtemp(prefix=prefix, dir=evidence_root))
     dest.chmod(0o755)
     print(f"Evidence: {dest}", flush=True)
     project = f"ocudu-node-{uuid.uuid4().hex[:12]}"
 
-    write_config(dest, "gnb.yml", "test/ocudu/config/gnb-zmq-pdcp.yml", [
+    gnb_changes = [
         ("  enable_du_e2: false", "  enable_du_e2: true"),
         (f"  addrs: [{BASE_RIC_IP}]", f"  addrs: [{TEST_RIC_IP}]"),
-    ])
+    ]
+    probe_source = PROBE
+    if args.include_cu_cp:
+        gnb_changes.append(
+            ("  enable_cu_cp_e2: false", "  enable_cu_cp_e2: true")
+        )
+        expected = 'expected = Counter({"ngran_gNB_DU": 1, "ngran_gNB_CUUP": 1})'
+        if PROBE.count(expected) != 1:
+            raise RuntimeError("Unexpected probe layout")
+        # This configuration advertises CU-CP as ngran_gNB.
+        probe_source = PROBE.replace(
+            expected,
+            'expected = Counter({"ngran_gNB_DU": 1, "ngran_gNB_CUUP": 1, "ngran_gNB": 1})',
+            1,
+        )
+    write_config(dest, "gnb.yml", "test/ocudu/config/gnb-zmq-pdcp.yml", gnb_changes)
     for name in ("ric.conf", "xapp.conf"):
         write_config(dest, name, f"deploy/ocudu/config/{name}", [
             (f'NearRT_RIC_IP = "{BASE_RIC_IP}"', f'NearRT_RIC_IP = "{TEST_RIC_IP}"'),
@@ -247,7 +272,7 @@ def main():
         if args.lifecycle:
             lifecycle = validate_lifecycle(compose, run_probe, dest)
         else:
-            run_probe("probe.log")
+            run_probe("probe.log", probe_source)
     except (Exception, KeyboardInterrupt) as exc:
         error = str(exc) or type(exc).__name__
     finally:

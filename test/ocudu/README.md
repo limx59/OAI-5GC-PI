@@ -220,6 +220,13 @@ gNB stop and returned after the gNB started again.
 See the [RIC/Agent reconnection and exit cleanup validation](README.du-cuup-lifecycle.md)
 for the test command, acceptance criteria and evidence.
 
+**CU-CP Agent identity** ✅ With CU-CP E2 enabled, the same RIC snapshot
+contained DU, CU-UP and one additional `ngran_gNB` record for gNB ID
+`420`. With CU-CP E2 disabled, the snapshot contained only DU and CU-UP.
+
+See the [CU-CP Agent identity validation](README.cu-cp-identity.md)
+for the comparison commands, acceptance criteria and evidence.
+
 Verify that the OCUDU gNB joins Open5GS and exposes the expected DU
 identity through FlexRIC, so an xApp can select the intended E2 node.
 
@@ -920,7 +927,7 @@ are recorded separately. Completed entries refer to the documented scope.
 
 | Test case | Completed | Remaining |
 | --- | --- | --- |
-| Node discovery | ✅ Recorded OCUDU source revision; Open5GS NG Setup; DU E2 Setup | ☐ DU/CU Agent identity distinction; RIC/Agent reconnection; exit cleanup |
+| Node discovery | ✅ Recorded OCUDU source revision, Open5GS NG Setup, DU E2 Setup, DU/CU-UP/CU-CP Agent identity distinction, and DU/CU-UP RIC/Agent reconnection and exit cleanup after a graceful gNB stop | ☐ Subscription targeting |
 | KPM monitoring | ✅ Normal subscription and reporting; one-second monitoring; **report styles, UL/DL and idle response, and abnormal subscription handling completed within the agreed Style 1/4 scope**; bounded xApp-disconnection cleanup; E2 build-configuration and FlexRIC compatibility audit | — |
 | KPM CSV recording | ✅ Node/PLMN, receive timestamps, numeric checks, row-count/missing-record checks, positive load response and subscription deletion; single-UE F1AP identity correlation; collection timestamps and nominal windows; measurement units; bounded quantitative UL/DL traffic comparison | — |
 | QoS monitoring | ✅ Five DU KPM fields and units; UL/DL high/low-load alerts and recovery; advisory mode; persistent supervisor state across managed SDK sessions; three-round regression; separately checked host I/O readiness guard | — Completed within the documented single-UE advisory scope |
