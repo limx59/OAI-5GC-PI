@@ -205,6 +205,13 @@ The worker test Dockerfile reuses the baseline builder stages when cached.
 
 ## Test Case: Node discovery
 
+**DU/CU Agent identity** ✅ One FlexRIC RIC reported one DU and one
+CU-UP record in the same snapshot for gNB ID `420`. The Python run
+passed and removed both temporary containers.
+
+See the [DU/CU Agent identity validation](README.du-cuup-identity.md)
+for the test command, acceptance criteria and evidence.
+
 Verify that the OCUDU gNB joins Open5GS and exposes the expected DU
 identity through FlexRIC, so an xApp can select the intended E2 node.
 
