@@ -42,6 +42,6 @@ produced the same node counts. All four runs passed with no cleanup errors.
 | Documented command, CU-CP enabled | `ocudu-three-agent-identity-g21boj6a` |
 
 Each directory contains `summary.json` and the probe logs. The
-three-Agent comparison covers node identity. Subscription targeting
-remains a separate Node discovery check. The `--lifecycle` option
+three-Agent comparison covers node identity. See the [KPM subscription targeting validation](README.subscription-targeting.md)
+for the separate report-source check. The `--lifecycle` option
 covers reconnection and exit cleanup for the DU/CU-UP configuration.

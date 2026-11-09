@@ -149,6 +149,66 @@ def validate_lifecycle(compose, run_probe, dest):
     return result
 
 
+def validate_subscription_targeting(compose, run_probe, dest):
+    probe_source = Path(__file__).with_name(
+        "probe-du-cuup-subscription-targeting.py"
+    ).read_text(encoding="utf-8")
+    template = (dest / "xapp.conf").read_text(encoding="utf-8")
+    cases = (
+        ("du", "ngran_gNB_DU", 4, "DRB.UEThpDl", "probe-du.log"),
+        ("cuup", "ngran_gNB_CUUP", 1, "DRB.PacketSuccessRateUlgNBUu", "probe-cuup.log"),
+        ("cucp", "ngran_gNB", 1, "RRC.ConnEstabAtt", "probe.log"),
+    )
+    for label, role, style, metric, _ in cases:
+        config = template
+        for old, new in (
+            ("format = 4,", f"format = {style},"),
+            ('ran_type = "ngran_gNB_DU"', f'ran_type = "{role}"'),
+            ('{ name = "DRB.UEThpDl" },\n'
+             '          { name = "DRB.UEThpUl" }',
+             f'{{ name = "{metric}" }}'),
+        ):
+            if config.count(old) != 1:
+                raise RuntimeError(f"Unexpected xApp config anchor: {old}")
+            config = config.replace(old, new, 1)
+        with (dest / f"xapp-{label}.conf").open("x", encoding="utf-8") as stream:
+            stream.write(config)
+
+    docker(*compose, "up", "-d", "--no-deps", "--no-build", "--pull", "never", "nrue")
+    ue = docker(*compose, "ps", "-q", "nrue").strip()
+    if len(ue.splitlines()) != 1:
+        raise RuntimeError("Expected one running temporary UE")
+    deadline = time.monotonic() + 45
+    while True:
+        ready = subprocess.run(
+            ["sudo", "docker", "exec", ue, "ip", "-4", "-o",
+             "addr", "show", "dev", "oaitun_ue1"],
+            capture_output=True, text=True, timeout=10,
+        )
+        if ready.returncode == 0 and " inet " in ready.stdout:
+            break
+        if time.monotonic() >= deadline:
+            raise RuntimeError("Temporary UE tunnel did not become ready")
+        time.sleep(1)
+
+    results = []
+    for label, role, style, metric, log_name in cases:
+        print(f"=== Subscribe to {role}: {metric} ===", flush=True)
+        result = run_probe(
+            log_name, probe_source, config=dest / f"xapp-{label}.conf",
+            environment={
+                "TARGET_ROLE": role,
+                "TARGET_METRIC": metric,
+                "OAI_PI_KPM_REPORT_STYLE": style,
+            },
+        )
+        results.append(result)
+        print(json.dumps(result), flush=True)
+        (dest / "subscription-targeting.json").write_text(
+            json.dumps(results, indent=2) + "\n", encoding="utf-8"
+        )
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -159,13 +219,24 @@ def main():
         "--include-cu-cp", action="store_true",
         help="Verify DU, CU-UP and CU-CP identities in one RIC snapshot.",
     )
+    parser.add_argument(
+        "--subscription-targeting", action="store_true",
+        help="Verify KPM subscription targeting with all three Agents online.",
+    )
     args = parser.parse_args()
+    if args.subscription_targeting:
+        if args.lifecycle:
+            parser.error("--subscription-targeting and --lifecycle must run separately")
+        args.include_cu_cp = True
     if args.include_cu_cp and args.lifecycle:
         parser.error("--include-cu-cp and --lifecycle must run separately")
     network = json.loads(docker("network", "inspect", NETWORK))[0]
+    test_addresses = {GNB_IP, TEST_RIC_IP}
+    if args.subscription_targeting:
+        test_addresses.add("172.22.0.161")
     for endpoint in (network.get("Containers") or {}).values():
         address = endpoint.get("IPv4Address", "").split("/")[0]
-        if address in {GNB_IP, TEST_RIC_IP}:
+        if address in test_addresses:
             raise RuntimeError(f"Test address {address} is occupied by {endpoint['Name']}")
     for image in (RIC_IMAGE, GNB_IMAGE, PROBE_IMAGE):
         docker("image", "inspect", image)
@@ -225,6 +296,10 @@ def main():
         "-f", "test/ocudu/patches/compose.kpm-collection-clock.yaml",
         "-f", str(override),
     )
+    services = ("ric", "gnb")
+    if args.subscription_targeting:
+        compose += ("--profile", "ue")
+        services += ("nrue",)
     resolved = docker(*compose, "config", "--format", "json")
     (dest / "compose.resolved.json").write_text(resolved, encoding="utf-8")
 
@@ -238,16 +313,20 @@ def main():
         time.sleep(2)
         docker(*compose, "up", "-d", "--no-deps", "--no-build", "--pull", "never", "gnb")
         time.sleep(3)
-        def run_probe(log_name, probe_source=PROBE):
+        def run_probe(log_name, probe_source=PROBE, config=None, environment=None):
+            config = dest / "xapp.conf" if config is None else config
+            env_args = []
+            for key, value in (environment or {}).items():
+                env_args.extend(("-e", f"{key}={value}"))
             nonlocal probe_started
             (dest / "probe.py").write_text(probe_source, encoding="utf-8")
             with (dest / log_name).open("w", encoding="utf-8") as log:
                 probe_started = True
                 docker(
                     "run", "--name", probe_name, "--rm", "--pull", "never",
-                    "--network", NETWORK, "--ulimit", "core=0",
+                    "--network", NETWORK, "--ulimit", "core=0", *env_args,
                     "-v", f"{dest}/probe.py:/opt/ocudu-xapp-compatibility/node_identity.py:ro",
-                    "-v", f"{dest}/xapp.conf:/usr/local/etc/flexric/xapp.conf:ro",
+                    "-v", f"{config}:/usr/local/etc/flexric/xapp.conf:ro",
                     "--entrypoint", "timeout", PROBE_IMAGE,
                     "--signal=INT", "--kill-after=5s", "40s",
                     "python3", "-B", "-u", "/opt/ocudu-xapp-compatibility/node_identity.py",
@@ -271,6 +350,8 @@ def main():
 
         if args.lifecycle:
             lifecycle = validate_lifecycle(compose, run_probe, dest)
+        elif args.subscription_targeting:
+            validate_subscription_targeting(compose, run_probe, dest)
         else:
             run_probe("probe.log", probe_source)
     except (Exception, KeyboardInterrupt) as exc:
@@ -285,7 +366,7 @@ def main():
                 cleanup_errors.append(f"Probe cleanup: {exc}")
         try:
             with (dest / "ran-ric.log").open("w", encoding="utf-8") as log:
-                docker(*compose, "logs", "--no-color", "ric", "gnb", output=log)
+                docker(*compose, "logs", "--no-color", *services, output=log)
         except Exception as exc:
             cleanup_errors.append(f"Log collection: {exc}")
         try:

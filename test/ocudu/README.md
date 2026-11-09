@@ -227,6 +227,13 @@ contained DU, CU-UP and one additional `ngran_gNB` record for gNB ID
 See the [CU-CP Agent identity validation](README.cu-cp-identity.md)
 for the comparison commands, acceptance criteria and evidence.
 
+**Subscription targeting** ✅ With DU, CU-UP and CU-CP online on one
+FlexRIC RIC, sequential KPM subscriptions returned three reports from
+each selected Agent. All three shared gNB ID `420` and RAN Function ID `2`.
+
+See the [KPM subscription targeting validation](README.subscription-targeting.md)
+for the test command, acceptance criteria and evidence.
+
 Verify that the OCUDU gNB joins Open5GS and exposes the expected DU
 identity through FlexRIC, so an xApp can select the intended E2 node.
 
@@ -927,7 +934,7 @@ are recorded separately. Completed entries refer to the documented scope.
 
 | Test case | Completed | Remaining |
 | --- | --- | --- |
-| Node discovery | ✅ Recorded OCUDU source revision, Open5GS NG Setup, DU E2 Setup, DU/CU-UP/CU-CP Agent identity distinction, and DU/CU-UP RIC/Agent reconnection and exit cleanup after a graceful gNB stop | ☐ Subscription targeting |
+| Node discovery | ✅ Recorded OCUDU source revision, Open5GS NG Setup, DU E2 Setup, DU/CU-UP/CU-CP Agent identity distinction, and DU/CU-UP RIC/Agent reconnection and exit cleanup after a graceful gNB stop, and KPM subscription targeting for DU, CU-UP and CU-CP | — |
 | KPM monitoring | ✅ Normal subscription and reporting; one-second monitoring; **report styles, UL/DL and idle response, and abnormal subscription handling completed within the agreed Style 1/4 scope**; bounded xApp-disconnection cleanup; E2 build-configuration and FlexRIC compatibility audit | — |
 | KPM CSV recording | ✅ Node/PLMN, receive timestamps, numeric checks, row-count/missing-record checks, positive load response and subscription deletion; single-UE F1AP identity correlation; collection timestamps and nominal windows; measurement units; bounded quantitative UL/DL traffic comparison | — |
 | QoS monitoring | ✅ Five DU KPM fields and units; UL/DL high/low-load alerts and recovery; advisory mode; persistent supervisor state across managed SDK sessions; three-round regression; separately checked host I/O readiness guard | — Completed within the documented single-UE advisory scope |
