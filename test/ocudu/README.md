@@ -212,6 +212,14 @@ passed and removed both temporary containers.
 See the [DU/CU Agent identity validation](README.du-cuup-identity.md)
 for the test command, acceptance criteria and evidence.
 
+**RIC/Agent reconnection and exit cleanup** ✅ After a RIC restart,
+both Agent records returned while the gNB process stayed running.
+With the RIC kept running, both records disappeared after a graceful
+gNB stop and returned after the gNB started again.
+
+See the [RIC/Agent reconnection and exit cleanup validation](README.du-cuup-lifecycle.md)
+for the test command, acceptance criteria and evidence.
+
 Verify that the OCUDU gNB joins Open5GS and exposes the expected DU
 identity through FlexRIC, so an xApp can select the intended E2 node.
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Verify that one FlexRIC RIC distinguishes OCUDU DU and CU-UP agents."""
 
+import argparse
 import json
 from pathlib import Path
 import subprocess
@@ -75,7 +76,86 @@ def write_config(dest, name, source, changes):
     (dest / name).write_text(text, encoding="utf-8")
 
 
+def process_identity(compose, service):
+    cid = docker(*compose, "ps", "-q", service).strip()
+    if len(cid.splitlines()) != 1:
+        raise RuntimeError(f"Expected one running {service} container")
+    item = json.loads(docker("inspect", cid))[0]
+    state = item["State"]
+    if not state["Running"]:
+        raise RuntimeError(f"{service} is not running")
+    return {
+        "id": item["Id"],
+        "pid": state["Pid"],
+        "started_at": state["StartedAt"],
+    }
+
+
+def validate_lifecycle(compose, run_probe, dest):
+    def identity(service):
+        return process_identity(compose, service)
+
+    def require_restart(before, after, service):
+        if before["id"] != after["id"] or before["started_at"] == after["started_at"]:
+            raise RuntimeError(f"Expected a new {service} process in the same container")
+
+    initial_nodes = run_probe("probe-before-ric-restart.log")
+    initial = {service: identity(service) for service in ("ric", "gnb")}
+
+    print("Restarting only the temporary RIC", flush=True)
+    docker(*compose, "restart", "ric")
+    ric_after = identity("ric")
+    require_restart(initial["ric"], ric_after, "RIC")
+    time.sleep(2)
+    reconnected = run_probe("probe-after-ric-restart.log")
+    if identity("gnb") != initial["gnb"] or identity("ric") != ric_after:
+        raise RuntimeError("Unexpected process change during RIC restart validation")
+
+    print("Stopping only the temporary gNB", flush=True)
+    docker(*compose, "stop", "gnb")
+    stopped = json.loads(docker("inspect", initial["gnb"]["id"]))[0]["State"]
+    if stopped["Running"]:
+        raise RuntimeError("Temporary gNB is still running")
+    expected = 'expected = Counter({"ngran_gNB_DU": 1, "ngran_gNB_CUUP": 1})'
+    if PROBE.count(expected) != 1:
+        raise RuntimeError("Unexpected probe layout")
+    absence_probe = PROBE.replace(expected, "expected = Counter()\ntime.sleep(2)", 1)
+    absent = run_probe("probe-after-gnb-stop.log", absence_probe)
+    if identity("ric") != ric_after:
+        raise RuntimeError("RIC process changed while gNB was stopped")
+
+    print("Starting the same temporary gNB container", flush=True)
+    docker(*compose, "start", "gnb")
+    gnb_after = identity("gnb")
+    require_restart(initial["gnb"], gnb_after, "gNB")
+    registered = run_probe("probe.log")
+    if identity("ric") != ric_after or identity("gnb") != gnb_after:
+        raise RuntimeError("Unexpected process change during gNB restart validation")
+
+    result = {
+        "initial_processes": initial,
+        "ric_after_restart": ric_after,
+        "gnb_after_restart": gnb_after,
+        "initial_nodes": initial_nodes["nodes"],
+        "nodes_after_ric_restart": reconnected["nodes"],
+        "nodes_while_gnb_stopped": absent["nodes"],
+        "nodes_after_gnb_restart": registered["nodes"],
+        "gnb_unchanged_across_ric_restart": True,
+        "ric_unchanged_across_gnb_stop_start": True,
+    }
+    (dest / "lifecycle.json").write_text(
+        json.dumps(result, indent=2) + "\n", encoding="utf-8"
+    )
+    return result
+
+
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--lifecycle", action="store_true",
+        help="Also verify RIC restart, gNB exit cleanup and Agent reconnection.",
+    )
+    args = parser.parse_args()
     network = json.loads(docker("network", "inspect", NETWORK))[0]
     for endpoint in (network.get("Containers") or {}).values():
         address = endpoint.get("IPv4Address", "").split("/")[0]
@@ -123,6 +203,7 @@ def main():
     resolved = docker(*compose, "config", "--format", "json")
     (dest / "compose.resolved.json").write_text(resolved, encoding="utf-8")
 
+    lifecycle = None
     error = None
     cleanup_errors = []
     probe_name = f"{project}-probe"
@@ -132,20 +213,41 @@ def main():
         time.sleep(2)
         docker(*compose, "up", "-d", "--no-deps", "--no-build", "--pull", "never", "gnb")
         time.sleep(3)
-        with (dest / "probe.log").open("w", encoding="utf-8") as log:
-            probe_started = True
-            docker(
-                "run", "--name", probe_name, "--rm", "--pull", "never",
-                "--network", NETWORK, "--ulimit", "core=0",
-                "-v", f"{dest}/probe.py:/opt/ocudu-xapp-compatibility/node_identity.py:ro",
-                "-v", f"{dest}/xapp.conf:/usr/local/etc/flexric/xapp.conf:ro",
-                "--entrypoint", "timeout", PROBE_IMAGE,
-                "--signal=INT", "--kill-after=5s", "40s",
-                "python3", "-B", "-u", "/opt/ocudu-xapp-compatibility/node_identity.py",
-                "-c", "/usr/local/etc/flexric/xapp.conf",
-                output=log,
-            )
-        probe_started = False
+        def run_probe(log_name, probe_source=PROBE):
+            nonlocal probe_started
+            (dest / "probe.py").write_text(probe_source, encoding="utf-8")
+            with (dest / log_name).open("w", encoding="utf-8") as log:
+                probe_started = True
+                docker(
+                    "run", "--name", probe_name, "--rm", "--pull", "never",
+                    "--network", NETWORK, "--ulimit", "core=0",
+                    "-v", f"{dest}/probe.py:/opt/ocudu-xapp-compatibility/node_identity.py:ro",
+                    "-v", f"{dest}/xapp.conf:/usr/local/etc/flexric/xapp.conf:ro",
+                    "--entrypoint", "timeout", PROBE_IMAGE,
+                    "--signal=INT", "--kill-after=5s", "40s",
+                    "python3", "-B", "-u", "/opt/ocudu-xapp-compatibility/node_identity.py",
+                    "-c", "/usr/local/etc/flexric/xapp.conf",
+                    output=log,
+                )
+            probe_started = False
+
+            result = None
+            setup_received = False
+            for line in (dest / log_name).read_text(
+                encoding="utf-8", errors="replace"
+            ).splitlines():
+                if "E42 SETUP-RESPONSE rx" in line:
+                    setup_received = True
+                if setup_received and line.startswith('{"passed":'):
+                    result = json.loads(line)
+            if result is None or result.get("passed") is not True:
+                raise RuntimeError(f"No passing snapshot after E42 setup in {log_name}")
+            return result
+
+        if args.lifecycle:
+            lifecycle = validate_lifecycle(compose, run_probe, dest)
+        else:
+            run_probe("probe.log")
     except (Exception, KeyboardInterrupt) as exc:
         error = str(exc) or type(exc).__name__
     finally:
@@ -180,6 +282,7 @@ def main():
         "nodes": nodes,
         "error": error,
         "cleanup_errors": cleanup_errors,
+        "lifecycle": lifecycle,
     }
     report = json.dumps(summary, indent=2) + "\n"
     (dest / "summary.json").write_text(report, encoding="utf-8")
